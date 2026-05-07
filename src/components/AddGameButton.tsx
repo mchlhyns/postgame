@@ -150,6 +150,7 @@ export default function AddGameButton({ game }: Props) {
             onClose={() => setShowAddModal(false)}
             onAdded={(record) => { setRecords(rs => [...rs, record]); setShowAddModal(false) }}
             initialGame={game as IgdbGame & { coverUrl?: string }}
+            defaultIsReplay
           />
         )}
       </>
@@ -289,7 +290,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
           <div>
             <div style={{ fontWeight: 600 }}>{record.value.game.title}</div>
             {record.value.game.releaseYear && (
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{record.value.game.releaseYear}</div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{record.value.game.releaseYear}</div>
             )}
           </div>
         </div>

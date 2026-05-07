@@ -239,8 +239,8 @@ export default function SettingsPage() {
           <div style={{ maxWidth: 480 }}>
             <form onSubmit={handleSave}>
 
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Profile</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.4 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 8 }}>Profile</h2>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.4 }}>
               Adjust the look and feel of your public profile. By default, we'll use the avatar and display name from your Atmosphere Account.
             </p>
 
@@ -304,20 +304,20 @@ export default function SettingsPage() {
               </div>
 
 
-{fileError && <p style={{ fontSize: 13, color: 'var(--danger)', marginTop: 8 }}>{fileError}</p>}
+{fileError && <p style={{ fontSize: '0.8125rem', color: 'var(--danger)', marginTop: 8 }}>{fileError}</p>}
 
 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 24 }}>
                 <button className="btn btn-primary" type="submit" disabled={saving}>
                   {saving ? 'Saving…' : 'Save'}
                 </button>
-                {saved && <span style={{ fontSize: 13, color: 'var(--accent)' }}>Saved</span>}
+                {saved && <span style={{ fontSize: '0.8125rem', color: 'var(--accent)' }}>Saved</span>}
               </div>
             </form>
           </div>
 
           <div style={{ maxWidth: 480, marginTop: 42, paddingTop: 32, borderTop: '2px solid var(--tertiary)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Danger zone</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 8 }}>Danger zone</h2>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
               Permanently delete all your CRASH THE ARCADE data, including games, lists, follows, and settings. Your Atmosphere Account and other connected apps will not be affected.
             </p>
             {!confirmDelete ? (
@@ -330,7 +330,7 @@ export default function SettingsPage() {
               </button>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <p style={{ fontSize: 14, color: 'var(--danger)' }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--danger)' }}>
                   This will delete all your games, lists, follows, and settings. This cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                     Cancel
                   </button>
                 </div>
-                {deleteError && <p style={{ fontSize: 13, color: 'var(--danger)' }}>{deleteError}</p>}
+                {deleteError && <p style={{ fontSize: '0.8125rem', color: 'var(--danger)' }}>{deleteError}</p>}
               </div>
             )}
           </div>

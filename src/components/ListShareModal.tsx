@@ -283,7 +283,7 @@ export default function ListShareModal({ list, agent, did, userHandle, showNumbe
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm"
-                      style={{ fontSize: 12, padding: '2px 0 2px 8px', border: 'none', color: 'var(--accent)' }}
+                      style={{ fontSize: '0.75rem', padding: '2px 0 2px 8px', border: 'none', color: 'var(--accent)' }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.textDecoration = 'underline' }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = ''; e.currentTarget.style.textDecoration = '' }}
                       onClick={() => {
@@ -351,7 +351,7 @@ export default function ListShareModal({ list, agent, did, userHandle, showNumbe
             {previewUrl ? (
               <img src={previewUrl} alt="Share preview" />
             ) : (
-              <div style={{ width: '100%', aspectRatio: `${W} / ${H}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+              <div style={{ width: '100%', aspectRatio: `${W} / ${H}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
                 {error ? 'Error' : 'Generating…'}
               </div>
             )}

@@ -256,7 +256,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
               )}
 
               {showNoResults && (
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '8px 4px' }}>No results found.</div>
+                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', padding: '8px 4px' }}>No results found.</div>
               )}
             </div>
           </div>

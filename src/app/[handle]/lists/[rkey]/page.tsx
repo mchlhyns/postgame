@@ -53,8 +53,8 @@ export default function PublicListPage() {
                   </svg>
                 </a>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: 1, gap: 16, flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>{list.value.name}</div>
-                  <div style={{ fontSize: 14, color: 'var(--text-muted)', flexShrink: 0 }}>
+                  <div style={{ fontSize: '1.375rem', fontWeight: 700 }}>{list.value.name}</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', flexShrink: 0 }}>
                     <a href={profileHref} style={{ color: 'inherit', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>@{resolvedHandle ?? cleanHandle}</a> · {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
                   </div>
                 </div>

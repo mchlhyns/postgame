@@ -102,7 +102,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div>
             <div style={{ fontWeight: 600 }}>{value.game.title}</div>
             {value.game.releaseYear && (
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{value.game.releaseYear}</div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{value.game.releaseYear}</div>
             )}
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 5 }}><RotateCcw size={13} style={{ color: 'var(--accent)' }} /></span>}
           </div>
             {platform && (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 0 }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 0 }}>
                 {platform}
               </div>
             )}
@@ -313,7 +313,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         )}
 
         {value.notes && (
-          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{value.notes}</p>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{value.notes}</p>
         )}
       </div>
 

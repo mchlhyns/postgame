@@ -215,7 +215,7 @@ export default function HomePage() {
               <section id="recent" className="browse-section">
                 <h2 className="browse-section-title"><CalendarDays size={16} color="#FFD100" />New releases</h2>
                 {recentlyReleased.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Nothing to show right now.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
                 ) : (
                   <div className="browse-grid">
                     {recentlyReleased.map((game) => (
@@ -228,7 +228,7 @@ export default function HomePage() {
               <section id="rated" className="browse-section">
                 <h2 className="browse-section-title"><Star size={16} color="#29ADFF" />Top rated</h2>
                 {highlyRated.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Nothing to show right now.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
                 ) : (
                   <div className="browse-grid">
                     {highlyRated.map((game) => (
@@ -241,7 +241,7 @@ export default function HomePage() {
               <section id="upcoming" className="browse-section">
                 <h2 className="browse-section-title"><Sparkles size={16} color="#FF3668" />Coming soon</h2>
                 {upcoming.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Nothing to show right now.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
                 ) : (
                   <div className="browse-grid">
                     {upcoming.map((game) => (

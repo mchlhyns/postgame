@@ -62,7 +62,6 @@ body {
   display: flex;
   flex-direction: column;
   font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-  font-size: 16px;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -103,7 +102,6 @@ input, textarea, select {
 
 /* Header */
 .header-site-name {
-  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text);
@@ -127,7 +125,7 @@ header .container {
 }
 
 .wordmark {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: -0.3px;
@@ -140,7 +138,7 @@ header .container {
   gap: 6px;
   padding: 8px 16px;
   border-radius: var(--radius);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   text-decoration: none;
   transition: background 0.15s;
@@ -172,7 +170,7 @@ header .container {
 
 .btn-sm {
   padding: 5px 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .btn-basic {
@@ -193,7 +191,7 @@ header .container {
   border: 0;
   border-radius: var(--radius);
   background: var(--text);
-  font-size: 14px;
+  font-size: 0.875rem;
   transition: border-color 0.15s;
   color: var(--bg);
 }
@@ -215,7 +213,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 /* Status badges */
 .status {
   display: inline-block;
-  font-size: 12px;
+  font-size: 0.75rem;
   border-radius: 2px;
   padding: 2px 6px;
   margin-top: 6px;
@@ -250,7 +248,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: none;
   border: none;
   color: var(--accent);
-  font-size: 14px;
+  font-size: 0.875rem;
   padding: 0;
   cursor: pointer;
   font-family: inherit;
@@ -290,7 +288,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 1.375rem;
 }
 
 .game-card-body {
@@ -305,7 +303,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   font-weight: normal;
-  font-size: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -317,7 +314,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .game-card-meta {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-family: 'Space Grotesk', sans-serif;
   color: var(--text-muted);
 }
@@ -378,7 +375,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 2rem;
 }
 
 .game-card-grid-info {
@@ -391,7 +388,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-grid-title {
   display: flex;
   align-items: center;
-  font-size: 16px;
   line-height: 1.4;
   font-weight: 400;
   white-space: nowrap;
@@ -456,7 +452,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-started-title {
   display: flex;
   align-items: center;
-  font-size: 16px;
   font-weight: 400;
   line-height: 1.4;
   white-space: nowrap;
@@ -476,7 +471,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .game-card-started-meta {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
@@ -492,7 +487,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   padding: 10px 12px;
   background: transparent;
   color: var(--text-muted);
-  font-size: 16px;
   line-height: 1;
   border: none;
   transition: background 0.15s, color 0.15s;
@@ -536,7 +530,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   padding: 10px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   line-height: 1.5;
   white-space: normal;
@@ -575,13 +569,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .login-box h2 {
-  font-size: 20px;
+  font-size: 1.25rem;
   margin-bottom: 4px;
 }
 
 .login-box p {
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 0.875rem;
   margin-bottom: 20px;
 }
 
@@ -608,7 +602,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .empty-state h3 {
-  font-size: 16px;
   color: var(--text);
   margin-bottom: 8px;
 }
@@ -632,7 +625,7 @@ main {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: bold;
   margin-top: 22px;
 }
@@ -653,7 +646,7 @@ main {
 }
 
 .game-list-divider-count {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: normal;
   color: var(--text-muted);
   font-family: var(--font-mono);
@@ -742,7 +735,6 @@ main {
 
 .feed-text {
   flex: 1;
-  font-size: 16px;
   color: var(--text-muted);
   min-width: 0;
 }
@@ -809,7 +801,7 @@ main {
 }
 
 .social-section-title {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -887,7 +879,7 @@ main {
 }
 
 .follow-name {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--text);
   white-space: nowrap;
@@ -896,7 +888,7 @@ main {
 }
 
 .follow-handle {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -970,7 +962,6 @@ main {
 }
 
 .list-card-name {
-  font-size: 16px;
   font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
@@ -978,7 +969,7 @@ main {
 }
 
 .list-card-count {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
 }
@@ -998,7 +989,7 @@ main {
 
 .list-overflow-btn {
   color: var(--text-muted);
-  font-size: 18px;
+  font-size: 1.125rem;
   padding: 9px;
   line-height: 1;
   letter-spacing: 0em;
@@ -1024,7 +1015,7 @@ main {
   width: 100%;
   text-align: left;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   background: none;
   border: none;
@@ -1035,7 +1026,7 @@ main {
 }
 
 .list-overflow-option > span {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--accent);
   flex-shrink: 0;
 }
@@ -1110,7 +1101,7 @@ main {
   background: none;
   border: none;
   outline: none;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   color: var(--text);
   font-family: inherit;
@@ -1203,13 +1194,12 @@ main {
 
 .public-list-rank {
   font-family: 'Space Mono', monospace;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1;
   color: var(--text-muted);
 }
 
 .public-list-title {
-  font-size: 16px;
   font-weight: 400;
   line-height: 1.3;
   overflow: hidden;
@@ -1219,7 +1209,7 @@ main {
 }
 
 .public-list-award {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   background: var(--tertiary);
   border-radius: 4px;
@@ -1239,7 +1229,7 @@ main {
   border: 1px dashed var(--border);
   border-radius: 20px;
   padding: 3px 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
@@ -1279,7 +1269,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   cursor: pointer;
   text-align: center;
@@ -1340,7 +1330,6 @@ main {
 
 .list-modal-section-label {
   display: block;
-  font-size: 16px;
   font-weight: bold;
   color: var(--text);
   margin-bottom: 12px;
@@ -1351,7 +1340,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   text-align: center;
   padding: 24px 0;
@@ -1360,7 +1349,7 @@ main {
 }
 
 .list-modal-results-label {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1369,7 +1358,7 @@ main {
 }
 
 .list-modal-add-item-year {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
   flex-shrink: 0;
@@ -1378,7 +1367,7 @@ main {
 }
 
 .list-modal-add-item-platforms {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-muted);
   font-family: 'Space Grotesk', sans-serif;
   flex-shrink: 1;
@@ -1408,7 +1397,7 @@ main {
 }
 
 .list-modal-item-rank {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
   width: 22px;
@@ -1427,7 +1416,6 @@ main {
 
 .list-modal-item-title {
   flex: 1;
-  font-size: 16px;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -1444,7 +1432,7 @@ main {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
   cursor: pointer;
   padding: 2px 5px;
   border-radius: 2px;
@@ -1473,7 +1461,7 @@ main {
 }
 
 .list-modal-add-title {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-muted);
   margin-bottom: 8px;
@@ -1518,7 +1506,6 @@ main {
 }
 
 .list-modal-add-item-title {
-  font-size: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1563,18 +1550,18 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-muted);
 }
 
 .share-link-copy {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--accent);
   flex-shrink: 0;
 }
 
 .page-header h1 {
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
 }
 
@@ -1638,14 +1625,13 @@ main {
 
 .search-result-info strong {
   display: block;
-  font-size: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .search-result-info span {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   color: var(--text-muted);
@@ -1654,7 +1640,7 @@ main {
 .search-result-platforms,
 .search-result-info .search-result-platforms {
   display: block;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-family: 'Space Grotesk', sans-serif;
   text-transform: none;
@@ -1689,7 +1675,7 @@ main {
 }
 
 .modal h2 {
-  font-size: 18px;
+  font-size: 1.125rem;
   margin-bottom: 20px;
 }
 
@@ -1703,7 +1689,7 @@ main {
 
 .form-field label {
   display: block;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   margin-bottom: 8px;
   color: var(--text-muted);
@@ -1756,7 +1742,7 @@ main {
 
 p.error-msg {
   color: var(--danger);
-  font-size: 14px;
+  font-size: 0.875rem;
   margin: 16px 0 0 0;
 }
 
@@ -1773,7 +1759,7 @@ p.error-msg {
 .filter-tab {
   padding: 5px 12px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 0.875rem;
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
@@ -1806,7 +1792,7 @@ p.error-msg {
 .nav-dropdown-item {
   display: block;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   text-decoration: none;
   transition: color 0.15s, background 0.15s;
@@ -1838,7 +1824,7 @@ p.error-msg {
   gap: 3px;
   padding: 4px 10px;
   border-radius: var(--radius);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   color: var(--text-muted);
   text-decoration: none;
@@ -1887,20 +1873,19 @@ p.error-msg {
   background-size: cover;
   background-position: center;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.25;
   mask-image: linear-gradient(to bottom, var(--bg) 20%, transparent 85%);
   -webkit-mask-image: linear-gradient(to bottom, var(--bg) 20%, transparent 85%);
 }
 
 .now-playing-title {
-  font-size: 36px;
+  font-size: 2.25rem;
   font-weight: 700;
   margin-bottom: 16px;
 }
 
 .now-playing-input {
   width: 100%;
-  font-size: 16px;
   padding: 12px 16px;
 }
 
@@ -2036,7 +2021,7 @@ a.social-link:hover {
 
 .settings-avatar-wrap .browse-card-action {
   border-radius: 50%;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 /* Settings banner preview */
@@ -2072,7 +2057,6 @@ a.social-link:hover {
 }
 
 .faq-section-heading {
-  font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2087,13 +2071,11 @@ a.social-link:hover {
 }
 
 .faq-question {
-  font-size: 16px;
   font-weight: 700;
   margin-bottom: 8px;
 }
 
 .faq-answer {
-  font-size: 16px;
   color: var(--text);
   line-height: 1.4;
 }
@@ -2133,7 +2115,6 @@ p.faq-answer a:hover {
   gap: 6px;
   padding: 6px 14px;
   border-radius: 999px;
-  font-size: 16px;
   color: var(--text-muted);
   background: var(--tertiary);
   transition: color 0.15s, background 0.15s;
@@ -2169,7 +2150,7 @@ p.faq-answer a:hover {
 }
 
 .browse-section-title {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: bold;
   margin-bottom: 18px;
   display: flex;
@@ -2220,7 +2201,7 @@ p.faq-answer a:hover {
   justify-content: center;
   gap: 6px;
   color: var(--bg);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2238,7 +2219,7 @@ p.faq-answer a:hover {
   left: 8px;
   z-index: 1;
   pointer-events: none;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2273,7 +2254,7 @@ p.faq-answer a:hover {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
 }
 
@@ -2295,7 +2276,7 @@ p.faq-answer a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 2rem;
 }
 
 .browse-card-cover-wrap:hover ~ .browse-card-title a {
@@ -2308,13 +2289,12 @@ p.faq-answer a:hover {
 .browse-card-title,
 .game-detail-related-grid .browse-card-title {
   margin-top: 10px;
-  font-size: 16px;
   font-weight: normal;
   line-height: 1.4;
 }
 
 .browse-card-meta {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-family: 'Space Grotesk', sans-serif;
   color: var(--text-muted);
   margin-top: 2px;
@@ -2359,7 +2339,7 @@ p.faq-answer a:hover {
 
 .select-option {
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: pointer;
   white-space: nowrap;
   color: var(--text-muted);
@@ -2382,7 +2362,7 @@ p.faq-answer a:hover {
 
 .select-option-header {
   padding: 8px 14px 4px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2394,7 +2374,7 @@ p.faq-answer a:hover {
 .select-filter .select-trigger,
 .lists-page-header {
   gap: 6px;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: bold;
   color: var(--text);
   padding: 4px 0;
@@ -2415,7 +2395,7 @@ p.faq-answer a:hover {
   height: 31px;
   padding: 0 10px;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   background: var(--surface);
   border: 1px solid var(--tertiary);
@@ -2435,7 +2415,7 @@ p.faq-answer a:hover {
   width: 100%;
   justify-content: space-between;
   padding: 10px 12px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--bg);
   background: var(--text);
   border: 0;
@@ -2458,7 +2438,7 @@ p.faq-answer a:hover {
   border: none;
   color: var(--text);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   padding: 4px 28px 4px 0;
 }
@@ -2475,7 +2455,7 @@ p.faq-answer a:hover {
   border-radius: var(--radius);
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
   height: 31px;
   padding: 0 28px 0 10px;
 }
@@ -2541,12 +2521,12 @@ p.faq-answer a:hover {
 }
 
 .handle-suggestion-name {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
 .handle-suggestion-handle {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   color: var(--text-muted);
@@ -2562,7 +2542,7 @@ p.faq-answer a:hover {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   background: none;
   border: none;
@@ -2603,7 +2583,7 @@ p.faq-answer a:hover {
   width: 100%;
   text-align: left;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   background: none;
   border: none;
@@ -2683,7 +2663,7 @@ p.faq-answer a:hover {
   width: 100%;
   text-align: left;
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   text-decoration: none;
   background: transparent;
@@ -2793,7 +2773,7 @@ p.faq-answer a:hover {
 }
 
 .game-detail-title {
-  font-size: 32px;
+  font-size: 2rem;
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
@@ -2801,7 +2781,6 @@ p.faq-answer a:hover {
 
 .game-detail-banner-sub {
   color: var(--text-muted);
-  font-size: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2825,7 +2804,7 @@ p.faq-answer a:hover {
 }
 
 .game-detail-meta-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2834,7 +2813,7 @@ p.faq-answer a:hover {
 }
 
 .game-detail-meta-value {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
   line-height: 1.5;
 }
@@ -2848,7 +2827,7 @@ p.faq-answer a:hover {
 .game-detail-link {
   color: var(--text);
   text-decoration: underline;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .game-detail-link:hover {
@@ -2873,7 +2852,6 @@ p.faq-answer a:hover {
 .game-detail-summary {
   color: var(--text);
   margin-bottom: 32px;
-  font-size: 16px;
   line-height: 1.6;
 }
 
@@ -2947,7 +2925,7 @@ p.faq-answer a:hover {
   background: none;
   border: none;
   color: #fff;
-  font-size: 24px;
+  font-size: 1.5rem;
   cursor: pointer;
   opacity: 0.7;
   line-height: 1;
@@ -2963,7 +2941,7 @@ p.faq-answer a:hover {
   background: none;
   border: none;
   color: #fff;
-  font-size: 52px;
+  font-size: 3.25rem;
   cursor: pointer;
   opacity: 0.6;
   line-height: 1;
@@ -2981,7 +2959,7 @@ p.faq-answer a:hover {
   left: 50%;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.6);
-  font-size: 13px;
+  font-size: 0.8125rem;
   pointer-events: none;
 }
 
@@ -3003,7 +2981,7 @@ footer .container {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text);
@@ -3018,7 +2996,7 @@ footer .container {
 }
 
 .footer-links a {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   border-radius: var(--radius);
   transition: color 0.15s, background 0.15s;
@@ -3119,7 +3097,7 @@ footer .container {
   }
 
   .list-modal-item-title {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
   .list-edit-body {
@@ -3163,7 +3141,7 @@ footer .container {
   }
 
   .game-detail-title {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
 
   .game-detail-banner-content {

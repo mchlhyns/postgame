@@ -14,9 +14,10 @@ interface Props {
   onClose: () => void
   onAdded: (record: GameRecordView) => void
   initialGame?: IgdbGame & { coverUrl?: string }
+  defaultIsReplay?: boolean
 }
 
-export default function AddGameModal({ agent, did, onClose, onAdded, initialGame }: Props) {
+export default function AddGameModal({ agent, did, onClose, onAdded, initialGame, defaultIsReplay }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<IgdbGame[]>([])
   const [searching, setSearching] = useState(false)
@@ -27,7 +28,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
   const [notes, setNotes] = useState('')
   const [startedAt, setStartedAt] = useState('')
   const [finishedAt, setFinishedAt] = useState('')
-  const [isReplay, setIsReplay] = useState(false)
+  const [isReplay, setIsReplay] = useState(defaultIsReplay ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -131,7 +132,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
               {(results.length > 0 || searching) && (
                 <div className="search-results">
                   {searching && (
-                    <div style={{ padding: '12px 14px', color: 'var(--text-muted)', fontSize: 14 }}>
+                    <div style={{ padding: '12px 14px', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                       Searching…
                     </div>
                   )}
@@ -172,7 +173,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
               <div>
                 <div style={{ fontWeight: 600 }}>{selected.name}</div>
                 {selected.first_release_date && (
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
                     {new Date(selected.first_release_date * 1000).getFullYear()}
                   </div>
                 )}

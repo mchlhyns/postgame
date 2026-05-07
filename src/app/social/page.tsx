@@ -396,8 +396,8 @@ export default function SocialPage() {
                             : <div className="social-search-avatar social-search-avatar-placeholder" />
                           }
                           <div>
-                            {actor.displayName && <div style={{ fontSize: 14 }}>{actor.displayName}</div>}
-                            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>@{actor.handle}</div>
+                            {actor.displayName && <div style={{ fontSize: '0.875rem' }}>{actor.displayName}</div>}
+                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>@{actor.handle}</div>
                           </div>
                         </a>
                         <button
@@ -444,7 +444,7 @@ export default function SocialPage() {
                       </div>
                       <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                         {item.rating && <Stars rating={item.rating / 2} />}
-                        <span style={{ fontSize: 14, width: 36, textAlign: 'right', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{relativeTime(item.createdAt)}</span>
+                        <span style={{ fontSize: '0.875rem', width: 36, textAlign: 'right', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{relativeTime(item.createdAt)}</span>
                       </div>
                     </div>
                   ))}
@@ -457,7 +457,7 @@ export default function SocialPage() {
                 Following{ctaFollows.length > 0 ? ` (${ctaFollows.length})` : ''}
               </div>
               {!feedLoading && ctaFollows.length === 0 ? (
-                <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
                   You're not following anyone
                 </p>
               ) : (

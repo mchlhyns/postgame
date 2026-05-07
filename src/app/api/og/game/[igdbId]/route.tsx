@@ -100,7 +100,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
               {name}
             </div>
             {year && (
-              <div style={{ color: '#8D9197', fontSize: 20, display: 'flex' }}>{year}</div>
+              <div style={{ color: '#8D9197', fontSize: '1.25rem', display: 'flex' }}>{year}</div>
             )}
           </div>
         </div>

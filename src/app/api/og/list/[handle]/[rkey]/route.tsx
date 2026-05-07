@@ -106,7 +106,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
             ))}
           </div>
 
-          <div style={{ color: '#8D9197', fontSize: 18, display: 'flex' }}>{attribution}</div>
+          <div style={{ color: '#8D9197', fontSize: '1.125rem', display: 'flex' }}>{attribution}</div>
         </div>
       </div>
     ),

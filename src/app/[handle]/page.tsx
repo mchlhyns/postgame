@@ -293,8 +293,8 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <h1 style={{ fontSize: 32, lineHeight: 1.2, fontWeight: 700, margin: '0' }}>{displayName ?? `@${resolvedHandle ?? handle}`}</h1>
-                {displayName && <p style={{ color: 'var(--text-muted)', fontSize: 16 }}>@{resolvedHandle ?? handle}</p>}
+                <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700, margin: '0' }}>{displayName ?? `@${resolvedHandle ?? handle}`}</h1>
+                {displayName && <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>@{resolvedHandle ?? handle}</p>}
               </div>
             </div>
           </div>

@@ -260,8 +260,8 @@ export default function ProfilePage() {
 
   const filteredGames = (filterStatus === 'all' ? deduped : deduped.filter((g) => matchesStatus(g.value.status, filterStatus)))
     .sort((a, b) => {
-      const aDate = a.value.finishedAt ?? a.value.createdAt
-      const bDate = b.value.finishedAt ?? b.value.createdAt
+      const aDate = a.value.updatedAt ?? a.value.finishedAt ?? a.value.createdAt
+      const bDate = b.value.updatedAt ?? b.value.finishedAt ?? b.value.createdAt
       return bDate.localeCompare(aDate)
     })
 

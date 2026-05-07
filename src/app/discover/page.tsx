@@ -32,19 +32,21 @@ function BrowseCard({ game, existingRecord, showRating, showReleaseDate }: {
 
   const gameHref = `/games/${game.id}`
   return (
-    <div className="browse-card">
-      <div className="browse-card-cover-wrap">
+    <div className="game-card-grid">
+      <div className="game-card-grid-cover-wrap">
         <a href={gameHref} style={{ display: 'block', lineHeight: 0 }}>
-          <img className="browse-card-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
+          <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
         </a>
       </div>
-      <div className="browse-card-title">
-        <a href={gameHref}>{game.name}</a>
+      <div className="game-card-grid-info">
+        <div className="game-card-grid-title">
+          <a href={gameHref}>{game.name}</a>
+        </div>
+        {showRating && game.rating != null && (
+          <div className="browse-card-meta"><Stars rating={game.rating / 20} /></div>
+        )}
+        {releaseDateMeta && <div className="browse-card-meta">{releaseDateMeta}</div>}
       </div>
-      {showRating && game.rating != null && (
-        <div className="browse-card-meta"><Stars rating={game.rating / 20} /></div>
-      )}
-      {releaseDateMeta && <div className="browse-card-meta">{releaseDateMeta}</div>}
     </div>
   )
 }
@@ -217,7 +219,7 @@ export default function HomePage() {
                 ) : (
                   <div className="browse-grid">
                     {recentlyReleased.map((game) => (
-                      <BrowseCard key={game.id} game={game} existingRecord={myGamesMap.get(game.id)} />
+                      <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
                     ))}
                   </div>
                 )}

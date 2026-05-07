@@ -219,7 +219,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 if (value.startedAt) parts.push(`Started ${formatDate(value.startedAt)}`)
                 return parts.length > 0 ? <div className="game-card-started-meta">{parts.join(' • ')}</div> : null
               })()}
-              {value.rating && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2} monochrome={!readonly} /></div>}
+              {value.rating && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
             </div>
           </div>
         </div>
@@ -246,7 +246,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               const sc = norm === 'played' || (norm === 'backlogged' && inferBackloggedStatus(value.status, value.backloggedStatus))
                 ? statusClass(value.status, value.playedStatus, value.backloggedStatus)
                 : null
-              return sc ? (
+              const hideBadge = sc === 'completed' || sc === 'finished'
+              return sc && !hideBadge ? (
                 <span className={`game-card-badge game-card-badge--${sc}`}>
                   {statusLabel(value.status, value.playedStatus, value.backloggedStatus)}
                 </span>
@@ -264,7 +265,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               </div>
             )}
             {normalizeStatus(value.status) === 'played' && value.rating && (
-              <div><Stars rating={value.rating / 2} monochrome={!readonly} /></div>
+              <div><Stars rating={value.rating / 2}  /></div>
             )}
           </div>
         </div>
@@ -273,7 +274,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
   }
 
   return (
-    <div className={`game-card game-card--${normalizeStatus(value.status)}${inferBackloggedStatus(value.status, value.backloggedStatus) === 'shelved' ? ' game-card--shelved' : ''}`}>
+    <div className={`game-card game-card--${normalizeStatus(value.status)} game-card--${statusClass(value.status, value.playedStatus, value.backloggedStatus)}${inferBackloggedStatus(value.status, value.backloggedStatus) === 'shelved' ? ' game-card--shelved' : ''}`}>
       {value.game.coverUrl ? (
         <img className="game-card-cover" src={value.game.coverUrl} alt={value.game.title} />
       ) : (
@@ -308,7 +309,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         })()}
 
         {value.rating && (
-          <div><Stars rating={value.rating / 2} monochrome={!readonly} /></div>
+          <div><Stars rating={value.rating / 2}  /></div>
         )}
 
         {value.notes && (

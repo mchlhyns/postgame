@@ -6,6 +6,7 @@ import GamePageBanner from '@/components/GamePageBanner'
 import AddGameButton from '@/components/AddGameButton'
 import ScreenshotGallery from '@/components/ScreenshotGallery'
 import RelatedGamesSection from '@/components/RelatedGamesSection'
+import GameSummary from '@/components/GameSummary'
 
 export default async function GamePage({ params }: { params: Promise<{ igdbId: string }> }) {
   const { igdbId } = await params
@@ -123,9 +124,7 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
             </div>
 
             <div className="game-detail-content">
-              {game.summary && (
-                <p className="game-detail-summary">{game.summary}</p>
-              )}
+              {game.summary && <GameSummary summary={game.summary} />}
               {allScreenshots.length > 0 && (
                 <ScreenshotGallery screenshots={allScreenshots} />
               )}

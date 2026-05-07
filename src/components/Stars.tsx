@@ -6,10 +6,10 @@ const starPath = "M11.1001 2.44358C11.4645 1.69178 12.5355 1.69178 12.8999 2.443
 
 const STAR_YELLOW = '#FFD100'
 
-function StarFull({ size, monochrome }: { size: number; monochrome?: boolean }) {
+function StarFull({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d={starPath} fill={monochrome ? 'var(--text-muted)' : STAR_YELLOW} />
+      <path d={starPath} fill={STAR_YELLOW} />
     </svg>
   )
 }
@@ -17,30 +17,30 @@ function StarFull({ size, monochrome }: { size: number; monochrome?: boolean }) 
 function StarEmpty({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d={starPath} fill="currentColor" fillOpacity={0.15} />
+      <path d={starPath} fill="currentColor" fillOpacity={0.5} />
     </svg>
   )
 }
 
-function StarHalf({ size, monochrome }: { size: number; monochrome?: boolean }) {
-  const filledColor = monochrome ? 'var(--text-muted)' : STAR_YELLOW
+function StarHalf({ size }: { size: number }) {
+  const filledColor = STAR_YELLOW
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d="M12.001 19.5801C11.8388 19.58 11.6767 19.6195 11.5293 19.6982L6.40332 22.4395C5.66663 22.8335 4.80015 22.2042 4.94727 21.3818L5.9707 15.6602C6.02943 15.3313 5.91955 14.9952 5.67871 14.7637L1.48828 10.7354C0.88599 10.1565 1.21644 9.13775 2.04395 9.02344L7.80273 8.22852C8.13362 8.18281 8.41965 7.97435 8.56543 7.67383L11.1006 2.44336C11.2829 2.06741 11.6421 1.87975 12.001 1.87988V19.5801Z" fill={filledColor} />
-      <path d="M11.9993 19.5801C12.1615 19.58 12.3236 19.6195 12.471 19.6982L17.597 22.4395C18.3337 22.8335 19.2001 22.2042 19.053 21.3818L18.0296 15.6602C17.9709 15.3313 18.0807 14.9952 18.3216 14.7637L22.512 10.7354C23.1143 10.1565 22.7838 9.13775 21.9563 9.02344L16.1975 8.22852C15.8667 8.18281 15.5806 7.97435 15.4349 7.67383L12.8997 2.44336C12.7174 2.06741 12.3582 1.87975 11.9993 1.87988V19.5801Z" fill="currentColor" fillOpacity={0.15} />
+      <path d="M11.9993 19.5801C12.1615 19.58 12.3236 19.6195 12.471 19.6982L17.597 22.4395C18.3337 22.8335 19.2001 22.2042 19.053 21.3818L18.0296 15.6602C17.9709 15.3313 18.0807 14.9952 18.3216 14.7637L22.512 10.7354C23.1143 10.1565 22.7838 9.13775 21.9563 9.02344L16.1975 8.22852C15.8667 8.18281 15.5806 7.97435 15.4349 7.67383L12.8997 2.44336C12.7174 2.06741 12.3582 1.87975 11.9993 1.87988V19.5801Z" fill="currentColor" fillOpacity={0.5} />
     </svg>
   )
 }
 
-export function Stars({ rating, monochrome }: { rating: number; monochrome?: boolean }) {
+export function Stars({ rating }: { rating: number }) {
   const full = Math.floor(rating)
   const half = rating % 1 >= 0.5
   const empty = 5 - full - (half ? 1 : 0)
   const size = 14
   return (
     <span style={{ display: 'inline-flex', gap: 1, alignItems: 'center' }}>
-      {Array.from({ length: full }).map((_, i) => <StarFull key={`f${i}`} size={size} monochrome={monochrome} />)}
-      {half && <StarHalf size={size} monochrome={monochrome} />}
+      {Array.from({ length: full }).map((_, i) => <StarFull key={`f${i}`} size={size} />)}
+      {half && <StarHalf size={size} />}
       {Array.from({ length: empty }).map((_, i) => <StarEmpty key={`e${i}`} size={size} />)}
     </span>
   )

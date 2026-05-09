@@ -38,15 +38,15 @@ function BrowseCard({ game, existingRecord, showRating, showReleaseDate }: {
           <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
         </a>
       </div>
-      <div className="game-card-grid-info">
+      <a className="game-card-grid-info" href={gameHref}>
         <div className="game-card-grid-title">
-          <a href={gameHref}>{game.name}</a>
+          {game.name}
         </div>
         {showRating && game.rating != null && (
           <div className="browse-card-meta"><Stars rating={game.rating / 20} /></div>
         )}
         {releaseDateMeta && <div className="browse-card-meta">{releaseDateMeta}</div>}
-      </div>
+      </a>
     </div>
   )
 }

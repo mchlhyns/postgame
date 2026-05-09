@@ -429,9 +429,9 @@ export default function SocialPage() {
                             ? <img src={actor.avatar} alt="" className="social-search-avatar" />
                             : <div className="social-search-avatar social-search-avatar-placeholder" />
                           }
-                          <div>
-                            {actor.displayName && <div style={{ fontSize: '0.875rem' }}>{actor.displayName}</div>}
-                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>@{actor.handle}</div>
+                          <div style={{ overflow: 'hidden' }}>
+                            {actor.displayName && <div style={{ fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actor.displayName}</div>}
+                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{actor.handle}</div>
                           </div>
                         </a>
                         <button

@@ -393,7 +393,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700, margin: '0' }}>{displayName ?? `@${resolvedHandle ?? handle}`}</h1>
+                <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
                 {displayName && <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>@{resolvedHandle ?? handle}</p>}
               </div>
               <div className="profile-stats" style={{ marginLeft: 'auto', gap: 32, flexShrink: 0 }}>

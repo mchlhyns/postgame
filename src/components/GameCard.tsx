@@ -208,9 +208,9 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div className="game-card-started-banner" style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined} />
           <div className="game-card-started-bottom">
             <div className="game-card-started-cover-wrap">{coverEl}</div>
-            <div className="game-card-started-info">
+            <a className="game-card-started-info" href={gameHref}>
               <div className="game-card-started-title">
-                <a href={gameHref}>{value.game.title}</a>
+                {value.game.title}
                 {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 6 }}><RotateCcw size={15} style={{ color: 'var(--accent)' }} /></span>}
               </div>
               {(() => {
@@ -220,7 +220,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 return parts.length > 0 ? <div className="game-card-started-meta">{parts.join(' • ')}</div> : null
               })()}
               {value.rating && normalizeStatus(value.status) !== 'playing' && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
-            </div>
+            </a>
           </div>
         </div>
         {!readonly && editModal}
@@ -260,11 +260,11 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               </button>
             )}
           </div>
-          <div className="game-card-grid-info">
+          <a className="game-card-grid-info" href={gameHref}>
             <div className="game-card-grid-title">
-              <a href={gameHref} onClick={(e) => e.stopPropagation()}>{value.game.title}</a>
+              {value.game.title}
               {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 5 }}><RotateCcw size={13} style={{ color: 'var(--accent)' }} /></span>}
-          </div>
+            </div>
             {platform && (
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 0 }}>
                 {platform}
@@ -273,12 +273,14 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             {normalizeStatus(value.status) === 'played' && value.rating && (
               <div><Stars rating={value.rating / 2}  /></div>
             )}
-          </div>
+          </a>
         </div>
         {!readonly && editModal}
       </>
     )
   }
+
+  const gameHref = `/games/${value.game.igdbId}`
 
   return (
     <div className={`game-card game-card--${normalizeStatus(value.status)} game-card--${statusClass(value.status, value.playedStatus, value.backloggedStatus)}${inferBackloggedStatus(value.status, value.backloggedStatus) === 'shelved' ? ' game-card--shelved' : ''}`}>
@@ -288,9 +290,9 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         <img className="game-card-cover" src="/no-cover.png" alt={value.game.title} />
       )}
 
-      <div className="game-card-body">
+      <a className="game-card-body" href={gameHref}>
         <div className="game-card-title">
-          <a href={`/games/${value.game.igdbId}`}>{value.game.title}</a>
+          {value.game.title}
           {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 6 }}><RotateCcw size={12} style={{ color: 'var(--accent)' }} /></span>}
         </div>
 
@@ -322,7 +324,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         {value.notes && (
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{value.notes}</p>
         )}
-      </div>
+      </a>
 
       {!readonly && (
         <div style={{ flexShrink: 0 }}>

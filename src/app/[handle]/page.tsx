@@ -9,6 +9,7 @@ import { GameRecordView, GameRef, ListRecordView } from '@/types'
 import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
 import { Stars } from '@/components/Stars'
+import { applyAccent, loadStoredAccent } from '@/components/AccentColorApplier'
 
 const ALL_STATUSES = PRIMARY_STATUSES
 
@@ -77,7 +78,7 @@ function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
   return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
 }
 
-async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; newScreenshots: Record<number, string> }> {
+async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; accentColor?: string; newScreenshots: Record<number, string> }> {
   const cleanHandle = handle.replace(/^@/, '')
   const { did, pdsUrl } = await resolveHandleToPds(cleanHandle)
 
@@ -150,12 +151,14 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
   let ctaAvatarUrl: string | undefined
   let bannerUrl: string | undefined
   let favouriteGame: GameRef | undefined
+  let accentColor: string | undefined
   if (settingsRes.ok) {
     const settings = await settingsRes.json()
     displayName = settings.value?.displayName
     if (settings.value?.avatarBlob) ctaAvatarUrl = blobUrl(pdsUrl, did, settings.value.avatarBlob) ?? undefined
     if (settings.value?.bannerBlob) bannerUrl = blobUrl(pdsUrl, did, settings.value.bannerBlob) ?? undefined
     if (settings.value?.favouriteGame) favouriteGame = settings.value.favouriteGame
+    if (settings.value?.accentColor) accentColor = settings.value.accentColor
   }
 
   let bskyDisplayName: string | undefined
@@ -166,7 +169,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     avatar = profile.avatar
   }
 
-  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, newScreenshots }
+  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, newScreenshots }
 }
 
 export default function ProfilePage() {
@@ -265,9 +268,12 @@ export default function ProfilePage() {
     try { screenshotCache = JSON.parse(sessionStorage.getItem('cta_screenshots') ?? '{}') } catch {}
 
     setFollows(null)
+    const ownAccent = loadStoredAccent()
+
     fetchPublicGames(handle, screenshotCache)
-      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, newScreenshots }) => {
+      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, newScreenshots }) => {
         if (cancelled) return
+        if (accentColor) applyAccent(accentColor)
         setProfileDid(did)
         setProfilePdsUrl(pdsUrl)
         setResolvedHandle(resolvedHandle)
@@ -284,7 +290,11 @@ export default function ProfilePage() {
       .catch((err) => { if (!cancelled) setError(err.message ?? 'Something went wrong') })
       .finally(() => { if (!cancelled) setLoading(false) })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      if (ownAccent) applyAccent(ownAccent)
+      else document.documentElement.style.removeProperty('--accent')
+    }
   }, [handle])
 
   useEffect(() => {

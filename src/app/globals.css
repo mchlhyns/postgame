@@ -46,10 +46,17 @@
   --accent: #10D275;
   --accent-hover: #99e8b2;
   --accent-light: #0d2b1e;
+  --accent-text: #08121D;
   --danger: #FF3668;
   --radius: 4px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   --font-mono: 'Space Mono', monospace;
+}
+
+header .container,
+main .container {
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 html {
@@ -150,7 +157,7 @@ header .container {
 
 .btn-primary {
   background: var(--accent);
-  color: var(--bg);
+  color: var(--accent-text);
 }
 
 .btn-primary:hover {
@@ -174,14 +181,14 @@ header .container {
 }
 
 .btn-basic {
-  background: transparent;
+  background: var(--tertiary);
   color: var(--text-muted);
   border: 1px solid transparent;
 }
 
 .btn-basic:hover {
   color: var(--text);
-  background: var(--tertiary);
+  background: var(--border);
 }
 
 /* Forms */
@@ -222,17 +229,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   text-transform: uppercase;
 }
 
-.status-backlogged  { background: rgba(139, 92, 246, 0.2);  color: #8B5CF6; }
+.status-backlogged,
 .status-playing,
-.status-started     { background: rgba(59, 130, 246, 0.2);  color: #3B82F6; }
+.status-started,
 .status-played,
 .status-completed,
-.status-finished    { background: rgba(16, 210, 117, 0.2);  color: #10D275; }
-.status-retired     { background: rgba(20, 184, 166, 0.2);  color: #14B8A6; }
-.status-shelved     { background: rgba(255, 209, 0, 0.2);   color: #FFD100; }
-.status-abandoned   { background: rgba(239, 68, 68, 0.2);   color: #EF4444; }
+.status-finished,
+.status-retired,
+.status-shelved,
+.status-abandoned,
 .status-wishlisted,
-.status-wishlist    { background: #FFFFFF;                   color: #000000; border: 1px solid rgba(0,0,0,0.15); }
+.status-wishlist    { background: var(--border); color: #ffffff; }
 
 /* Game card */
 .game-card {
@@ -258,17 +265,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   text-decoration: underline;
 }
 
-.game-card--playing,
-.game-card--started   { border-left: 4px solid #3B82F6; }
-.game-card--wishlisted,
-.game-card--wishlist  { border-left: 4px solid #FFFFFF; }
-.game-card--backlogged { border-left: 4px solid #8B5CF6; }
-.game-card--shelved   { border-left: 4px solid #FFD100; }
-.game-card--played,
-.game-card--completed,
-.game-card--finished  { border-left: 4px solid #10D275; }
-.game-card--retired   { border-left: 4px solid #14B8A6; }
-.game-card--abandoned { border-left: 4px solid #EF4444; }
 
 .game-card-cover {
   width: 54px;
@@ -358,6 +354,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   position: relative;
 }
 
+.game-card-grid-cover-wrap:hover .browse-card-action {
+  opacity: 1;
+}
+
 
 .game-card-grid-cover {
   width: 100%;
@@ -427,13 +427,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .game-card-started-cover-wrap {
-  margin-top: -34px;
+  margin-top: -54px;
   flex-shrink: 0;
 }
 
 .game-card-started-cover {
-  width: 60px;
-  height: 80px;
+  width: 74px;
+  height: 100px;
   object-fit: cover;
   border-radius: 2px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -620,6 +620,10 @@ main {
   margin: 24px 0;
 }
 
+.page-header.social {
+  height: 41px;
+}
+
 /* Game list status dividers */
 .game-list-divider {
   display: flex;
@@ -705,7 +709,7 @@ main {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px 12px 12px;
+  padding: 12px 16px;
 }
 
 .feed-item:nth-child(odd) {
@@ -801,12 +805,11 @@ main {
 }
 
 .social-section-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
+  font-size: 1.125rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .follows-list {
@@ -1167,7 +1170,7 @@ main {
 /* Public list view */
 .public-list-items {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -1211,11 +1214,9 @@ main {
 .public-list-award {
   font-size: 0.75rem;
   color: var(--text-muted);
-  background: var(--tertiary);
-  border-radius: 4px;
-  padding: 2px 6px;
-  display: inline-block;
-  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* List awards */
@@ -1571,7 +1572,7 @@ main {
 }
 
 .social .search-wrapper {
-  width: 350px;
+  width: 50%;
 }
 
 .social .search-wrapper input {
@@ -1749,26 +1750,30 @@ p.error-msg {
 /* Filter tabs (profile page) */
 .filter-tabs {
   display: flex;
-  gap: 5px;
+  gap: 24px;
   flex-wrap: nowrap;
   align-items: center;
-  margin: 0 0 24px 0;
+  margin: 0 0 32px 0;
   overflow-x: auto;
 }
 
 .filter-tab {
-  padding: 5px 12px;
-  border-radius: 4px;
+  padding: 8px 0;
   font-size: 0.875rem;
-  background: var(--surface);
+  background: none;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s;
+  border-bottom: 4px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
 }
 
-.filter-tab:hover, .filter-tab.active {
-  background: var(--tertiary);
+.filter-tab:hover {
   color: var(--text);
+}
+
+.filter-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
 }
 
 /* Nav dropdown */
@@ -1945,13 +1950,13 @@ p.error-msg {
 
 .profile-follow-btn:hover {
   background: var(--accent);
-  color: var(--bg);
+  color: var(--accent-text);
   border-color: var(--accent);
 }
 
 .profile-follow-btn--following {
   background: var(--accent);
-  color: var(--bg);
+  color: var(--accent-text);
   border-color: var(--accent);
 }
 
@@ -2200,7 +2205,7 @@ p.faq-answer a:hover {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: var(--bg);
+  color: var(--accent-text);
   font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -2228,10 +2233,10 @@ p.faq-answer a:hover {
 }
 
 .game-card-badge--completed,
-.game-card-badge--finished   { background: #10D275; color: var(--bg); }
-.game-card-badge--retired    { background: #14B8A6; color: #fff; }
-.game-card-badge--abandoned  { background: #EF4444; color: #fff; }
-.game-card-badge--shelved    { background: #FFD100; color: var(--bg); }
+.game-card-badge--finished,
+.game-card-badge--retired,
+.game-card-badge--abandoned,
+.game-card-badge--shelved    { background: var(--border); color: #ffffff; }
 
 .playthrough-dropdown {
   position: absolute;
@@ -2286,8 +2291,7 @@ p.faq-answer a:hover {
   text-decoration-color: var(--accent);
 }
 
-.browse-card-title,
-.game-detail-related-grid .browse-card-title {
+.browse-card-title {
   margin-top: 10px;
   font-weight: normal;
   line-height: 1.4;
@@ -2845,7 +2849,7 @@ p.faq-answer a:hover {
 
 .game-detail-related-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -3008,6 +3012,10 @@ footer .container {
   text-decoration: none;
 }
 
+.profile-stats {
+  display: flex;
+}
+
 /* Responsive */
 @media (max-width: 767px) {
   header {
@@ -3016,29 +3024,13 @@ footer .container {
   
   .header-site-name,
   .list-card-covers,
-  .header-desktop-nav {
+  .header-desktop-nav,
+  .profile-stats {
     display: none;
   }
 
   .mobile-menu {
     display: block;
-  }
-
-  .now-playing-block,
-  .browse-section {
-    padding: 0 16px;
-  }
-
-  header .container,
-  .profile-banner-content,
-  .profile-sidebar,
-  .game-grid,
-  .lists-grid,
-  .page-header,
-  .list-edit-header,
-  .game-list {
-    padding-left: 16px;
-    padding-right: 16px;
   }
 
   .browse-grid {
@@ -3061,15 +3053,14 @@ footer .container {
     margin-top: 0;
   }
 
+  .my-games-main .game-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .profile-sidebar {
     width: 100%;
     flex-direction: column;
     gap: 8px;
-  }
-
-  .game-list .game-list-divider:first-child,
-  .game-grid .game-list-divider:first-child {
-    margin-top: 16px;
   }
 
   .game-list-divider {

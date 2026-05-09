@@ -2,14 +2,65 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { UserCheck, UserMinus, UserPlus } from 'lucide-react'
+import { ChevronLeft, Trophy, UserCheck, UserMinus, UserPlus } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { COLLECTION, SETTINGS_COLLECTION, LIST_COLLECTION, FOLLOW_COLLECTION, restoreSession, resolveHandleToPds } from '@/lib/atproto'
-import { GameRecordView, GameRef, GameStatus, ListRecordView } from '@/types'
+import { GameRecordView, GameRef, ListRecordView } from '@/types'
 import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
+import { Stars } from '@/components/Stars'
 
 const ALL_STATUSES = PRIMARY_STATUSES
+
+async function pdsFromDid(did: string): Promise<string> {
+  try {
+    const url = did.startsWith('did:web:')
+      ? `https://${did.slice('did:web:'.length).split(':')[0]}/.well-known/did.json`
+      : `https://plc.directory/${did}`
+    const res = await fetch(url)
+    if (res.ok) {
+      const doc = await res.json()
+      const svc = doc.service?.find((s: { id: string; serviceEndpoint: string }) => s.id === '#atproto_pds')
+      if (svc?.serviceEndpoint) return svc.serviceEndpoint
+    }
+  } catch {}
+  return 'https://bsky.social'
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d`
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
+function feedActionText(status: string, playedStatus?: string): string {
+  switch (status) {
+    case 'playing':
+    case 'started': return 'started playing'
+    case 'backlogged': return 'backlogged'
+    case 'wishlisted':
+    case 'wishlist': return 'wishlisted'
+    case 'played': {
+      switch (playedStatus) {
+        case 'completed': return 'completed'
+        case 'retired': return 'retired'
+        case 'shelved': return 'shelved'
+        case 'abandoned': return 'abandoned'
+        default: return 'played'
+      }
+    }
+    case 'finished': return 'completed'
+    case 'shelved': return 'shelved'
+    case 'abandoned': return 'abandoned'
+    default: return status
+  }
+}
 
 function extractCid(ref: unknown): string | null {
   if (!ref) return null
@@ -26,7 +77,7 @@ function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
   return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
 }
 
-async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; newScreenshots: Record<number, string> }> {
+async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; newScreenshots: Record<number, string> }> {
   const cleanHandle = handle.replace(/^@/, '')
   const { did, pdsUrl } = await resolveHandleToPds(cleanHandle)
 
@@ -115,7 +166,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     avatar = profile.avatar
   }
 
-  return { did, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, newScreenshots }
+  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, newScreenshots }
 }
 
 export default function ProfilePage() {
@@ -131,11 +182,12 @@ export default function ProfilePage() {
   const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filterStatus, setFilterStatus] = useState<GameStatus | 'all'>('all')
-  const [section, setSection] = useState<'games' | 'lists'>('games')
+  const [section, setSection] = useState<'games' | 'lists' | 'activity' | 'following'>('games')
+  const [activityLimit, setActivityLimit] = useState(20)
+  const [profilePdsUrl, setProfilePdsUrl] = useState<string | null>(null)
+  const [follows, setFollows] = useState<Array<{ did: string; handle: string; displayName?: string; avatar?: string }> | null>(null)
+  const [followsLoading, setFollowsLoading] = useState(false)
   const [selectedList, setSelectedList] = useState<ListRecordView | null>(null)
-  const [sectionDropdownOpen, setSectionDropdownOpen] = useState(false)
-  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false)
   const [authSession, setAuthSession] = useState<{ agent: Agent; did: string } | null>(null)
   const [profileDid, setProfileDid] = useState<string | null>(null)
   const [isFollowing, setIsFollowing] = useState(false)
@@ -143,8 +195,6 @@ export default function ProfilePage() {
   const [followLoading, setFollowLoading] = useState(false)
   const [followBtnHover, setFollowBtnHover] = useState(false)
   const bannerBgRef = useRef<HTMLDivElement>(null)
-  const sectionDropdownRef = useRef<HTMLDivElement>(null)
-  const statusDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     restoreSession()
@@ -191,18 +241,6 @@ export default function ProfilePage() {
     }
   }
 
-  useEffect(() => {
-    function handleMouseDown(e: MouseEvent) {
-      if (sectionDropdownRef.current && !sectionDropdownRef.current.contains(e.target as Node)) {
-        setSectionDropdownOpen(false)
-      }
-      if (statusDropdownRef.current && !statusDropdownRef.current.contains(e.target as Node)) {
-        setStatusDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
-  }, [])
 
   useEffect(() => {
     function onScroll() {
@@ -226,10 +264,12 @@ export default function ProfilePage() {
     let screenshotCache: Record<number, string> = {}
     try { screenshotCache = JSON.parse(sessionStorage.getItem('cta_screenshots') ?? '{}') } catch {}
 
+    setFollows(null)
     fetchPublicGames(handle, screenshotCache)
-      .then(({ did, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, newScreenshots }) => {
+      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, newScreenshots }) => {
         if (cancelled) return
         setProfileDid(did)
+        setProfilePdsUrl(pdsUrl)
         setResolvedHandle(resolvedHandle)
         setDisplayName(displayName ?? bskyDisplayName ?? null)
         setAvatar(ctaAvatarUrl ?? avatar ?? null)
@@ -247,6 +287,59 @@ export default function ProfilePage() {
     return () => { cancelled = true }
   }, [handle])
 
+  useEffect(() => {
+    if (section !== 'following' || follows !== null || !profileDid || !profilePdsUrl) return
+    setFollowsLoading(true)
+    ;(async () => {
+      try {
+        const res = await fetch(`${profilePdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(profileDid)}&collection=${encodeURIComponent(FOLLOW_COLLECTION)}&limit=100`)
+        if (!res.ok) { setFollows([]); return }
+        const data = await res.json()
+        const subjectDids: string[] = (data.records ?? []).map((r: { value: { subject: string } }) => r.value.subject)
+        if (subjectDids.length === 0) { setFollows([]); return }
+
+        const chunks: string[][] = []
+        for (let i = 0; i < subjectDids.length; i += 25) chunks.push(subjectDids.slice(i, i + 25))
+        const bskyMap = new Map<string, { handle: string; displayName?: string; avatar?: string }>()
+        await Promise.allSettled(chunks.map(async (chunk) => {
+          const params = chunk.map(d => `actors=${encodeURIComponent(d)}`).join('&')
+          const r = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfiles?${params}`)
+          if (!r.ok) return
+          for (const p of (await r.json()).profiles ?? []) {
+            bskyMap.set(p.did, { handle: p.handle, displayName: p.displayName, avatar: p.avatar })
+          }
+        }))
+
+        // Fetch CTA settings for each followed user to get custom display name / avatar
+        const ctaMap = new Map<string, { displayName?: string; avatarUrl?: string }>()
+        await Promise.allSettled(subjectDids.map(async (did) => {
+          try {
+            const pds = await pdsFromDid(did)
+            const r = await fetch(`${pds}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(SETTINGS_COLLECTION)}&rkey=self`)
+            if (!r.ok) return
+            const { value } = await r.json()
+            const ctaEntry: { displayName?: string; avatarUrl?: string } = {}
+            if (value?.displayName) ctaEntry.displayName = value.displayName
+            if (value?.avatarBlob) ctaEntry.avatarUrl = blobUrl(pds, did, value.avatarBlob) ?? undefined
+            if (ctaEntry.displayName || ctaEntry.avatarUrl) ctaMap.set(did, ctaEntry)
+          } catch {}
+        }))
+
+        const profiles = subjectDids.flatMap((did) => {
+          const bsky = bskyMap.get(did)
+          if (!bsky) return []
+          const cta = ctaMap.get(did)
+          return [{ did, handle: bsky.handle, displayName: cta?.displayName ?? bsky.displayName, avatar: cta?.avatarUrl ?? bsky.avatar }]
+        })
+        setFollows(profiles.sort((a, b) => (a.displayName ?? a.handle).localeCompare(b.displayName ?? b.handle)))
+      } catch {
+        setFollows([])
+      } finally {
+        setFollowsLoading(false)
+      }
+    })()
+  }, [section, follows, profileDid, profilePdsUrl])
+
   // Deduplicate by igdbId, keeping the most recent record per game
   const deduped = Object.values(
     games.reduce<Record<number, GameRecordView>>((acc, record) => {
@@ -258,14 +351,11 @@ export default function ProfilePage() {
     }, {})
   )
 
-  const filteredGames = (filterStatus === 'all' ? deduped : deduped.filter((g) => matchesStatus(g.value.status, filterStatus)))
-    .sort((a, b) => {
-      const aDate = a.value.updatedAt ?? a.value.finishedAt ?? a.value.createdAt
-      const bDate = b.value.updatedAt ?? b.value.finishedAt ?? b.value.createdAt
-      return bDate.localeCompare(aDate)
-    })
-
-  const countFor = (s: string) => deduped.filter((g) => matchesStatus(g.value.status, s)).length
+  const sortedGames = [...deduped].sort((a, b) => {
+    const aDate = a.value.updatedAt ?? a.value.finishedAt ?? a.value.createdAt
+    const bDate = b.value.updatedAt ?? b.value.finishedAt ?? b.value.createdAt
+    return bDate.localeCompare(aDate)
+  })
 
   return (
     <>
@@ -273,7 +363,7 @@ export default function ProfilePage() {
         {!loading && !error && (
           <div className="profile-banner-block">
             {bannerUrl && <div ref={bannerBgRef} className="profile-banner-bg" style={{ backgroundImage: `url(${bannerUrl})` }} />}
-            <div className="container profile-banner-content">
+            <div className="container profile-banner-content" style={{ alignItems: 'flex-end' }}>
               <div style={{ position: 'relative', height: 80, flexShrink: 0 }}>
                 {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}
                 {authSession && profileDid && authSession.did !== profileDid && (
@@ -296,10 +386,32 @@ export default function ProfilePage() {
                 <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700, margin: '0' }}>{displayName ?? `@${resolvedHandle ?? handle}`}</h1>
                 {displayName && <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>@{resolvedHandle ?? handle}</p>}
               </div>
+              <div className="profile-stats" style={{ marginLeft: 'auto', gap: 32, flexShrink: 0 }}>
+                {([
+                  { label: 'Backlogged', status: 'backlogged' },
+                  { label: 'Wishlisted', status: 'wishlisted' },
+                  { label: 'Played', status: 'played' },
+                ] as const).map(({ label, status }) => (
+                  <button
+                    key={status}
+                    style={{ textAlign: 'right', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
+                    onClick={() => {
+                      setSection('games')
+                      setSelectedList(null)
+                      setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+                    }}
+                  >
+                    <div style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700 }}>
+                      {deduped.filter(g => matchesStatus(g.value.status, status)).length}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{label}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
-        <div className="container" style={{ position: 'relative', zIndex: 1, paddingTop: 100 }}>
+        <div className="container" style={{ position: 'relative', zIndex: 1, paddingTop: 90 }}>
           {loading ? (
             <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
           ) : error ? (
@@ -309,147 +421,64 @@ export default function ProfilePage() {
             </div>
           ) : (
             <>
-              <div className="profile-content-layout">
-                {/* Sidebar */}
-                <div className="profile-sidebar">
-                  {/* Section dropdown */}
-                  <div ref={sectionDropdownRef} style={{ position: 'relative' }} className="profile-sidebar-item">
-                    <button
-                      className="filter-tab active"
-                      style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
-                      onClick={() => setSectionDropdownOpen((v) => !v)}
-                    >
-                      {section === 'games' ? 'Games' : 'Lists'}
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transform: sectionDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </button>
-                    {sectionDropdownOpen && (
-                      <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 20, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 2, overflow: 'hidden' }}>
-                        {(['games', 'lists'] as const).map((s) => (
-                          <button
-                            key={s}
-                            className={`filter-tab${section === s ? ' active' : ''}`}
-                            style={{ width: '100%', borderRadius: 0, border: 'none', textAlign: 'left' }}
-                            onClick={() => { setSection(s); setSelectedList(null); setSectionDropdownOpen(false) }}
-                          >
-                            {s === 'games' ? 'Games' : 'Lists'}
-                          </button>
+              {/* Games / Lists / Activity tabs */}
+              <div className="filter-tabs">
+                {(['games', 'lists', 'activity', 'following'] as const).map((s) => (
+                  <button
+                    key={s}
+                    className={`filter-tab${section === s ? ' active' : ''}`}
+                    onClick={() => { setSection(s); setSelectedList(null); setActivityLimit(20) }}
+                  >
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              {section === 'lists' ? (
+                selectedList ? (
+                  <>
+                    <div className="game-list-divider profile-lists">
+                      <button
+                        onClick={() => setSelectedList(null)}
+                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexShrink: 0 }}
+                      >
+                        <ChevronLeft size={22} style={{ color: 'var(--accent)' }} />
+                      </button>
+                      {selectedList.value.name}
+                      <span className="game-list-divider-count">{selectedList.value.items.length}</span>
+                    </div>
+                    {selectedList.value.items.length === 0 ? (
+                      <div className="empty-state">
+                        <h3>No games yet</h3>
+                        <p>This list is empty.</p>
+                      </div>
+                    ) : (
+                      <div className="public-list-items">
+                        {selectedList.value.items.map((item, i) => (
+                          <div key={item.igdbId} className="game-card-grid">
+                            <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                              {item.coverUrl
+                                ? <img src={item.coverUrl} alt={item.title} className="game-card-grid-cover" />
+                                : <div className="game-card-grid-cover" />
+                              }
+                            </a>
+                            <div className="game-card-grid-info">
+                              {selectedList.value.numbered !== false && <span className="public-list-rank">#{i + 1}</span>}
+                              <div className="game-card-grid-title">
+                                <a href={`/games/${item.igdbId}`}>{item.title}</a>
+                              </div>
+                              {item.award && (
+                                <div className="public-list-award">
+                                  <Trophy size={12} />
+                                  {item.award}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}
-                  </div>
-
-                  {/* Status pills — desktop only */}
-                  {section === 'games' && (
-                    <div className="profile-status-pills">
-                      <button
-                        className={`filter-tab${filterStatus === 'all' ? ' active' : ''}`}
-                        style={{ textAlign: 'left' }}
-                        onClick={() => setFilterStatus('all')}
-                      >
-                        All ({deduped.length})
-                      </button>
-                      {ALL_STATUSES.filter((s) => countFor(s) > 0).map((s) => (
-                        <button
-                          key={s}
-                          className={`filter-tab${filterStatus === s ? ' active' : ''}`}
-                          style={{ textAlign: 'left' }}
-                          onClick={() => setFilterStatus(s)}
-                        >
-                          {statusLabel(s)} ({countFor(s)})
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Status dropdown — mobile only */}
-                  {section === 'games' && (
-                    <div ref={statusDropdownRef} style={{ position: 'relative' }} className="profile-status-dropdown profile-sidebar-item">
-                      <button
-                        className="filter-tab active"
-                        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
-                        onClick={() => setStatusDropdownOpen((v) => !v)}
-                      >
-                        {filterStatus === 'all' ? `All (${deduped.length})` : `${statusLabel(filterStatus as GameStatus)} (${countFor(filterStatus as GameStatus)})`}
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transform: statusDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                      </button>
-                      {statusDropdownOpen && (
-                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 20, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 2, overflow: 'hidden' }}>
-                          <button
-                            className={`filter-tab${filterStatus === 'all' ? ' active' : ''}`}
-                            style={{ width: '100%', borderRadius: 0, border: 'none', textAlign: 'left' }}
-                            onClick={() => { setFilterStatus('all'); setStatusDropdownOpen(false) }}
-                          >
-                            All ({deduped.length})
-                          </button>
-                          {ALL_STATUSES.filter((s) => countFor(s) > 0).map((s) => (
-                            <button
-                              key={s}
-                              className={`filter-tab${filterStatus === s ? ' active' : ''}`}
-                              style={{ width: '100%', borderRadius: 0, border: 'none', textAlign: 'left' }}
-                              onClick={() => { setFilterStatus(s); setStatusDropdownOpen(false) }}
-                            >
-                              {statusLabel(s)} ({countFor(s)})
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Back button when viewing a list */}
-                  {section === 'lists' && selectedList && (
-                    <button
-                      className="filter-tab active"
-                      onClick={() => setSelectedList(null)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left' }}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                        <polyline points="15 18 9 12 15 6" />
-                      </svg>
-                      All lists
-                    </button>
-                  )}
-                </div>
-
-                {/* Right content */}
-                <div className="profile-content">
-              {section === 'lists' ? (
-                selectedList ? (
-                  /* Inline list view */
-                  selectedList.value.items.length === 0 ? (
-                    <div className="empty-state">
-                      <h3>No games yet</h3>
-                      <p>This list is empty.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="game-list-divider profile-lists">
-                        {selectedList.value.name}
-                        <span className="game-list-divider-count">{selectedList.value.items.length}</span>
-                      </div>
-                      <div className="public-list-items">
-                      {selectedList.value.items.map((item, i) => (
-                        <div key={item.igdbId} className="public-list-item">
-                          <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0, flexShrink: 0 }}>
-                            {item.coverUrl
-                              ? <img src={item.coverUrl} alt={item.title} className="public-list-cover" />
-                              : <div className="public-list-cover" />
-                            }
-                          </a>
-                          <div className="public-list-meta">
-                            {selectedList.value.numbered !== false && <span className="public-list-rank">#{i + 1}</span>}
-                            <a href={`/games/${item.igdbId}`} className="public-list-title">{item.title}</a>
-                            {item.award && <div className="public-list-award">{item.award}</div>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    </>
-                  )
+                  </>
                 ) : lists.length === 0 ? (
                   <div className="empty-state">
                     <h3>No lists yet</h3>
@@ -458,12 +487,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="lists-grid">
                     {[...lists].sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt)).map((list) => (
-                      <div
-                        key={list.uri}
-                        className="list-card"
-                        onClick={() => setSelectedList(list)}
-                        style={{ cursor: 'pointer' }}
-                      >
+                      <div key={list.uri} className="list-card" onClick={() => setSelectedList(list)} style={{ cursor: 'pointer' }}>
                         <div className="list-card-covers">
                           {list.value.items.slice(0, 3).map((item) => (
                             item.coverUrl
@@ -476,50 +500,125 @@ export default function ProfilePage() {
                         </div>
                         <div className="list-card-info">
                           <div className="list-card-name">{list.value.name}</div>
-                          <div className="list-card-count">
-                            {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
-                          </div>
+                          <div className="list-card-count">{list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 )
-              ) : (
-                filteredGames.length === 0 ? (
+              ) : section === 'following' ? (
+                followsLoading ? (
+                  <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+                ) : !follows || follows.length === 0 ? (
                   <div className="empty-state">
-                    <h3>{filterStatus === 'all' ? 'No games yet' : `No ${filterStatus} games`}</h3>
-                    <p>{filterStatus === 'all' ? 'Nothing here yet.' : 'Try a different filter.'}</p>
+                    <h3>Not following anyone</h3>
+                    <p>This user isn't following anyone yet.</p>
                   </div>
                 ) : (
                   <div className="game-grid">
-                    {filterStatus === 'all' ? ALL_STATUSES.flatMap((status) => {
-                      const group = filteredGames.filter((g) => matchesStatus(g.value.status, status))
-                      if (group.length === 0) return []
-                      return [
-                        <div key={`divider-${status}`} className="game-list-divider">
-                          {statusLabel(status)}
-                          <span className="game-list-divider-count">{group.length}</span>
-                        </div>,
-                        ...group.map((record) => (
-                          <GameCard key={record.uri} record={record} view={status === 'playing' ? 'started' : 'grid'} readonly />
-                        )),
-                      ]
-                    }) : (
-                      <>
-                        <div className="game-list-divider">
-                          {statusLabel(filterStatus as GameStatus)}
-                          <span className="game-list-divider-count">{filteredGames.length}</span>
+                    {follows.map((f) => (
+                      <div key={f.did} className="game-card-grid" style={{ padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
+                        <a href={`/${f.handle}`} style={{ display: 'block', flexShrink: 0 }}>
+                          {f.avatar
+                            ? <img src={f.avatar} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
+                            : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)' }} />
+                          }
+                        </a>
+                        <div style={{ minWidth: 0, width: '100%' }}>
+                          <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <a href={`/${f.handle}`}>{f.displayName ?? `@${f.handle}`}</a>
+                          </div>
+                          {f.displayName && (
+                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              @{f.handle}
+                            </div>
+                          )}
                         </div>
-                        {filteredGames.map((record) => (
-                          <GameCard key={record.uri} record={record} view={filterStatus === 'playing' ? 'started' : 'grid'} readonly />
-                        ))}
-                      </>
-                    )}
+                      </div>
+                    ))}
                   </div>
                 )
+              ) : section === 'activity' ? (
+                (() => {
+                  type ActivityItem =
+                    | { kind: 'game'; date: string; record: GameRecordView }
+                    | { kind: 'list'; date: string; record: ListRecordView }
+                  const activityItems: ActivityItem[] = [
+                    ...games.map((r) => ({ kind: 'game' as const, date: r.value.updatedAt ?? r.value.createdAt, record: r })),
+                    ...lists.map((r) => ({ kind: 'list' as const, date: r.value.createdAt, record: r })),
+                  ].sort((a, b) => b.date.localeCompare(a.date))
+
+                  return activityItems.length === 0 ? (
+                    <div className="empty-state">
+                      <h3>No activity yet</h3>
+                      <p>Nothing here yet.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="social-feed">
+                        {activityItems.slice(0, activityLimit).map((item, i) => (
+                          <div key={i} className="feed-item" style={{ minHeight: 56 }}>
+                            {item.kind === 'list' ? (
+                              <>
+                                <div className="feed-text">
+                                  <span style={{ color: 'var(--text-muted)' }}>Created list</span>
+                                  {' '}
+                                  <a href={`/${resolvedHandle ?? handle}/lists/${item.record.uri.split('/').pop()}`} className="feed-game-title">{item.record.value.name}</a>
+                                </div>
+                                <span style={{ fontSize: '0.875rem', marginLeft: 'auto', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                  {relativeTime(item.date)}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="feed-text">
+                                  <span style={{ color: 'var(--text-muted)' }}>
+                                    {(() => { const t = feedActionText(item.record.value.status, item.record.value.playedStatus); return t.charAt(0).toUpperCase() + t.slice(1) })()}
+                                  </span>
+                                  {' '}
+                                  <a href={`/games/${item.record.value.game.igdbId}`} className="feed-game-title">{item.record.value.game.title}</a>
+                                </div>
+                                <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  {item.record.value.rating && <Stars rating={item.record.value.rating / 2} />}
+                                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                    {relativeTime(item.date)}
+                                  </span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {activityItems.length > activityLimit && (
+                        <button className="btn btn-ghost activity-show-more" style={{ marginTop: 16, width: '100%', justifyContent: 'center' }} onClick={() => setActivityLimit(n => n + 20)}>
+                          Show more
+                        </button>
+                      )}
+                    </>
+                  )
+                })()
+              ) : sortedGames.length === 0 ? (
+                <div className="empty-state">
+                  <h3>No games yet</h3>
+                  <p>Nothing here yet.</p>
+                </div>
+              ) : (
+                <div className="game-grid">
+                  {ALL_STATUSES.flatMap((status) => {
+                    const group = sortedGames.filter((g) => matchesStatus(g.value.status, status))
+                    if (group.length === 0) return []
+                    return [
+                      <div key={`divider-${status}`} id={status} className="game-list-divider" style={{ scrollMarginTop: 80 }}>
+                        {statusLabel(status)}
+                        <span className="game-list-divider-count">{group.length}</span>
+                      </div>,
+                      ...group.map((record) => (
+                        <GameCard key={record.uri} record={record} view={status === 'playing' ? 'started' : 'grid'} readonly />
+                      )),
+                    ]
+                  })}
+                </div>
               )}
-                </div>{/* end profile-content */}
-              </div>{/* end profile-content-layout */}
             </>
           )}
         </div>

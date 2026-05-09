@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { Pencil, RotateCcw } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { GameRecordView, GameStatus, GameRecord } from '@/types'
 import { COLLECTION } from '@/lib/atproto'
@@ -219,7 +219,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 if (value.startedAt) parts.push(`Started ${formatDate(value.startedAt)}`)
                 return parts.length > 0 ? <div className="game-card-started-meta">{parts.join(' • ')}</div> : null
               })()}
-              {value.rating && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
+              {value.rating && normalizeStatus(value.status) !== 'playing' && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
             </div>
           </div>
         </div>
@@ -253,6 +253,12 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 </span>
               ) : null
             })()}
+            {!readonly && (
+              <button className="browse-card-action" onClick={(e) => { e.stopPropagation(); startEdit() }}>
+                <Pencil size={16} strokeWidth={2} />
+                Edit
+              </button>
+            )}
           </div>
           <div className="game-card-grid-info">
             <div className="game-card-grid-title">
@@ -269,6 +275,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             )}
           </div>
         </div>
+        {!readonly && editModal}
       </>
     )
   }

@@ -13,6 +13,7 @@ export default function Home() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestionIndex, setSuggestionIndex] = useState(-1)
   const typeaheadRef = useRef<HTMLDivElement>(null)
+  const skipNextSearch = useRef(false)
 
   useEffect(() => {
     restoreSession()
@@ -21,6 +22,10 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    if (skipNextSearch.current) {
+      skipNextSearch.current = false
+      return
+    }
     const q = handle.trim().replace(/^@/, '')
     if (q.length < 2) {
       setSuggestions([])
@@ -54,6 +59,7 @@ export default function Home() {
   }, [])
 
   function selectSuggestion(selectedHandle: string) {
+    skipNextSearch.current = true
     setHandle(selectedHandle)
     setShowSuggestions(false)
     setSuggestions([])

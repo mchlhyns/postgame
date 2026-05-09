@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Upload } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { restoreSession, signOut, COLLECTION, SETTINGS_COLLECTION, LIST_COLLECTION, FOLLOW_COLLECTION } from '@/lib/atproto'
+import { applyAccent, saveAccent } from '@/components/AccentColorApplier'
 import { GameRef, IgdbGame } from '@/types'
 import { formatIgdbGame } from '@/lib/igdb'
 
@@ -15,7 +16,13 @@ interface Settings {
   avatarBlob?: unknown
   bannerBlob?: unknown
   favouriteGame?: GameRef
+  accentColor?: string
 }
+
+const ACCENT_PRESETS = [
+  '#10D275', '#3B82F6', '#8B5CF6', '#EC4899',
+  '#EF4444', '#F97316', '#EAB308', '#14B8A6',
+]
 
 async function resolvePds(did: string): Promise<string> {
   try {
@@ -72,6 +79,7 @@ export default function SettingsPage() {
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [accentColor, setAccentColor] = useState('#10D275')
   const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -114,6 +122,11 @@ export default function SettingsPage() {
         if (value.avatarBlob) setAvatarBlob(value.avatarBlob)
         if (value.bannerBlob) setBannerBlob(value.bannerBlob)
         if (value.favouriteGame) setFavouriteGame(value.favouriteGame)
+        if (value.accentColor) {
+          setAccentColor(value.accentColor)
+          applyAccent(value.accentColor)
+          saveAccent(value.accentColor)
+        }
       } catch { /* no settings yet */ }
 
       setLoading(false)
@@ -174,6 +187,7 @@ export default function SettingsPage() {
       const record: Settings & { $type: string } = {
         $type: SETTINGS_COLLECTION,
         profileView,
+        accentColor,
         ...(displayName.trim() ? { displayName: displayName.trim() } : {}),
         ...(newAvatarBlob ? { avatarBlob: newAvatarBlob } : {}),
         ...(newBannerBlob ? { bannerBlob: newBannerBlob } : {}),
@@ -189,6 +203,7 @@ export default function SettingsPage() {
       if (newBannerBlob) setBannerBlob(newBannerBlob)
       setAvatarFile(null)
       setBannerFile(null)
+      saveAccent(accentColor)
       setSaved(true)
     } catch (err) {
       console.error('Failed to save settings:', err)
@@ -303,6 +318,41 @@ export default function SettingsPage() {
                 />
               </div>
 
+
+              {/* Accent colour */}
+              <div className="form-field" style={{ marginTop: 8 }}>
+                <label>Accent colour</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  {ACCENT_PRESETS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => { setAccentColor(color); applyAccent(color) }}
+                      style={{
+                        width: 28, height: 28, borderRadius: '50%', background: color, border: 'none',
+                        cursor: 'pointer', flexShrink: 0,
+                        outline: accentColor.toLowerCase() === color.toLowerCase() ? '2px solid var(--text)' : '2px solid transparent',
+                        outlineOffset: 2,
+                      }}
+                      title={color}
+                    />
+                  ))}
+                  <label style={{ position: 'relative', width: 28, height: 28, flexShrink: 0, cursor: 'pointer', display: 'flex', marginBottom: 0 }} title="Custom colour">
+                    <div style={{
+                      width: 28, height: 28, borderRadius: '50%',
+                      background: accentColor,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1rem', color: 'var(--accent-text)', lineHeight: 1,
+                    }}>+</div>
+                    <input
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => { setAccentColor(e.target.value); applyAccent(e.target.value) }}
+                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    />
+                  </label>
+                </div>
+              </div>
 
 {fileError && <p style={{ fontSize: '0.8125rem', color: 'var(--danger)', marginTop: 8 }}>{fileError}</p>}
 

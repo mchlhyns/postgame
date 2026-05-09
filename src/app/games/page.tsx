@@ -17,7 +17,7 @@ export default function MyGamesPage() {
   const [games, setGames] = useState<GameRecordView[]>([])
   const [gamesLoading, setGamesLoading] = useState(false)
   const [filterStatus, setFilterStatus] = useState<GameStatus | 'all'>('all')
-  const [view, setView] = useState<'list' | 'grid'>('list')
+  const [view, setView] = useState<'list' | 'grid'>('grid')
   const [sortBy, setSortBy] = useState<'added' | 'release' | 'type'>('added')
   const [showAddModal, setShowAddModal] = useState(false)
 
@@ -117,8 +117,8 @@ export default function MyGamesPage() {
               />
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <div className="view-toggle">
-                  <button className={`view-toggle-btn${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')} title="List view">☰</button>
                   <button className={`view-toggle-btn${view === 'grid' ? ' active' : ''}`} onClick={() => setView('grid')} title="Grid view">⊞</button>
+                  <button className={`view-toggle-btn${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')} title="List view">☰</button>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>+ Add game</button>
               </div>

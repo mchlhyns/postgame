@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Agent } from '@atproto/api'
-import { restoreSession, COLLECTION, FOLLOW_COLLECTION } from '@/lib/atproto'
+import { restoreSession, COLLECTION, FOLLOW_COLLECTION, SETTINGS_COLLECTION } from '@/lib/atproto'
 import { GameRecordView, GameStatus } from '@/types'
 import { Stars } from '@/components/Stars'
 import AddGameModal from '@/components/AddGameModal'
@@ -102,6 +102,21 @@ function loadPdsCache(): Record<string, string> {
 
 function savePdsCache(cache: Record<string, string>) {
   try { sessionStorage.setItem(PDS_CACHE_KEY, JSON.stringify(cache)) } catch {}
+}
+
+function extractCid(ref: unknown): string | null {
+  if (!ref) return null
+  if (typeof (ref as any)['$link'] === 'string') return (ref as any)['$link']
+  if (typeof (ref as any)['/'] === 'string') return (ref as any)['/']
+  const s = (ref as any).toString?.()
+  if (typeof s === 'string' && s !== '[object Object]') return s
+  return null
+}
+
+function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
+  const cid = extractCid((blob as any)?.ref)
+  if (!cid) return null
+  return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
 }
 
 async function getPdsFromDidCached(did: string, cache: Record<string, string>): Promise<string> {
@@ -258,6 +273,21 @@ export default function SocialPage() {
         })
       )
 
+      // Fetch CTA settings for each followed user (custom avatar / display name)
+      const ctaMap = new Map<string, { displayName?: string; avatarUrl?: string }>()
+      await Promise.allSettled(followedDidsArray.map(async ([subjectDid], i) => {
+        try {
+          const pds = pdsUrls[i]
+          const r = await fetch(`${pds}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(subjectDid)}&collection=${encodeURIComponent(SETTINGS_COLLECTION)}&rkey=self`)
+          if (!r.ok) return
+          const { value } = await r.json()
+          const entry: { displayName?: string; avatarUrl?: string } = {}
+          if (value?.displayName) entry.displayName = value.displayName
+          if (value?.avatarBlob) entry.avatarUrl = blobUrl(pds, subjectDid, value.avatarBlob) ?? undefined
+          if (entry.displayName || entry.avatarUrl) ctaMap.set(subjectDid, entry)
+        } catch {}
+      }))
+
       const follows: FollowProfile[] = []
       const items: FeedItem[] = []
 
@@ -267,8 +297,12 @@ export default function SocialPage() {
         const profile = bskyProfiles.get(subjectDid)
         if (!profile) continue
 
-        follows.push({ did: subjectDid, handle: profile.handle, displayName: profile.displayName, avatar: profile.avatar, followUri })
-        for (const item of buildFeedItems(records, profile.handle, profile.displayName, profile.avatar)) {
+        const cta = ctaMap.get(subjectDid)
+        const displayName = cta?.displayName ?? profile.displayName
+        const avatar = cta?.avatarUrl ?? profile.avatar
+
+        follows.push({ did: subjectDid, handle: profile.handle, displayName, avatar, followUri })
+        for (const item of buildFeedItems(records, profile.handle, displayName, avatar)) {
           items.push(item)
         }
       }
@@ -416,78 +450,69 @@ export default function SocialPage() {
             </div>
           </div>
 
-          <div className="social-body">
-            <div className="social-left">
-              {feedLoading ? (
-                <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading feed…</div>
-              ) : feedItems.length === 0 ? (
-                <div className="empty-state">
-                  <h3>No activity yet</h3>
-                  <p style={{ fontSize: '14px'}}>Find and follow people to see what they're playing</p>
-                </div>
-              ) : (
-                <div className="social-feed">
-                  {feedItems.map((item, i) => (
-                    <div key={i} className="feed-item">
-                      <a href={`/${item.userHandle}`} className="feed-avatar-link">
-                        {item.avatar
-                          ? <img src={item.avatar} alt="" className="feed-avatar" />
-                          : <div className="feed-avatar feed-avatar-placeholder" />
-                        }
-                      </a>
-                      <div className="feed-text">
-                        <a href={`/${item.userHandle}`} className="feed-username">
-                          {item.displayName ?? `@${item.userHandle}`}
-                        </a>
-                        {' '}{feedActionText(item.status, item.playedStatus)}{' '}
-                        <a href={`/games/${item.igdbId}`} className="feed-game-title">{item.gameTitle}</a>
+          {/* Following cards */}
+          {ctaFollows.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <h2 className="social-section-title" style={{ marginBottom: 18 }}>Following ({ctaFollows.length})</h2>
+              <div className="game-grid">
+                {ctaFollows.map((follow) => (
+                  <div key={follow.did} className="game-card-grid" style={{ padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
+                    <a href={`/${follow.handle}`} style={{ display: 'block', flexShrink: 0 }}>
+                      {follow.avatar
+                        ? <img src={follow.avatar} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
+                        : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)' }} />
+                      }
+                    </a>
+                    <div style={{ minWidth: 0, width: '100%' }}>
+                      <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <a href={`/${follow.handle}`}>{follow.displayName ?? `@${follow.handle}`}</a>
                       </div>
-                      <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {item.rating && <Stars rating={item.rating / 2} />}
-                        <span style={{ fontSize: '0.875rem', width: 36, textAlign: 'right', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{relativeTime(item.createdAt)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="social-right">
-              <div className="list-modal-section-label">
-                Following{ctaFollows.length > 0 ? ` (${ctaFollows.length})` : ''}
-              </div>
-              {!feedLoading && ctaFollows.length === 0 ? (
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
-                  You're not following anyone
-                </p>
-              ) : (
-                <div className="follows-list">
-                  {ctaFollows.map((follow) => (
-                    <div key={follow.did} className="follow-list-item">
-                      <a href={`/${follow.handle}`} className="follow-list-item-link">
-                        {follow.avatar
-                          ? <img src={follow.avatar} alt="" className="follow-avatar" />
-                          : <div className="follow-avatar follow-avatar-placeholder" />
-                        }
-                        <div className="follow-info">
-                          <div className="follow-name">{follow.displayName ?? `@${follow.handle}`}</div>
-                          {follow.displayName && <div className="follow-handle">@{follow.handle}</div>}
+                      {follow.displayName && (
+                        <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          @{follow.handle}
                         </div>
-                      </a>
-                      <button
-                        className="btn btn-sm btn-ghost"
-                        onClick={() => handleUnfollow(follow)}
-                        disabled={followLoading[follow.did]}
-                        style={{ flexShrink: 0 }}
-                      >
-                        {followLoading[follow.did] ? '…' : 'Unfollow'}
-                      </button>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Feed */}
+          <h2 className="social-section-title" style={{ marginBottom: 18 }}>Activity</h2>
+          {feedLoading ? (
+            <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+          ) : feedItems.length === 0 ? (
+            <div className="empty-state">
+              <h3>No activity yet</h3>
+              <p style={{ fontSize: '14px' }}>Find and follow people to see what they're playing</p>
+            </div>
+          ) : (
+            <div className="social-feed">
+              {feedItems.map((item, i) => (
+                <div key={i} className="feed-item">
+                  <a href={`/${item.userHandle}`} className="feed-avatar-link">
+                    {item.avatar
+                      ? <img src={item.avatar} alt="" className="feed-avatar" />
+                      : <div className="feed-avatar feed-avatar-placeholder" />
+                    }
+                  </a>
+                  <div className="feed-text">
+                    <a href={`/${item.userHandle}`} className="feed-username">
+                      {item.displayName ?? `@${item.userHandle}`}
+                    </a>
+                    {' '}{feedActionText(item.status, item.playedStatus)}{' '}
+                    <a href={`/games/${item.igdbId}`} className="feed-game-title">{item.gameTitle}</a>
+                  </div>
+                  <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {item.rating && <Stars rating={item.rating / 2} />}
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{relativeTime(item.createdAt)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 

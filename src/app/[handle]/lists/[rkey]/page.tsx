@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { Trophy } from 'lucide-react'
 import { LIST_COLLECTION, resolveHandleToPds } from '@/lib/atproto'
 import { ListRecordView } from '@/types'
 
@@ -68,17 +69,24 @@ export default function PublicListPage() {
               ) : (
                 <div className="public-list-items">
                   {list.value.items.map((item, i) => (
-                    <div key={item.igdbId} className="public-list-item">
-                      <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0, flexShrink: 0 }}>
+                    <div key={item.igdbId} className="game-card-grid">
+                      <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
                         {item.coverUrl
-                          ? <img src={item.coverUrl} alt={item.title} className="public-list-cover" />
-                          : <div className="public-list-cover" />
+                          ? <img src={item.coverUrl} alt={item.title} className="game-card-grid-cover" />
+                          : <div className="game-card-grid-cover" />
                         }
                       </a>
-                      <div className="public-list-meta">
+                      <div className="game-card-grid-info">
                         {list.value.numbered !== false && <span className="public-list-rank">#{i + 1}</span>}
-                        <a href={`/games/${item.igdbId}`} className="public-list-title">{item.title}</a>
-                        {item.award && <div className="public-list-award">{item.award}</div>}
+                        <div className="game-card-grid-title">
+                          <a href={`/games/${item.igdbId}`}>{item.title}</a>
+                        </div>
+                        {item.award && (
+                          <div className="public-list-award">
+                            <Trophy size={12} />
+                            {item.award}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

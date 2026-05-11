@@ -151,7 +151,7 @@ export default function SocialPage() {
       const profileMap = new Map<string, Profile>((data.profiles ?? []).map((p: Profile) => [p.did, p]))
 
       const follows: FollowProfile[] = allDids
-        .map(subjectDid => {
+        .map((subjectDid): FollowProfile | null => {
           const profile = profileMap.get(subjectDid)
           const followUri = map.get(subjectDid)!
           if (!profile) return null

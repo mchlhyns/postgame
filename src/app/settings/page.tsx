@@ -12,12 +12,14 @@ type FormattedGame = IgdbGame & { coverUrl?: string }
 
 interface Settings {
   displayName?: string
+  pronouns?: string
   profileView?: 'list' | 'grid'
   avatarBlob?: unknown
   bannerBlob?: unknown
   favouriteGame?: GameRef
   accentColor?: string
 }
+
 
 const ACCENT_PRESETS = [
   '#10D275', '#3B82F6', '#8B5CF6', '#EC4899',
@@ -71,6 +73,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [displayName, setDisplayName] = useState('')
+  const [pronouns, setPronouns] = useState('')
   const [profileView] = useState<'list' | 'grid'>('grid')
   const [bskyAvatar, setBskyAvatar] = useState<string | null>(null)
   const [avatarBlob, setAvatarBlob] = useState<unknown>(null)
@@ -119,6 +122,7 @@ export default function SettingsPage() {
         })
         const value = res.data.value as Settings
         setDisplayName(value.displayName ?? '')
+        setPronouns(value.pronouns ?? '')
         if (value.avatarBlob) setAvatarBlob(value.avatarBlob)
         if (value.bannerBlob) setBannerBlob(value.bannerBlob)
         if (value.favouriteGame) setFavouriteGame(value.favouriteGame)
@@ -189,6 +193,7 @@ export default function SettingsPage() {
         profileView,
         accentColor,
         ...(displayName.trim() ? { displayName: displayName.trim() } : {}),
+        ...(pronouns ? { pronouns } : {}),
         ...(newAvatarBlob ? { avatarBlob: newAvatarBlob } : {}),
         ...(newBannerBlob ? { bannerBlob: newBannerBlob } : {}),
         ...(favouriteGame ? { favouriteGame } : {}),
@@ -297,6 +302,20 @@ export default function SettingsPage() {
                 />
               </div>
               
+              {/* Pronouns */}
+              <div className="form-field">
+                <label>Pronouns</label>
+                <input
+                  className="input"
+                  style={{ width: '100%' }}
+                  type="text"
+                  placeholder="e.g. they/them"
+                  value={pronouns}
+                  onChange={(e) => setPronouns(e.target.value)}
+                  maxLength={40}
+                />
+              </div>
+
               {/* Banner */}
               <div className="form-field">
                 <label>Profile banner</label>

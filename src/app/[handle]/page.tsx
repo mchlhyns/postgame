@@ -78,7 +78,7 @@ function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
   return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
 }
 
-async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; accentColor?: string; newScreenshots: Record<number, string> }> {
+async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; accentColor?: string; pronouns?: string; newScreenshots: Record<number, string> }> {
   const cleanHandle = handle.replace(/^@/, '')
   const { did, pdsUrl } = await resolveHandleToPds(cleanHandle)
 
@@ -152,6 +152,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
   let bannerUrl: string | undefined
   let favouriteGame: GameRef | undefined
   let accentColor: string | undefined
+  let pronouns: string | undefined
   if (settingsRes.ok) {
     const settings = await settingsRes.json()
     displayName = settings.value?.displayName
@@ -159,6 +160,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     if (settings.value?.bannerBlob) bannerUrl = blobUrl(pdsUrl, did, settings.value.bannerBlob) ?? undefined
     if (settings.value?.favouriteGame) favouriteGame = settings.value.favouriteGame
     if (settings.value?.accentColor) accentColor = settings.value.accentColor
+    if (settings.value?.pronouns) pronouns = settings.value.pronouns
   }
 
   let bskyDisplayName: string | undefined
@@ -169,7 +171,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     avatar = profile.avatar
   }
 
-  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, newScreenshots }
+  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, pronouns, newScreenshots }
 }
 
 export default function ProfilePage() {
@@ -183,6 +185,7 @@ export default function ProfilePage() {
   const [games, setGames] = useState<GameRecordView[]>([])
   const [lists, setLists] = useState<ListRecordView[]>([])
   const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
+  const [pronouns, setPronouns] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [section, setSection] = useState<'games' | 'lists' | 'activity' | 'following'>('games')
@@ -271,7 +274,7 @@ export default function ProfilePage() {
     const ownAccent = loadStoredAccent()
 
     fetchPublicGames(handle, screenshotCache)
-      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, newScreenshots }) => {
+      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, pronouns, newScreenshots }) => {
         if (cancelled) return
         if (accentColor) applyAccent(accentColor)
         setProfileDid(did)
@@ -282,6 +285,7 @@ export default function ProfilePage() {
         setBannerUrl(bannerUrl ?? null)
         setLists(fetchedLists)
         setFavouriteGame(favouriteGame ?? null)
+        setPronouns(pronouns ?? null)
         if (Object.keys(newScreenshots).length > 0) {
           try { sessionStorage.setItem('cta_screenshots', JSON.stringify({ ...screenshotCache, ...newScreenshots })) } catch {}
         }
@@ -394,7 +398,13 @@ export default function ProfilePage() {
               </div>
               <div>
                 <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
-                {displayName && <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>@{resolvedHandle ?? handle}</p>}
+                {(displayName || pronouns) && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+                    {displayName && `@${resolvedHandle ?? handle}`}
+                    {displayName && pronouns && ' • '}
+                    {pronouns}
+                  </p>
+                )}
               </div>
               <div className="profile-stats" style={{ marginLeft: 'auto', gap: 32, flexShrink: 0 }}>
                 {([

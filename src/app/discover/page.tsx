@@ -66,8 +66,8 @@ export default function HomePage() {
   const [recentlyReleased, setRecentlyReleased] = useState<FormattedGame[]>([])
   const [trending, setTrending] = useState<AppviewGame[]>([])
   const [topRated, setTopRated] = useState<AppviewGame[]>([])
-  const [loading, setLoading] = useState(true)
-  const [gamesLoading, setGamesLoading] = useState(true)
+  const [igdbLoading, setIgdbLoading] = useState(true)
+  const [appviewLoading, setAppviewLoading] = useState(true)
 
   const [artworkUrls, setArtworkUrls] = useState<string[]>([])
   const [bgImage, setBgImage] = useState<string | null>(null)
@@ -84,7 +84,6 @@ export default function HomePage() {
       .then((s) => {
         if (!s) { window.location.href = '/'; return }
         setSession(s)
-        setLoading(false)
         ;(async () => {
           try {
             const map = new Map<number, GameRecordView>()
@@ -105,21 +104,26 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/igdb/trending').then(r => r.json()),
-      fetch('/api/appview/trending').then(r => r.json()),
-    ])
-      .then(([igdb, appview]) => {
+    fetch('/api/igdb/trending')
+      .then(r => r.json())
+      .then(igdb => {
         setUpcoming(shuffle((igdb.upcoming ?? []).map(formatIgdbGame)))
         setRecentlyReleased(shuffle((igdb.recentlyReleased ?? []).map(formatIgdbGame)))
-        setTrending(shuffle(appview.trending ?? []))
-        setTopRated(shuffle(appview.topRated ?? []))
         const urls = igdb.artworkUrls ?? []
         setArtworkUrls(urls)
         if (urls.length > 0) setBgImage(urls[Math.floor(Math.random() * urls.length)])
       })
       .catch(() => {})
-      .finally(() => setGamesLoading(false))
+      .finally(() => setIgdbLoading(false))
+
+    fetch('/api/appview/trending')
+      .then(r => r.json())
+      .then(appview => {
+        setTrending(shuffle(appview.trending ?? []))
+        setTopRated(shuffle(appview.topRated ?? []))
+      })
+      .catch(() => {})
+      .finally(() => setAppviewLoading(false))
   }, [])
 
   useEffect(() => {
@@ -155,7 +159,6 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  if (loading) return <main style={{ flex: 1 }} />
 
   return (
     <>
@@ -219,96 +222,102 @@ export default function HomePage() {
         </section>
 
         <div className="container">
-          {gamesLoading ? (
-            <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
-          ) : (
-            <>
-              <section id="recent" className="browse-section">
-                <div className="browse-section-header">
-                  <h2 className="browse-section-title"><CalendarDays size={16} />New releases</h2>
-                  <a href="/discover/new-releases" className="btn btn-basic btn-sm">See more</a>
-                </div>
-                {recentlyReleased.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-                ) : (
-                  <div className="browse-grid">
-                    {recentlyReleased.slice(0, 8).map((game) => (
-                      <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
-                    ))}
-                  </div>
-                )}
-              </section>
+          <section id="recent" className="browse-section">
+            <div className="browse-section-header">
+              <h2 className="browse-section-title"><CalendarDays size={16} />New releases</h2>
+              <a href="/discover/new-releases" className="btn btn-basic btn-sm">See more</a>
+            </div>
+            {igdbLoading ? (
+              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
+            ) : recentlyReleased.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+            ) : (
+              <div className="browse-grid">
+                {recentlyReleased.slice(0, 8).map((game) => (
+                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                ))}
+              </div>
+            )}
+          </section>
 
-              <section id="upcoming" className="browse-section">
-                <div className="browse-section-header">
-                  <h2 className="browse-section-title"><Sparkles size={16} />Coming soon</h2>
-                  <a href="/discover/coming-soon" className="btn btn-basic btn-sm">See more</a>
-                </div>
-                {upcoming.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-                ) : (
-                  <div className="browse-grid">
-                    {upcoming.slice(0, 8).map((game) => (
-                      <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
-                    ))}
-                  </div>
-                )}
-              </section>
+          <section id="upcoming" className="browse-section">
+            <div className="browse-section-header">
+              <h2 className="browse-section-title"><Sparkles size={16} />Coming soon</h2>
+              <a href="/discover/coming-soon" className="btn btn-basic btn-sm">See more</a>
+            </div>
+            {igdbLoading ? (
+              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
+            ) : upcoming.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+            ) : (
+              <div className="browse-grid">
+                {upcoming.slice(0, 8).map((game) => (
+                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                ))}
+              </div>
+            )}
+          </section>
 
-              {trending.length > 0 && (
-                <section id="trending" className="browse-section">
-                  <div className="browse-section-header">
-                    <h2 className="browse-section-title"><TrendingUp size={16} />Trending</h2>
-                    <a href="/discover/trending" className="btn btn-basic btn-sm">See more</a>
-                  </div>
-                  <div className="browse-grid">
-                    {trending.slice(0, 8).map((game) => (
-                      <div key={game.igdbId} className="game-card-grid">
-                        <div className="game-card-grid-cover-wrap">
-                          <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                            <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
-                          </a>
+          {(appviewLoading || trending.length > 0) && (
+            <section id="trending" className="browse-section">
+              <div className="browse-section-header">
+                <h2 className="browse-section-title"><TrendingUp size={16} />Trending</h2>
+                <a href="/discover/trending" className="btn btn-basic btn-sm">See more</a>
+              </div>
+              {appviewLoading ? (
+                <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
+              ) : (
+                <div className="browse-grid">
+                  {trending.slice(0, 8).map((game) => (
+                    <div key={game.igdbId} className="game-card-grid">
+                      <div className="game-card-grid-cover-wrap">
+                        <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                          <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+                        </a>
+                      </div>
+                      <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
+                        <div className="game-card-grid-title">{game.title}</div>
+                        <div className="browse-card-meta" style={{ color: 'var(--text-muted)' }}>
+                          {game.count} {game.count === 1 ? 'player' : 'players'}
                         </div>
-                        <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
-                          <div className="game-card-grid-title">{game.title}</div>
-                          <div className="browse-card-meta" style={{ color: 'var(--text-muted)' }}>
-                            {game.count} {game.count === 1 ? 'player' : 'players'}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {(appviewLoading || topRated.length > 0) && (
+            <section id="rated" className="browse-section">
+              <div className="browse-section-header">
+                <h2 className="browse-section-title"><Star size={16} />Top rated</h2>
+                <a href="/discover/top-rated" className="btn btn-basic btn-sm">See more</a>
+              </div>
+              {appviewLoading ? (
+                <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
+              ) : (
+                <div className="browse-grid">
+                  {topRated.slice(0, 8).map((game) => (
+                    <div key={game.igdbId} className="game-card-grid">
+                      <div className="game-card-grid-cover-wrap">
+                        <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                          <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+                        </a>
+                      </div>
+                      <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
+                        <div className="game-card-grid-title">{game.title}</div>
+                        {game.avgRating != null && (
+                          <div className="browse-card-meta">
+                            <Stars rating={game.avgRating / 2} />
                           </div>
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                        )}
+                      </a>
+                    </div>
+                  ))}
+                </div>
               )}
-
-              {topRated.length > 0 && (
-                <section id="rated" className="browse-section">
-                  <div className="browse-section-header">
-                    <h2 className="browse-section-title"><Star size={16} />Top rated</h2>
-                    <a href="/discover/top-rated" className="btn btn-basic btn-sm">See more</a>
-                  </div>
-                  <div className="browse-grid">
-                    {topRated.slice(0, 8).map((game) => (
-                      <div key={game.igdbId} className="game-card-grid">
-                        <div className="game-card-grid-cover-wrap">
-                          <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                            <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
-                          </a>
-                        </div>
-                        <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
-                          <div className="game-card-grid-title">{game.title}</div>
-                          {game.avgRating != null && (
-                            <div className="browse-card-meta">
-                              <Stars rating={game.avgRating / 2} />
-                            </div>
-                          )}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
+            </section>
           )}
         </div>
       </main>

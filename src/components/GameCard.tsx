@@ -208,9 +208,9 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div className="game-card-started-banner" style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined} />
           <div className="game-card-started-bottom">
             <div className="game-card-started-cover-wrap">{coverEl}</div>
-            <a className="game-card-started-info" href={gameHref}>
+            <div className="game-card-started-info">
               <div className="game-card-started-title">
-                {value.game.title}
+                <a href={gameHref}>{value.game.title}</a>
                 {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 6 }}><RotateCcw size={15} style={{ color: 'var(--accent)' }} /></span>}
               </div>
               {(() => {
@@ -220,7 +220,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 return parts.length > 0 ? <div className="game-card-started-meta">{parts.join(' • ')}</div> : null
               })()}
               {value.rating && normalizeStatus(value.status) !== 'playing' && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
-            </a>
+            </div>
           </div>
         </div>
         {!readonly && editModal}

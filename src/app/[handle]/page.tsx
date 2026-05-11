@@ -309,7 +309,9 @@ export default function ProfilePage() {
         const res = await fetch(`${profilePdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(profileDid)}&collection=${encodeURIComponent(FOLLOW_COLLECTION)}&limit=100`)
         if (!res.ok) { setFollows([]); return }
         const data = await res.json()
-        const subjectDids: string[] = (data.records ?? []).map((r: { value: { subject: string } }) => r.value.subject)
+        const rawRecords: { value: { subject: string; createdAt: string } }[] = data.records ?? []
+        const followedAt = new Map(rawRecords.map(r => [r.value.subject, r.value.createdAt]))
+        const subjectDids: string[] = rawRecords.map(r => r.value.subject)
         if (subjectDids.length === 0) { setFollows([]); return }
 
         const chunks: string[][] = []
@@ -345,7 +347,7 @@ export default function ProfilePage() {
           const cta = ctaMap.get(did)
           return [{ did, handle: bsky.handle, displayName: cta?.displayName ?? bsky.displayName, avatar: cta?.avatarUrl ?? bsky.avatar }]
         })
-        setFollows(profiles.sort((a, b) => (a.displayName ?? a.handle).localeCompare(b.displayName ?? b.handle)))
+        setFollows(profiles.sort((a, b) => (followedAt.get(b.did) ?? '').localeCompare(followedAt.get(a.did) ?? '')))
       } catch {
         setFollows([])
       } finally {

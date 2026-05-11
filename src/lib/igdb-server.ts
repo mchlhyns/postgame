@@ -26,6 +26,7 @@ export async function igdbQuery(token: string, endpoint: string, body: string): 
       'Content-Type': 'text/plain',
     },
     body,
+    next: { revalidate: 3600 },
   })
   if (!res.ok) throw new Error(`IGDB ${endpoint} error: ${res.status}`)
   return res.json()

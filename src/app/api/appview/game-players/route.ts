@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { fetchAllGameRecords, didFromUri } from '@/lib/happyview'
+import { fetchAllGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
 
 const BSKY_API = 'https://public.api.bsky.app/xrpc'
 const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
   try {
     const all = await fetchAllGameRecords()
 
-    const byDid = new Map<string, HappyViewRecord>()
+    const byDid = new Map<string, HVGameRecord>()
     for (const r of all) {
       if (r.game.igdbId !== igdbId) continue
       const did = didFromUri(r.uri)

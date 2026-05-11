@@ -1,42 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { fetchAllGameRecords, didFromUri } from '@/lib/happyview'
 
-const HAPPYVIEW_URL = process.env.HAPPYVIEW_URL!
-const HAPPYVIEW_KEY = process.env.HAPPYVIEW_CLIENT_KEY!
 const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
-
-type HVRecord = {
-  uri: string
-  game: { igdbId: number; title: string; coverUrl?: string }
-  status: string
-  rating?: number
-  createdAt: string
-}
-
-function didFromUri(uri: string): string | null {
-  return uri.match(/^at:\/\/(did:[^/]+)\//)?.[1] ?? null
-}
-
-async function fetchAllHVRecords(): Promise<HVRecord[]> {
-  const records: HVRecord[] = []
-  let cursor: string | undefined
-  let pages = 0
-  do {
-    const url = new URL(`${HAPPYVIEW_URL}/xrpc/com.crashthearcade.getGames`)
-    url.searchParams.set('limit', '100')
-    if (cursor) url.searchParams.set('cursor', cursor)
-    const res = await fetch(url.toString(), {
-      headers: { 'X-Client-Key': HAPPYVIEW_KEY },
-      next: { revalidate: 300 },
-    })
-    if (!res.ok) break
-    const data = await res.json()
-    records.push(...(data.records ?? []))
-    cursor = data.cursor && data.records?.length === 100 ? data.cursor : undefined
-    pages++
-  } while (cursor && pages < 200)
-  return records
-}
 
 async function fetchBskyProfiles(dids: string[]) {
   const map = new Map<string, { handle: string; displayName?: string; avatar?: string }>()
@@ -108,7 +74,7 @@ export async function GET(req: NextRequest) {
     const didSet = new Set(dids)
 
     const [allRecords, bskyProfiles, ctaResults] = await Promise.all([
-      fetchAllHVRecords(),
+      fetchAllGameRecords(),
       fetchBskyProfiles(dids),
       Promise.all(dids.map(did => fetchCtaProfile(did).then(p => ({ did, ...p })))),
     ])

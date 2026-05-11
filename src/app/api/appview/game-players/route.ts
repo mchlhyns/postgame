@@ -1,40 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { fetchAllGameRecords, didFromUri } from '@/lib/happyview'
 
-const HAPPYVIEW_URL = process.env.HAPPYVIEW_URL!
-const HAPPYVIEW_KEY = process.env.HAPPYVIEW_CLIENT_KEY!
 const BSKY_API = 'https://public.api.bsky.app/xrpc'
 const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
-
-type HappyViewRecord = {
-  uri: string
-  game: { igdbId: number }
-  status: string
-  createdAt: string
-}
-
-function didFromUri(uri: string): string | null {
-  return uri.match(/^at:\/\/(did:[^/]+)\//)?.[1] ?? null
-}
-
-async function fetchAllRecords(): Promise<HappyViewRecord[]> {
-  const records: HappyViewRecord[] = []
-  let cursor: string | undefined
-  do {
-    const url = new URL(`${HAPPYVIEW_URL}/xrpc/com.crashthearcade.getGames`)
-    url.searchParams.set('limit', '100')
-    if (cursor) url.searchParams.set('cursor', cursor)
-    const res = await fetch(url.toString(), {
-      headers: { 'X-Client-Key': HAPPYVIEW_KEY },
-      next: { revalidate: 300 },
-    })
-    if (!res.ok) break
-    const data = await res.json()
-    records.push(...(data.records ?? []))
-    cursor = data.cursor && data.records?.length === 100 ? data.cursor : undefined
-  } while (cursor)
-  return records
-}
 
 async function resolvePds(did: string): Promise<string> {
   try {
@@ -98,7 +67,7 @@ export async function GET(req: NextRequest) {
   if (!igdbId) return NextResponse.json({ error: 'igdbId required' }, { status: 400 })
 
   try {
-    const all = await fetchAllRecords()
+    const all = await fetchAllGameRecords()
 
     const byDid = new Map<string, HappyViewRecord>()
     for (const r of all) {

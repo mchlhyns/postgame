@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server'
 import { fetchAllGameRecords } from '@/lib/happyview'
 
 const PENTARACT_URL = 'https://gamesgamesgamesgames.games'
-const PENTARACT_KEY = process.env.GAMES_CLIENT_KEY_LOCAL!
+const PENTARACT_KEY = process.env.GAMES_CLIENT_KEY!
 const HAPPYVIEW_URL = process.env.HAPPYVIEW_URL!
 const HAPPYVIEW_KEY = process.env.HAPPYVIEW_CLIENT_KEY!
 

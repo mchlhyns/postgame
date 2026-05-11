@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { fetchAllGameRecords, didFromUri } from '@/lib/happyview'
+import { fetchAllGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
 
 const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
 
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     const ctaMap = new Map(ctaResults.map(p => [p.did, p]))
 
     // Group records by DID, filter to requested DIDs
-    const byDid = new Map<string, HVRecord[]>()
+    const byDid = new Map<string, HVGameRecord[]>()
     for (const r of allRecords) {
       const did = didFromUri(r.uri)
       if (!did || !didSet.has(did)) continue
@@ -92,9 +92,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Deduplicate by igdbId per user (most recent), take top 10 per user
-    const feedRecords: Array<HVRecord & { did: string }> = []
+    const feedRecords: Array<HVGameRecord & { did: string }> = []
     for (const [did, records] of byDid) {
-      const deduped = new Map<number, HVRecord>()
+      const deduped = new Map<number, HVGameRecord>()
       for (const r of records) {
         const existing = deduped.get(r.game.igdbId)
         if (!existing || r.createdAt > existing.createdAt) deduped.set(r.game.igdbId, r)

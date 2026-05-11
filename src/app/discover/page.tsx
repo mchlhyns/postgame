@@ -64,6 +64,7 @@ export default function HomePage() {
   const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
   const [upcoming, setUpcoming] = useState<FormattedGame[]>([])
   const [recentlyReleased, setRecentlyReleased] = useState<FormattedGame[]>([])
+  const [highlyRated, setHighlyRated] = useState<FormattedGame[]>([])
   const [trending, setTrending] = useState<AppviewGame[]>([])
   const [topRated, setTopRated] = useState<AppviewGame[]>([])
   const [igdbLoading, setIgdbLoading] = useState(true)
@@ -109,6 +110,7 @@ export default function HomePage() {
       .then(igdb => {
         setUpcoming(shuffle((igdb.upcoming ?? []).map(formatIgdbGame)))
         setRecentlyReleased(shuffle((igdb.recentlyReleased ?? []).map(formatIgdbGame)))
+        setHighlyRated((igdb.highlyRated ?? []).map(formatIgdbGame))
         const urls = igdb.artworkUrls ?? []
         setArtworkUrls(urls)
         if (urls.length > 0) setBgImage(urls[Math.floor(Math.random() * urls.length)])
@@ -225,7 +227,6 @@ export default function HomePage() {
           <section id="recent" className="browse-section">
             <div className="browse-section-header">
               <h2 className="browse-section-title"><CalendarDays size={16} />New releases</h2>
-              <a href="/discover/new-releases" className="btn btn-basic btn-sm">See more</a>
             </div>
             {igdbLoading ? (
               <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
@@ -243,7 +244,6 @@ export default function HomePage() {
           <section id="upcoming" className="browse-section">
             <div className="browse-section-header">
               <h2 className="browse-section-title"><Sparkles size={16} />Coming soon</h2>
-              <a href="/discover/coming-soon" className="btn btn-basic btn-sm">See more</a>
             </div>
             {igdbLoading ? (
               <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
@@ -262,7 +262,6 @@ export default function HomePage() {
             <section id="trending" className="browse-section">
               <div className="browse-section-header">
                 <h2 className="browse-section-title"><TrendingUp size={16} />Trending</h2>
-                <a href="/discover/trending" className="btn btn-basic btn-sm">See more</a>
               </div>
               {appviewLoading ? (
                 <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
@@ -288,36 +287,40 @@ export default function HomePage() {
             </section>
           )}
 
-          {(appviewLoading || topRated.length > 0) && (
-            <section id="rated" className="browse-section">
-              <div className="browse-section-header">
-                <h2 className="browse-section-title"><Star size={16} />Top rated</h2>
-                <a href="/discover/top-rated" className="btn btn-basic btn-sm">See more</a>
-              </div>
-              {appviewLoading ? (
-                <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
-              ) : (
-                <div className="browse-grid">
-                  {topRated.slice(0, 8).map((game) => (
-                    <div key={game.igdbId} className="game-card-grid">
-                      <div className="game-card-grid-cover-wrap">
-                        <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                          <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
-                        </a>
-                      </div>
-                      <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
-                        <div className="game-card-grid-title">{game.title}</div>
-                        {game.avgRating != null && (
-                          <div className="browse-card-meta">
-                            <Stars rating={game.avgRating / 2} />
-                          </div>
-                        )}
+          <section id="rated" className="browse-section">
+            <div className="browse-section-header">
+              <h2 className="browse-section-title"><Star size={16} />Top rated</h2>
+            </div>
+            {appviewLoading || igdbLoading ? (
+              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
+            ) : topRated.length > 0 ? (
+              <div className="browse-grid">
+                {topRated.slice(0, 8).map((game) => (
+                  <div key={game.igdbId} className="game-card-grid">
+                    <div className="game-card-grid-cover-wrap">
+                      <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                        <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
                       </a>
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
+                    <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
+                      <div className="game-card-grid-title">{game.title}</div>
+                      {game.avgRating != null && (
+                        <div className="browse-card-meta">
+                          <Stars rating={game.avgRating / 2} />
+                        </div>
+                      )}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="browse-grid">
+                {highlyRated.slice(0, 8).map((game) => (
+                  <BrowseCard key={game.id} game={game} showRating existingRecord={myGamesMap.get(game.id)} />
+                ))}
+              </div>
+            )}
+          </section>
           )}
         </div>
       </main>

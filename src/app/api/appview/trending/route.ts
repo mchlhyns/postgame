@@ -5,16 +5,6 @@ import { fetchAllGameRecords } from '@/lib/happyview'
 
 const PENTARACT_URL = 'https://gamesgamesgamesgames.games'
 const PENTARACT_KEY = process.env.GAMES_CLIENT_KEY!
-const HAPPYVIEW_URL = process.env.HAPPYVIEW_URL!
-const HAPPYVIEW_KEY = process.env.HAPPYVIEW_CLIENT_KEY!
-
-type ReviewRecord = {
-  title?: string
-  rating?: number
-  identifiers?: { igdbId?: string }
-  creativeWorkType?: string
-  createdAt: string
-}
 
 type GameEntry = {
   igdbId: number
@@ -29,32 +19,8 @@ type GameEntry = {
 let _cache: { data: unknown; expiresAt: number } | null = null
 let _inFlight: Promise<unknown> | null = null
 
-async function fetchReviews(maxPages = 150): Promise<ReviewRecord[]> {
-  const records: ReviewRecord[] = []
-  let cursor: string | undefined
-  let pages = 0
-  do {
-    const url = new URL(`${HAPPYVIEW_URL}/xrpc/com.crashthearcade.getReviews`)
-    url.searchParams.set('limit', '100')
-    if (cursor) url.searchParams.set('cursor', cursor)
-    const res = await fetch(url.toString(), {
-      headers: { 'X-Client-Key': HAPPYVIEW_KEY },
-      next: { revalidate: 3600 },
-    })
-    if (!res.ok) break
-    const data = await res.json()
-    records.push(...(data.records ?? []))
-    cursor = data.cursor && data.records?.length === 100 ? data.cursor : undefined
-    pages++
-  } while (cursor && pages < maxPages)
-  return records
-}
-
 async function buildTrending(): Promise<unknown> {
-  const [gameRecords, reviewRecords] = await Promise.all([
-    fetchAllGameRecords(),
-    fetchReviews(),
-  ])
+  const gameRecords = await fetchAllGameRecords()
 
   const gameMap = new Map<number, GameEntry>()
 
@@ -69,24 +35,6 @@ async function buildTrending(): Promise<unknown> {
       gameMap.set(igdbId, {
         igdbId, title, coverUrl, count: 1, lastActivity: r.createdAt,
         ratingSum: r.rating ?? 0, ratingCount: r.rating ? 1 : 0,
-      })
-    }
-  }
-
-  for (const r of reviewRecords) {
-    if (!r.rating || !r.identifiers?.igdbId || r.creativeWorkType !== 'video_game') continue
-    const igdbId = parseInt(r.identifiers.igdbId, 10)
-    if (!igdbId) continue
-    const existing = gameMap.get(igdbId)
-    if (existing) {
-      existing.ratingSum += r.rating
-      existing.ratingCount++
-      if (r.createdAt > existing.lastActivity) existing.lastActivity = r.createdAt
-    } else {
-      gameMap.set(igdbId, {
-        igdbId, title: r.title ?? '', coverUrl: undefined,
-        count: 0, lastActivity: r.createdAt,
-        ratingSum: r.rating, ratingCount: 1,
       })
     }
   }

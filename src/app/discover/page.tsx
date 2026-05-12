@@ -30,7 +30,6 @@ function shuffle<T>(arr: T[]): T[] {
 function BrowseCard({ game, existingRecord, showRating, showReleaseDate }: {
   game: FormattedGame
   existingRecord?: GameRecordView
-  showRating?: boolean
   showReleaseDate?: boolean
 }) {
   const releaseDateMeta = showReleaseDate && game.first_release_date
@@ -49,9 +48,6 @@ function BrowseCard({ game, existingRecord, showRating, showReleaseDate }: {
         <div className="game-card-grid-title">
           {game.name}
         </div>
-        {showRating && game.rating != null && (
-          <div className="browse-card-meta"><Stars rating={game.rating / 20} /></div>
-        )}
         {releaseDateMeta && <div className="browse-card-meta">{releaseDateMeta}</div>}
       </a>
     </div>

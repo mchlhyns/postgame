@@ -8,10 +8,10 @@ export const getGame = unstable_cache(
     const results = await igdbQuery(
       token,
       'games',
-      `fields name,url,cover.url,screenshots.url,artworks.url,first_release_date,platforms.name,summary,involved_companies.company.name,involved_companies.developer,involved_companies.publisher,genres.name,websites.url,similar_games.id,similar_games.name,similar_games.cover.url; where id = ${id}; limit 1;`
+      `fields name,url,cover.url,screenshots.url,artworks.url,first_release_date,platforms.name,summary,involved_companies.company.name,involved_companies.developer,involved_companies.publisher,genres.name,websites.url,similar_games.id,similar_games.name,similar_games.cover.url,similar_games.platforms.name; where id = ${id}; limit 1;`
     ) as IgdbGame[]
     return results?.[0] ?? null
   },
-  ['igdb-game-detail-v6'],
+  ['igdb-game-detail-v7'],
   { revalidate: 604800 }
 )

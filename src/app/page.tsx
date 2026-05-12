@@ -16,9 +16,10 @@ export default function Home() {
   const skipNextSearch = useRef(false)
 
   useEffect(() => {
+    const timeout = setTimeout(() => setChecking(false), 3000)
     restoreSession()
-      .then((s) => { if (s) { window.location.href = '/discover'; return } setChecking(false) })
-      .catch(() => setChecking(false))
+      .then((s) => { clearTimeout(timeout); if (s) { window.location.href = '/discover'; return } setChecking(false) })
+      .catch(() => { clearTimeout(timeout); setChecking(false) })
   }, [])
 
   useEffect(() => {

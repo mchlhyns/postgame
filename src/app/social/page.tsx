@@ -5,6 +5,7 @@ import { Agent } from '@atproto/api'
 import { restoreSession, FOLLOW_COLLECTION } from '@/lib/atproto'
 import { Stars } from '@/components/Stars'
 import AddGameModal from '@/components/AddGameModal'
+import Select from '@/components/Select'
 
 interface FollowProfile {
   did: string
@@ -70,18 +71,78 @@ function feedActionText(status: string): string {
   }
 }
 
+function FeedList({ items, loading, emptyTitle, emptyBody }: {
+  items: FeedItem[]
+  loading: boolean
+  emptyTitle: string
+  emptyBody: string
+}) {
+  const [modalGame, setModalGame] = useState<FeedItem | null>(null)
+  const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
+
+  useEffect(() => {
+    restoreSession().then(s => { if (s) setSession(s) }).catch(() => {})
+  }, [])
+
+  if (loading) return <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+  if (items.length === 0) return (
+    <div className="empty-state">
+      <h3>{emptyTitle}</h3>
+      <p style={{ fontSize: '14px' }}>{emptyBody}</p>
+    </div>
+  )
+  return (
+    <>
+      <div className="social-feed">
+        {items.map((item, i) => (
+          <div key={i} className="feed-item">
+            <a href={`/${item.handle}`} className="feed-avatar-link">
+              {item.avatar
+                ? <img src={item.avatar} alt="" className="feed-avatar" />
+                : <div className="feed-avatar feed-avatar-placeholder" />
+              }
+            </a>
+            <div className="feed-text">
+              <a href={`/${item.handle}`} className="feed-username">
+                {item.displayName ?? `@${item.handle}`}
+              </a>
+              {' '}{feedActionText(item.status)}{' '}
+              <a href={`/games/${item.igdbId}`} className="feed-game-title">{item.gameTitle}</a>
+            </div>
+            <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {item.rating && <Stars rating={item.rating / 2} />}
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', width: 50, textAlign: 'right', display: 'inline-block' }}>{relativeTime(item.createdAt)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {modalGame && session && (
+        <AddGameModal
+          agent={session.agent}
+          did={session.did}
+          initialGame={{ id: modalGame.igdbId, name: modalGame.gameTitle, coverUrl: modalGame.gameCoverUrl ?? undefined }}
+          onClose={() => setModalGame(null)}
+          onAdded={() => setModalGame(null)}
+        />
+      )}
+    </>
+  )
+}
+
 export default function SocialPage() {
   const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
-  const [ctaFollows, setCtaFollows] = useState<FollowProfile[]>([])
+  const [tab, setTab] = useState<'following' | 'network'>('following')
   const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [feedLoading, setFeedLoading] = useState(false)
+  const [networkItems, setNetworkItems] = useState<FeedItem[]>([])
+  const [networkLoading, setNetworkLoading] = useState(false)
+  const [networkLoaded, setNetworkLoaded] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchActor[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
   const followedDids = useRef<Map<string, string>>(new Map())
   const [followStates, setFollowStates] = useState<Record<string, { following: boolean; followUri?: string }>>({})
   const [followLoading, setFollowLoading] = useState<Record<string, boolean>>({})
-  const [modalGame, setModalGame] = useState<FeedItem | null>(null)
   const searchRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<{ agent: Agent; did: string } | null>(null)
 
@@ -91,7 +152,7 @@ export default function SocialPage() {
         if (!s) { window.location.href = '/'; return }
         setSession(s)
         sessionRef.current = s
-        loadSocialData(s.agent, s.did)
+        loadActivityFeed(s.agent, s.did)
       })
       .catch(() => { window.location.href = '/' })
   }, [])
@@ -127,21 +188,28 @@ export default function SocialPage() {
     return () => document.removeEventListener('mousedown', handleMouseDown)
   }, [])
 
-  async function loadSocialData(agent: Agent, did: string) {
+  useEffect(() => {
+    if (tab === 'network' && !networkLoaded) {
+      setNetworkLoading(true)
+      fetch('/api/appview/network')
+        .then(r => r.json())
+        .then(data => setNetworkItems(data.feed ?? []))
+        .catch(() => {})
+        .finally(() => { setNetworkLoading(false); setNetworkLoaded(true) })
+    }
+  }, [tab, networkLoaded])
+
+  async function loadActivityFeed(agent: Agent, did: string) {
     setFeedLoading(true)
     try {
       const followsRes = await agent.com.atproto.repo.listRecords({ repo: did, collection: FOLLOW_COLLECTION, limit: 100 })
       const rawFollows = followsRes.data.records as unknown as { uri: string; value: { subject: string; createdAt: string } }[]
 
       const map = new Map<string, string>()
-      const followedAt = new Map<string, string>()
-      for (const r of rawFollows) {
-        map.set(r.value.subject, r.uri)
-        followedAt.set(r.value.subject, r.value.createdAt)
-      }
+      for (const r of rawFollows) map.set(r.value.subject, r.uri)
       followedDids.current = map
 
-      if (!map.size) { setFeedItems([]); setCtaFollows([]); return }
+      if (!map.size) { setFeedItems([]); return }
 
       const allDids = [...map.keys()]
       const params = allDids.map(d => `dids=${encodeURIComponent(d)}`).join('&')
@@ -149,21 +217,14 @@ export default function SocialPage() {
       const data = await res.json()
 
       const profileMap = new Map<string, Profile>((data.profiles ?? []).map((p: Profile) => [p.did, p]))
+      const states: Record<string, { following: boolean; followUri?: string }> = {}
+      for (const [did, uri] of map) states[did] = { following: true, followUri: uri }
+      setFollowStates(states)
 
-      const follows: FollowProfile[] = allDids
-        .map((subjectDid): FollowProfile | null => {
-          const profile = profileMap.get(subjectDid)
-          const followUri = map.get(subjectDid)!
-          if (!profile) return null
-          return { did: subjectDid, handle: profile.handle, displayName: profile.displayName ?? undefined, avatar: profile.avatar ?? undefined, followUri }
-        })
-        .filter((f): f is FollowProfile => f !== null)
-
-      follows.sort((a, b) => (followedAt.get(b.did) ?? '').localeCompare(followedAt.get(a.did) ?? ''))
-      setCtaFollows(follows)
       setFeedItems(data.feed ?? [])
+      void profileMap
     } catch (err) {
-      console.error('Failed to load social data:', err)
+      console.error('Failed to load activity feed:', err)
     } finally {
       setFeedLoading(false)
     }
@@ -181,7 +242,6 @@ export default function SocialPage() {
         await s.agent.com.atproto.repo.deleteRecord({ repo: s.did, collection: FOLLOW_COLLECTION, rkey })
         followedDids.current.delete(actor.did)
         setFollowStates((prev) => ({ ...prev, [actor.did]: { following: false } }))
-        setCtaFollows((prev) => prev.filter((f) => f.did !== actor.did))
         setFeedItems((prev) => prev.filter((f) => f.did !== actor.did))
       } else {
         const res = await s.agent.com.atproto.repo.createRecord({
@@ -193,25 +253,12 @@ export default function SocialPage() {
         followedDids.current.set(actor.did, followUri)
         setFollowStates((prev) => ({ ...prev, [actor.did]: { following: true, followUri } }))
 
-        // Fetch the new follow's data and merge in
         const newRes = await fetch(`/api/appview/feed?dids=${encodeURIComponent(actor.did)}`)
         const newData = await newRes.json()
-        const profile: Profile | undefined = (newData.profiles ?? [])[0]
-
-        if (profile) {
-          const newFollow: FollowProfile = {
-            did: actor.did,
-            handle: profile.handle,
-            displayName: profile.displayName ?? undefined,
-            avatar: profile.avatar ?? undefined,
-            followUri,
-          }
-          setCtaFollows((prev) => [...prev, newFollow])
-          if (newData.feed?.length) {
-            setFeedItems((prev) =>
-              [...prev, ...newData.feed].sort((a: FeedItem, b: FeedItem) => b.createdAt.localeCompare(a.createdAt)).slice(0, 50)
-            )
-          }
+        if (newData.feed?.length) {
+          setFeedItems((prev) =>
+            [...prev, ...newData.feed].sort((a: FeedItem, b: FeedItem) => b.createdAt.localeCompare(a.createdAt)).slice(0, 50)
+          )
         }
       }
     } catch (err) {
@@ -221,145 +268,78 @@ export default function SocialPage() {
     }
   }
 
-  async function handleUnfollow(follow: FollowProfile) {
-    const s = sessionRef.current
-    if (!s || followLoading[follow.did]) return
-    setFollowLoading((prev) => ({ ...prev, [follow.did]: true }))
-    try {
-      const rkey = follow.followUri.split('/').pop()!
-      await s.agent.com.atproto.repo.deleteRecord({ repo: s.did, collection: FOLLOW_COLLECTION, rkey })
-      followedDids.current.delete(follow.did)
-      setFollowStates((prev) => ({ ...prev, [follow.did]: { following: false } }))
-      setCtaFollows((prev) => prev.filter((f) => f.did !== follow.did))
-      setFeedItems((prev) => prev.filter((f) => f.did !== follow.did))
-    } catch (err) {
-      console.error('Failed to unfollow:', err)
-    } finally {
-      setFollowLoading((prev) => ({ ...prev, [follow.did]: false }))
-    }
-  }
-
   return (
-    <>
-      <main>
-        <div className="container">
-          <div className="page-header social">
-            <h1>Social</h1>
-            <div ref={searchRef} className="search-wrapper">
-              <input
-                className="input"
-                type="text"
-                placeholder="Search for a user"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
-                autoComplete="off"
-              />
-              {searchOpen && searchResults.length > 0 && (
-                <div className="search-results">
-                  {searchResults.map((actor) => {
-                    const state = followStates[actor.did]
-                    const isFollowing = state?.following ?? false
-                    return (
-                      <div key={actor.did} className="search-result-item social-search-result">
-                        <a href={`/${actor.handle}`} className="social-search-actor" onClick={() => { setSearchOpen(false); setSearchQuery('') }}>
-                          {actor.avatar
-                            ? <img src={actor.avatar} alt="" className="social-search-avatar" />
-                            : <div className="social-search-avatar social-search-avatar-placeholder" />
-                          }
-                          <div style={{ overflow: 'hidden' }}>
-                            {actor.displayName && <div style={{ fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actor.displayName}</div>}
-                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{actor.handle}</div>
-                          </div>
-                        </a>
-                        <button
-                          className={`btn btn-sm ${isFollowing ? 'btn-basic' : 'btn-ghost'}`}
-                          onClick={(e) => { e.preventDefault(); handleFollow(actor) }}
-                          disabled={followLoading[actor.did]}
-                        >
-                          {followLoading[actor.did] ? '...' : (isFollowing ? 'Following' : 'Follow')}
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {ctaFollows.length > 0 && (
-            <div style={{ marginBottom: 32 }}>
-              <h2 className="social-section-title" style={{ marginBottom: 18 }}>Following ({ctaFollows.length})</h2>
-              <div className="game-grid">
-                {ctaFollows.map((follow) => (
-                  <div key={follow.did} className="game-card-grid" style={{ padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
-                    <a href={`/${follow.handle}`} style={{ display: 'block', flexShrink: 0 }}>
-                      {follow.avatar
-                        ? <img src={follow.avatar} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
-                        : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)' }} />
-                      }
-                    </a>
-                    <div style={{ minWidth: 0, width: '100%' }}>
-                      <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <a href={`/${follow.handle}`}>{follow.displayName ?? `@${follow.handle}`}</a>
-                      </div>
-                      {follow.displayName && (
-                        <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          @{follow.handle}
+    <main>
+      <div className="container">
+        <div className="page-header">
+          <Select
+            variant="filter"
+            value={tab}
+            onChange={(v) => setTab(v as 'following' | 'network')}
+            options={[
+              { value: 'following', label: 'Following' },
+              { value: 'network', label: 'Network' },
+            ]}
+          />
+          <div ref={searchRef} className="search-wrapper" style={{ maxWidth: 320 }}>
+            <input
+              className="input"
+              type="text"
+              placeholder="Search for a user"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
+              autoComplete="off"
+            />
+            {searchOpen && searchResults.length > 0 && (
+              <div className="search-results">
+                {searchResults.map((actor) => {
+                  const state = followStates[actor.did]
+                  const isFollowing = state?.following ?? false
+                  return (
+                    <div key={actor.did} className="search-result-item social-search-result">
+                      <a href={`/${actor.handle}`} className="social-search-actor" onClick={() => { setSearchOpen(false); setSearchQuery('') }}>
+                        {actor.avatar
+                          ? <img src={actor.avatar} alt="" className="social-search-avatar" />
+                          : <div className="social-search-avatar social-search-avatar-placeholder" />
+                        }
+                        <div style={{ overflow: 'hidden' }}>
+                          {actor.displayName && <div style={{ fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actor.displayName}</div>}
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{actor.handle}</div>
                         </div>
-                      )}
+                      </a>
+                      <button
+                        className={`btn btn-sm ${isFollowing ? 'btn-basic' : 'btn-ghost'}`}
+                        onClick={(e) => { e.preventDefault(); handleFollow(actor) }}
+                        disabled={followLoading[actor.did]}
+                      >
+                        {followLoading[actor.did] ? '...' : (isFollowing ? 'Following' : 'Follow')}
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
-            </div>
-          )}
-
-          <h2 className="social-section-title" style={{ marginBottom: 18 }}>Activity</h2>
-          {feedLoading ? (
-            <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
-          ) : feedItems.length === 0 ? (
-            <div className="empty-state">
-              <h3>No activity yet</h3>
-              <p style={{ fontSize: '14px' }}>Find and follow people to see what they're playing</p>
-            </div>
-          ) : (
-            <div className="social-feed">
-              {feedItems.map((item, i) => (
-                <div key={i} className="feed-item">
-                  <a href={`/${item.handle}`} className="feed-avatar-link">
-                    {item.avatar
-                      ? <img src={item.avatar} alt="" className="feed-avatar" />
-                      : <div className="feed-avatar feed-avatar-placeholder" />
-                    }
-                  </a>
-                  <div className="feed-text">
-                    <a href={`/${item.handle}`} className="feed-username">
-                      {item.displayName ?? `@${item.handle}`}
-                    </a>
-                    {' '}{feedActionText(item.status)}{' '}
-                    <a href={`/games/${item.igdbId}`} className="feed-game-title">{item.gameTitle}</a>
-                  </div>
-                  <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {item.rating && <Stars rating={item.rating / 2} />}
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{relativeTime(item.createdAt)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </main>
 
-      {modalGame && session && (
-        <AddGameModal
-          agent={session.agent}
-          did={session.did}
-          initialGame={{ id: modalGame.igdbId, name: modalGame.gameTitle, coverUrl: modalGame.gameCoverUrl ?? undefined }}
-          onClose={() => setModalGame(null)}
-          onAdded={() => setModalGame(null)}
-        />
-      )}
-    </>
+        {tab === 'following' && (
+          <FeedList
+            items={feedItems}
+            loading={feedLoading}
+            emptyTitle="No activity yet"
+            emptyBody="Follow people to see what they're playing"
+          />
+        )}
+        {tab === 'network' && (
+          <FeedList
+            items={networkItems}
+            loading={networkLoading}
+            emptyTitle="Nothing here yet"
+            emptyBody="No recent activity across the network"
+          />
+        )}
+      </div>
+    </main>
   )
 }

@@ -2,6 +2,7 @@ interface RelatedGame {
   id: number
   name: string
   coverUrl?: string
+  platforms?: string[]
 }
 
 interface Props {
@@ -22,6 +23,11 @@ export default function RelatedGamesSection({ games }: Props) {
             <div className="game-card-grid-title">
               <a href={`/games/${game.id}`}>{game.name}</a>
             </div>
+            {game.platforms && game.platforms.length > 0 && (
+              <div className="browse-card-meta" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {game.platforms.join(', ')}
+              </div>
+            )}
           </div>
         </div>
       ))}

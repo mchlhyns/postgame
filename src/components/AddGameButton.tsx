@@ -117,7 +117,7 @@ export default function AddGameButton({ game }: Props) {
   if (records.length === 1) {
     return (
       <>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
           <button
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center' }}

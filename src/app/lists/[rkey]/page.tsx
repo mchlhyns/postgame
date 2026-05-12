@@ -62,9 +62,12 @@ export default function ListEditPage() {
   const [overflowOpen, setOverflowOpen] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const awardPickerRef = useRef<HTMLDivElement>(null)
   const overflowRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!overflowOpen) return
@@ -87,6 +90,14 @@ export default function ListEditPage() {
     document.addEventListener('mousedown', handleMouseDown)
     return () => document.removeEventListener('mousedown', handleMouseDown)
   }, [awardPickerFor])
+
+  useEffect(() => {
+    function handleMouseDown(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false)
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [])
 
   useEffect(() => {
     restoreSession()
@@ -121,7 +132,8 @@ export default function ListEditPage() {
   // Debounced IGDB search
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current)
-    if (query.length < 2) { setIgdbResults([]); return }
+    if (query.length < 2) { setIgdbResults([]); setSearchOpen(false); return }
+    setSearchOpen(true)
     searchTimeout.current = setTimeout(async () => {
       setSearching(true)
       try {
@@ -160,6 +172,7 @@ export default function ListEditPage() {
     setItems((prev) => [...prev, { igdbId: result.igdbId, title: result.title, coverUrl: result.coverUrl, position: prev.length + 1 }])
     setQuery('')
     setIgdbResults([])
+    setSearchOpen(false)
     setSaved(false)
   }
 
@@ -292,18 +305,71 @@ export default function ListEditPage() {
               </svg>
             </a>
             <input
+              ref={nameInputRef}
               className="list-edit-name-input"
               value={name}
               onChange={(e) => { setName(e.target.value); setSaved(false) }}
               placeholder="List name"
               maxLength={100}
             />
+            <div ref={searchRef} className="list-edit-search-wrap">
+              <input
+                className="input list-edit-search-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => (showCollectionSection || showIgdbSection || showNoResults) && setSearchOpen(true)}
+                placeholder="Add games to list"
+                autoComplete="off"
+              />
+              {searchOpen && (showCollectionSection || showIgdbSection || showNoResults) && (
+                <div className="search-results list-edit-search-results">
+                  {showCollectionSection && (
+                    <>
+                      {query.trim() !== '' && <div className="list-modal-results-label" style={{ padding: '4px 12px 2px' }}>Your collection</div>}
+                      {collectionResults.slice(0, 20).map((record) => {
+                        const g = record.value.game
+                        return (
+                          <div key={g.igdbId} className="list-modal-add-item search-result-item" onMouseDown={(e) => { e.preventDefault(); addFromCollection(record) }}>
+                            <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
+                            <div className="list-modal-add-item-info">
+                              <span className="list-modal-add-item-title">{g.title}</span>
+                              {record.value.platform && <span className="list-modal-add-item-platforms">{record.value.platform}</span>}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </>
+                  )}
+                  {showIgdbSection && (
+                    <>
+                      <div className="list-modal-results-label" style={{ padding: '4px 12px 2px', marginTop: showCollectionSection ? 4 : 0 }}>
+                        {searching ? 'Searching…' : 'From IGDB'}
+                      </div>
+                      {filteredIgdbResults.slice(0, 10).map((g) => (
+                        <div key={g.igdbId} className="list-modal-add-item search-result-item" onMouseDown={(e) => { e.preventDefault(); addItem(g) }}>
+                          <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
+                          <div className="list-modal-add-item-info">
+                            <span className="list-modal-add-item-title">{g.title}</span>
+                            {(g.year || g.platforms) && (
+                              <span className="list-modal-add-item-platforms">{[g.year, g.platforms].filter(Boolean).join(' · ')}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {showNoResults && (
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', padding: '8px 12px' }}>No results found.</div>
+                  )}
+                </div>
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {saved && <span style={{ fontSize: '0.8125rem', color: 'var(--accent)' }}>Saved</span>}
               {error && <span style={{ fontSize: '0.8125rem', color: 'var(--danger)' }}>{error}</span>}
               <div className="list-overflow-wrap" ref={overflowRef}>
                 <button
-                  className="btn btn-basic list-overflow-btn"
+                  className="btn btn-ghost list-overflow-btn"
                   onClick={() => setOverflowOpen((o) => !o)}
                   title="More options"
                 >⋯</button>
@@ -339,6 +405,19 @@ export default function ListEditPage() {
                     >
                       {duplicating ? 'Duplicating…' : 'Duplicate list'}
                     </button>
+                    <button
+                      className="list-overflow-option"
+                      onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setTimeout(() => nameInputRef.current?.focus(), 0) }}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      className="list-overflow-option"
+                      onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); if (items.length > 0) setSharingList(currentList) }}
+                      disabled={items.length === 0}
+                    >
+                      Share
+                    </button>
                     <div className="list-overflow-divider" />
                     <button
                       className="list-overflow-option list-overflow-option-danger"
@@ -349,13 +428,6 @@ export default function ListEditPage() {
                   </div>
                 )}
               </div>
-              <button
-                className="btn btn-ghost"
-                onClick={() => items.length > 0 && setSharingList(currentList)}
-                disabled={items.length === 0}
-              >
-                Share
-              </button>
               <button className="btn btn-primary" onClick={() => handleSave()} disabled={saving}>
                 {saving ? 'Saving…' : 'Save'}
               </button>
@@ -363,12 +435,10 @@ export default function ListEditPage() {
           </div>
 
           <div className="list-edit-body">
-            {/* Left: ordered items */}
-            <div className="list-edit-left">
-              {items.length === 0 ? (
-                <div className="list-modal-empty">Search for games on the right to add them →</div>
-              ) : (
-                <div className="list-edit-items">
+            {items.length === 0 ? (
+              <div className="list-modal-empty">Search for games using the bar above to add them</div>
+            ) : (
+              <div className="list-edit-items">
                   {items.map((item, i) => (
                     <div
                       key={i}
@@ -456,70 +526,7 @@ export default function ListEditPage() {
                     </div>
                   ))}
                 </div>
-              )}
-
-            </div>
-
-            {/* Right: search + add */}
-            <div className="list-edit-right">
-              <label className="list-modal-section-label">Add games to this list</label>
-              <input
-                className="input"
-                style={{ width: '100%', marginBottom: 8 }}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by game title"
-                autoComplete="off"
-              />
-
-              <div className="list-modal-add-results">
-                {showCollectionSection && (
-                  <div className="list-collection-section">
-                    {query.trim() !== '' && (
-                      <div className="list-modal-results-label">Your collection</div>
-                    )}
-                    {collectionResults.slice(0, 30).map((record) => {
-                      const g = record.value.game
-                      return (
-                        <div key={g.igdbId} className="list-modal-add-item" onClick={() => addFromCollection(record)}>
-                          <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
-                          <div className="list-modal-add-item-info">
-                            <span className="list-modal-add-item-title">{g.title}</span>
-                            {record.value.platform && <span className="list-modal-add-item-platforms">{record.value.platform}</span>}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {showIgdbSection && (
-                  <>
-                    <div className="list-modal-results-label" style={{ marginTop: showCollectionSection ? 8 : 0 }}>
-                      {searching ? 'Searching IGDB…' : 'From IGDB'}
-                    </div>
-                    {filteredIgdbResults.slice(0, 10).map((g) => (
-                      <div key={g.igdbId} className="list-modal-add-item" onClick={() => addItem(g)}>
-                        <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
-                        <div className="list-modal-add-item-info">
-                          <span className="list-modal-add-item-title">{g.title}</span>
-                          {(g.year || g.platforms) && (
-                            <span className="list-modal-add-item-platforms">
-                              {[g.year, g.platforms].filter(Boolean).join(' · ')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                {showNoResults && (
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', padding: '8px 4px' }}>No results found.</div>
-                )}
-              </div>
-
-            </div>
+            )}
           </div>
 
         </div>
@@ -528,9 +535,6 @@ export default function ListEditPage() {
       {sharingList && (
         <ListShareModal
           list={sharingList}
-          agent={session!.agent}
-          did={session!.did}
-          userHandle={userHandle}
           showNumbers={showNumbers}
           onClose={() => setSharingList(null)}
         />

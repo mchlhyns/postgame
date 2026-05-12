@@ -164,9 +164,6 @@ export default function MyListsPage() {
       {sharingList && (
         <ListShareModal
           list={sharingList}
-          agent={session!.agent}
-          did={session!.did}
-          userHandle={userHandle}
           showNumbers={sharingList.value.numbered ?? true}
           onClose={() => setSharingList(null)}
         />

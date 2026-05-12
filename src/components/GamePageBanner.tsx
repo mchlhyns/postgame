@@ -1,43 +1,30 @@
-'use client'
-
-import { useEffect, useRef } from 'react'
+import GameBannerStats from '@/components/GameBannerStats'
 
 interface Props {
+  igdbId: number
   bannerUrl?: string
   coverUrl?: string
   title: string
   subtitle?: string
 }
 
-export default function GamePageBanner({ bannerUrl, coverUrl, title, subtitle }: Props) {
-  const bannerBgRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function onScroll() {
-      if (bannerBgRef.current) {
-        bannerBgRef.current.style.transform = `translateY(${window.scrollY * 0.3}px)`
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
+export default function GamePageBanner({ igdbId, bannerUrl, coverUrl, title, subtitle }: Props) {
   return (
     <div className="game-detail-banner-block">
-      {bannerUrl && (
-        <div
-          ref={bannerBgRef}
-          className="game-detail-banner-bg"
-          style={{ backgroundImage: `url(${bannerUrl})` }}
-        />
-      )}
-      <div className="container game-detail-banner-content">
-        <div id="game-cover-wrap" style={{ position: 'relative', flexShrink: 0 }}>
+      <div
+        className="game-detail-banner-img"
+        style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined}
+      />
+      <div className="container">
+        <div className="game-detail-banner-content">
           <img src={coverUrl ?? '/no-cover.png'} alt={title} className="game-detail-cover" />
-        </div>
-        <div className="game-detail-banner-info">
-          <h1 className="game-detail-title">{title}</h1>
-          {subtitle && <p className="game-detail-banner-sub">{subtitle}</p>}
+          <div className="game-detail-banner-info">
+            <div>
+              <h1 className="game-detail-title">{title}</h1>
+              {subtitle && <p className="game-detail-banner-sub">{subtitle}</p>}
+            </div>
+            <GameBannerStats igdbId={igdbId} />
+          </div>
         </div>
       </div>
     </div>

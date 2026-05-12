@@ -20,7 +20,7 @@ export async function getOAuthClient(): Promise<BrowserOAuthClient> {
       client_name: 'CRASH THE ARCADE',
       client_uri: origin,
       redirect_uris: [`${origin}/oauth/callback`],
-      scope: 'atproto repo:com.crashthearcade.game repo:com.crashthearcade.settings repo:com.crashthearcade.list repo:com.crashthearcade.follow repo:app.bsky.feed.post blob:image/*',
+      scope: 'atproto repo:com.crashthearcade.game repo:com.crashthearcade.settings repo:com.crashthearcade.list repo:com.crashthearcade.follow blob:image/*',
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],
       token_endpoint_auth_method: 'none',

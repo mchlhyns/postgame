@@ -76,6 +76,7 @@ export default function SettingsPage() {
   const [pronouns, setPronouns] = useState('')
   const [profileView] = useState<'list' | 'grid'>('grid')
   const [bskyAvatar, setBskyAvatar] = useState<string | null>(null)
+  const [bskyDisplayName, setBskyDisplayName] = useState<string | null>(null)
   const [avatarBlob, setAvatarBlob] = useState<unknown>(null)
   const [bannerBlob, setBannerBlob] = useState<unknown>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -104,6 +105,7 @@ export default function SettingsPage() {
       const pds = await resolvePds(s.did)
       setPdsUrl(pds)
 
+      let bskyName: string | null = null
       try {
         const profileRes = await fetch(
           `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(s.did)}`
@@ -111,6 +113,8 @@ export default function SettingsPage() {
         if (profileRes.ok) {
           const profile = await profileRes.json()
           setBskyAvatar(profile.avatar ?? null)
+          bskyName = profile.displayName ?? null
+          setBskyDisplayName(bskyName)
         }
       } catch { /* ignore */ }
 
@@ -121,7 +125,7 @@ export default function SettingsPage() {
           rkey: 'self',
         })
         const value = res.data.value as Settings
-        setDisplayName(value.displayName ?? '')
+        setDisplayName(value.displayName ?? bskyName ?? '')
         setPronouns(value.pronouns ?? '')
         if (value.avatarBlob) setAvatarBlob(value.avatarBlob)
         if (value.bannerBlob) setBannerBlob(value.bannerBlob)
@@ -131,7 +135,7 @@ export default function SettingsPage() {
           applyAccent(value.accentColor)
           saveAccent(value.accentColor)
         }
-      } catch { /* no settings yet */ }
+      } catch { if (bskyName) setDisplayName(bskyName) }
 
       setLoading(false)
     }).catch(() => { window.location.href = '/' })
@@ -319,6 +323,7 @@ export default function SettingsPage() {
               {/* Banner */}
               <div className="form-field">
                 <label>Profile banner</label>
+                <span className="settings-subtext">1600 x 500 for best results</span>
                 <div
                   className="settings-banner-preview"
                   style={currentBanner ? { backgroundImage: `url(${currentBanner})` } : undefined}

@@ -8,7 +8,7 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['127.0.0.1', '*.ngrok-free.app', '*.ngrok-free.dev'],
+  allowedDevOrigins: ['127.0.0.1', '*.ngrok-free.app', '*.ngrok-free.dev', '*.run.pinggy-free.link', '*.pinggy.io', '*.a.pinggy.link'],
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },

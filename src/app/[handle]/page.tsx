@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { ChevronLeft, Trophy, UserCheck, UserMinus, UserPlus } from 'lucide-react'
 import { Agent } from '@atproto/api'
@@ -200,7 +200,6 @@ export default function ProfilePage() {
   const [followUri, setFollowUri] = useState<string | null>(null)
   const [followLoading, setFollowLoading] = useState(false)
   const [followBtnHover, setFollowBtnHover] = useState(false)
-  const bannerBgRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     restoreSession()
@@ -248,15 +247,6 @@ export default function ProfilePage() {
   }
 
 
-  useEffect(() => {
-    function onScroll() {
-      if (bannerBgRef.current) {
-        bannerBgRef.current.style.transform = `translateY(${window.scrollY * 0.3}px)`
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   useEffect(() => {
     if (!handle) return
@@ -378,9 +368,9 @@ export default function ProfilePage() {
       <main>
         {!loading && !error && (
           <div className="profile-banner-block">
-            {bannerUrl && <div ref={bannerBgRef} className="profile-banner-bg" style={{ backgroundImage: `url(${bannerUrl})` }} />}
-            <div className="container profile-banner-content" style={{ alignItems: 'flex-end' }}>
-              <div style={{ position: 'relative', height: 80, flexShrink: 0 }}>
+            <div className="profile-banner-img" style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined} />
+            <div className="container profile-banner-content">
+              <div style={{ position: 'relative', height: 72, flexShrink: 0 }}>
                 {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}
                 {authSession && profileDid && authSession.did !== profileDid && (
                   <button
@@ -410,6 +400,7 @@ export default function ProfilePage() {
               </div>
               <div className="profile-stats" style={{ marginLeft: 'auto', gap: 32, flexShrink: 0 }}>
                 {([
+                  { label: 'Playing', status: 'playing' },
                   { label: 'Backlogged', status: 'backlogged' },
                   { label: 'Wishlisted', status: 'wishlisted' },
                   { label: 'Played', status: 'played' },
@@ -423,17 +414,17 @@ export default function ProfilePage() {
                       setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
                     }}
                   >
-                    <div style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700 }}>
+                    <div className="profile-stat-count">
                       {deduped.filter(g => matchesStatus(g.value.status, status)).length}
                     </div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{label}</div>
+                    <div className="profile-stat-label">{label}</div>
                   </button>
                 ))}
               </div>
             </div>
           </div>
         )}
-        <div className="container" style={{ position: 'relative', zIndex: 1, paddingTop: 90 }}>
+        <div className="container" style={{ paddingTop: 32 }}>
           {loading ? (
             <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
           ) : error ? (
@@ -632,7 +623,6 @@ export default function ProfilePage() {
                     return [
                       <div key={`divider-${status}`} id={status} className="game-list-divider" style={{ scrollMarginTop: 80 }}>
                         {statusLabel(status)}
-                        <span className="game-list-divider-count">{group.length}</span>
                       </div>,
                       ...group.map((record) => (
                         <GameCard key={record.uri} record={record} view={status === 'playing' ? 'started' : 'grid'} readonly />

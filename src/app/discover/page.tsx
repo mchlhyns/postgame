@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Agent } from '@atproto/api'
 import { restoreSession, COLLECTION } from '@/lib/atproto'
 import { IgdbGame, GameRecordView } from '@/types'
 import { formatIgdbGame } from '@/lib/igdb'
@@ -56,19 +55,16 @@ function BrowseCard({ game, existingRecord, showReleaseDate }: {
 
 export default function HomePage() {
   const router = useRouter()
-  const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
   const [upcoming, setUpcoming] = useState<FormattedGame[]>([])
   const [recentlyReleased, setRecentlyReleased] = useState<FormattedGame[]>([])
   const [trending, setTrending] = useState<AppviewGame[]>([])
   const [igdbLoading, setIgdbLoading] = useState(true)
   const [appviewLoading, setAppviewLoading] = useState(true)
-
-  const [artworkUrls, setArtworkUrls] = useState<string[]>([])
+  const [myGamesMap, setMyGamesMap] = useState<Map<number, GameRecordView>>(new Map())
   const [bgImage, setBgImage] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<FormattedGame[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
-  const [myGamesMap, setMyGamesMap] = useState<Map<number, GameRecordView>>(new Map())
   const searchRef = useRef<HTMLDivElement>(null)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nowPlayingBgRef = useRef<HTMLDivElement>(null)
@@ -77,7 +73,6 @@ export default function HomePage() {
     restoreSession()
       .then((s) => {
         if (!s) { window.location.href = '/'; return }
-        setSession(s)
         ;(async () => {
           try {
             const map = new Map<number, GameRecordView>()
@@ -103,8 +98,7 @@ export default function HomePage() {
       .then(igdb => {
         setUpcoming(shuffle((igdb.upcoming ?? []).map(formatIgdbGame)))
         setRecentlyReleased(shuffle((igdb.recentlyReleased ?? []).map(formatIgdbGame)))
-        const urls = igdb.artworkUrls ?? []
-        setArtworkUrls(urls)
+        const urls: string[] = igdb.artworkUrls ?? []
         if (urls.length > 0) setBgImage(urls[Math.floor(Math.random() * urls.length)])
       })
       .catch(() => {})
@@ -152,7 +146,6 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-
   return (
     <>
       <main>
@@ -167,119 +160,116 @@ export default function HomePage() {
           )}
           <div className="container">
             <div className="now-playing-content">
-            <h2 className="now-playing-title">What are you playing?</h2>
-            <div className="search-wrapper" ref={searchRef}>
-              <input
-                className="input now-playing-input"
-                type="text"
-                placeholder="Search for a game"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
-                autoComplete="off"
-              />
-              {searchOpen && searchResults.length > 0 && (
-                <div className="search-results">
-                  {searchResults.map((game) => {
-                    const year = game.first_release_date
-                      ? new Date(game.first_release_date * 1000).getFullYear()
-                      : null
-                    const platforms = game.platforms?.map((p) => p.name).join(', ')
-                    return (
-                      <div
-                        key={game.id}
-                        className="search-result-item"
-                        onMouseDown={(e) => {
-                          e.preventDefault()
-                          setSearchQuery('')
-                          setSearchOpen(false)
-                          setSearchResults([])
-                          router.push(`/games/${game.id}`)
-                        }}
-                      >
-                        <img className="search-result-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
-                        <div className="search-result-info">
-                          <strong>{game.name}</strong>
-                          <span className="search-result-platforms">
-                            {[year ?? 'Unknown year', platforms].filter(Boolean).join(' • ')}
-                          </span>
+              <h2 className="now-playing-title">What are you playing?</h2>
+              <div className="search-wrapper" ref={searchRef}>
+                <input
+                  className="input now-playing-input"
+                  type="text"
+                  placeholder="Search for a game"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
+                  autoComplete="off"
+                />
+                {searchOpen && searchResults.length > 0 && (
+                  <div className="search-results">
+                    {searchResults.map((game) => {
+                      const year = game.first_release_date
+                        ? new Date(game.first_release_date * 1000).getFullYear()
+                        : null
+                      const platforms = game.platforms?.map((p) => p.name).join(', ')
+                      return (
+                        <div
+                          key={game.id}
+                          className="search-result-item"
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            setSearchQuery('')
+                            setSearchOpen(false)
+                            setSearchResults([])
+                            router.push(`/games/${game.id}`)
+                          }}
+                        >
+                          <img className="search-result-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
+                          <div className="search-result-info">
+                            <strong>{game.name}</strong>
+                            <span className="search-result-platforms">
+                              {[year ?? 'Unknown year', platforms].filter(Boolean).join(' • ')}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
         <div className="container">
-          {(appviewLoading || trending.length > 0) && (
-            <section id="trending" className="browse-section">
-              <div className="browse-section-header">
-                <h2 className="browse-section-title"><TrendingUp size={16} />Trending</h2>
-              </div>
-              {appviewLoading ? (
-                <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
-              ) : (
-                <div className="browse-grid">
-                  {trending.slice(0, 12).map((game) => (
-                    <div key={game.igdbId} className="game-card-grid">
-                      <div className="game-card-grid-cover-wrap">
-                        <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                          <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+          {(igdbLoading || appviewLoading) ? (
+            <div style={{ padding: '48px 0', color: 'var(--text-muted)', textAlign: 'center' }}>Loading…</div>
+          ) : (
+            <>
+              {trending.length > 0 && (
+                <section id="trending" className="browse-section">
+                  <div className="browse-section-header">
+                    <h2 className="browse-section-title">Trending now</h2>
+                  </div>
+                  <div className="browse-grid">
+                    {trending.slice(0, 12).map((game) => (
+                      <div key={game.igdbId} className="game-card-grid">
+                        <div className="game-card-grid-cover-wrap">
+                          <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                            <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+                          </a>
+                        </div>
+                        <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
+                          <div className="game-card-grid-title">{game.title}</div>
+                          <div className="browse-card-meta" style={{ color: 'var(--text-muted)' }}>
+                            {game.count} {game.count === 1 ? 'player' : 'players'}
+                          </div>
                         </a>
                       </div>
-                      <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
-                        <div className="game-card-grid-title">{game.title}</div>
-                        <div className="browse-card-meta" style={{ color: 'var(--text-muted)' }}>
-                          {game.count} {game.count === 1 ? 'player' : 'players'}
-                        </div>
-                      </a>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </section>
               )}
-            </section>
+
+              <section id="recent" className="browse-section">
+                <div className="browse-section-header">
+                  <h2 className="browse-section-title">New releases</h2>
+                </div>
+                {recentlyReleased.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                ) : (
+                  <div className="browse-grid">
+                    {recentlyReleased.slice(0, 12).map((game) => (
+                      <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section id="upcoming" className="browse-section">
+                <div className="browse-section-header">
+                  <h2 className="browse-section-title">Coming soon</h2>
+                </div>
+                {upcoming.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                ) : (
+                  <div className="browse-grid">
+                    {upcoming.slice(0, 12).map((game) => (
+                      <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
           )}
-
-          <section id="recent" className="browse-section">
-            <div className="browse-section-header">
-              <h2 className="browse-section-title"><CalendarDays size={16} />New releases</h2>
-            </div>
-            {igdbLoading ? (
-              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
-            ) : recentlyReleased.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-            ) : (
-              <div className="browse-grid">
-                {recentlyReleased.slice(0, 12).map((game) => (
-                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section id="upcoming" className="browse-section">
-            <div className="browse-section-header">
-              <h2 className="browse-section-title"><Sparkles size={16} />Coming soon</h2>
-            </div>
-            {igdbLoading ? (
-              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
-            ) : upcoming.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-            ) : (
-              <div className="browse-grid">
-                {upcoming.slice(0, 12).map((game) => (
-                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
-                ))}
-              </div>
-            )}
-          </section>
         </div>
       </main>
-
     </>
   )
 }

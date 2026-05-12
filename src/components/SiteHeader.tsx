@@ -2,20 +2,25 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { Agent } from '@atproto/api'
 import { restoreSession, signOut } from '@/lib/atproto'
 import HeaderMenu from '@/components/HeaderMenu'
 import MobileMenu from '@/components/MobileMenu'
+import AddGameModal from '@/components/AddGameModal'
 
 export default function SiteHeader() {
   const pathname = usePathname()
   const [userHandle, setUserHandle] = useState<string | null>(null)
+  const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
   const [sessionChecked, setSessionChecked] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     restoreSession()
       .then((s) => {
         if (s) {
+          setSession(s)
           s.agent.com.atproto.repo.describeRepo({ repo: s.did })
             .then((res) => setUserHandle(res.data.handle))
             .catch(() => {})
@@ -68,8 +73,17 @@ export default function SiteHeader() {
                 <a href="/discover" className={`nav-link${isDiscover ? ' nav-link-active' : ''}`}>Discover</a>
                 <a href="/social" className={`nav-link${isSocial ? ' nav-link-active' : ''}`}>Social</a>
                 <HeaderMenu userHandle={userHandle} onSignOut={handleSignOut} active={isProfileSection} />
+                <button className="btn btn-primary btn-sm" style={{ marginLeft: 14 }} onClick={() => setShowAddModal(true)}>+ Add game</button>
               </nav>
               <MobileMenu userHandle={userHandle} onSignOut={handleSignOut} />
+              {showAddModal && session && (
+                <AddGameModal
+                  agent={session.agent}
+                  did={session.did}
+                  onClose={() => setShowAddModal(false)}
+                  onAdded={() => setShowAddModal(false)}
+                />
+              )}
             </>
           ) : (
             <a href="/" className="btn btn-ghost btn-sm">

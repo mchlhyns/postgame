@@ -86,5 +86,5 @@ export interface IgdbGame {
   involved_companies?: { company: { name: string }; developer: boolean; publisher: boolean }[]
   genres?: { name: string }[]
   websites?: { url: string }[]
-  similar_games?: { id: number; name: string; cover?: { url: string } }[]
+  similar_games?: { id: number; name: string; cover?: { url: string }; platforms?: { name: string }[] }[]
 }

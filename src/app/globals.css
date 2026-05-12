@@ -83,13 +83,16 @@ a {
 }
 
 a:hover,
-.game-card-started-title a:hover,
 .login-page a:hover {
   color: var(--text);
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-thickness: 2px;
   text-decoration-color: var(--accent);
+}
+
+.game-card-started-title a:hover {
+  text-decoration: none;
 }
 
 button {

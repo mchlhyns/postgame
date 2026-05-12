@@ -27,7 +27,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function BrowseCard({ game, existingRecord, showRating, showReleaseDate }: {
+function BrowseCard({ game, existingRecord, showReleaseDate }: {
   game: FormattedGame
   existingRecord?: GameRecordView
   showReleaseDate?: boolean

@@ -6,8 +6,7 @@ import { Agent } from '@atproto/api'
 import { restoreSession, COLLECTION } from '@/lib/atproto'
 import { IgdbGame, GameRecordView } from '@/types'
 import { formatIgdbGame } from '@/lib/igdb'
-import { CalendarDays, Star, Sparkles, TrendingUp } from 'lucide-react'
-import { Stars } from '@/components/Stars'
+import { CalendarDays, Sparkles, TrendingUp } from 'lucide-react'
 
 type FormattedGame = IgdbGame & { coverUrl?: string }
 
@@ -64,9 +63,7 @@ export default function HomePage() {
   const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
   const [upcoming, setUpcoming] = useState<FormattedGame[]>([])
   const [recentlyReleased, setRecentlyReleased] = useState<FormattedGame[]>([])
-  const [highlyRated, setHighlyRated] = useState<FormattedGame[]>([])
   const [trending, setTrending] = useState<AppviewGame[]>([])
-  const [topRated, setTopRated] = useState<AppviewGame[]>([])
   const [igdbLoading, setIgdbLoading] = useState(true)
   const [appviewLoading, setAppviewLoading] = useState(true)
 
@@ -110,7 +107,6 @@ export default function HomePage() {
       .then(igdb => {
         setUpcoming(shuffle((igdb.upcoming ?? []).map(formatIgdbGame)))
         setRecentlyReleased(shuffle((igdb.recentlyReleased ?? []).map(formatIgdbGame)))
-        setHighlyRated((igdb.highlyRated ?? []).map(formatIgdbGame))
         const urls = igdb.artworkUrls ?? []
         setArtworkUrls(urls)
         if (urls.length > 0) setBgImage(urls[Math.floor(Math.random() * urls.length)])
@@ -122,7 +118,6 @@ export default function HomePage() {
       .then(r => r.json())
       .then(appview => {
         setTrending(shuffle(appview.trending ?? []))
-        setTopRated(shuffle(appview.topRated ?? []))
       })
       .catch(() => {})
       .finally(() => setAppviewLoading(false))
@@ -224,40 +219,6 @@ export default function HomePage() {
         </section>
 
         <div className="container">
-          <section id="recent" className="browse-section">
-            <div className="browse-section-header">
-              <h2 className="browse-section-title"><CalendarDays size={16} />New releases</h2>
-            </div>
-            {igdbLoading ? (
-              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
-            ) : recentlyReleased.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-            ) : (
-              <div className="browse-grid">
-                {recentlyReleased.slice(0, 8).map((game) => (
-                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section id="upcoming" className="browse-section">
-            <div className="browse-section-header">
-              <h2 className="browse-section-title"><Sparkles size={16} />Coming soon</h2>
-            </div>
-            {igdbLoading ? (
-              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
-            ) : upcoming.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-            ) : (
-              <div className="browse-grid">
-                {upcoming.slice(0, 8).map((game) => (
-                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
-                ))}
-              </div>
-            )}
-          </section>
-
           {(appviewLoading || trending.length > 0) && (
             <section id="trending" className="browse-section">
               <div className="browse-section-header">
@@ -267,7 +228,7 @@ export default function HomePage() {
                 <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
               ) : (
                 <div className="browse-grid">
-                  {trending.slice(0, 8).map((game) => (
+                  {trending.slice(0, 12).map((game) => (
                     <div key={game.igdbId} className="game-card-grid">
                       <div className="game-card-grid-cover-wrap">
                         <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
@@ -287,36 +248,35 @@ export default function HomePage() {
             </section>
           )}
 
-          <section id="rated" className="browse-section">
+          <section id="recent" className="browse-section">
             <div className="browse-section-header">
-              <h2 className="browse-section-title"><Star size={16} />Top rated</h2>
+              <h2 className="browse-section-title"><CalendarDays size={16} />New releases</h2>
             </div>
-            {appviewLoading || igdbLoading ? (
+            {igdbLoading ? (
               <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
-            ) : topRated.length >= 8 ? (
-              <div className="browse-grid">
-                {topRated.slice(0, 8).map((game) => (
-                  <div key={game.igdbId} className="game-card-grid">
-                    <div className="game-card-grid-cover-wrap">
-                      <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                        <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
-                      </a>
-                    </div>
-                    <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
-                      <div className="game-card-grid-title">{game.title}</div>
-                      {game.avgRating != null && (
-                        <div className="browse-card-meta">
-                          <Stars rating={game.avgRating / 2} />
-                        </div>
-                      )}
-                    </a>
-                  </div>
-                ))}
-              </div>
+            ) : recentlyReleased.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
             ) : (
               <div className="browse-grid">
-                {highlyRated.slice(0, 8).map((game) => (
-                  <BrowseCard key={game.id} game={game} showRating existingRecord={myGamesMap.get(game.id)} />
+                {recentlyReleased.slice(0, 12).map((game) => (
+                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section id="upcoming" className="browse-section">
+            <div className="browse-section-header">
+              <h2 className="browse-section-title"><Sparkles size={16} />Coming soon</h2>
+            </div>
+            {igdbLoading ? (
+              <div style={{ padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</div>
+            ) : upcoming.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+            ) : (
+              <div className="browse-grid">
+                {upcoming.slice(0, 12).map((game) => (
+                  <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
                 ))}
               </div>
             )}

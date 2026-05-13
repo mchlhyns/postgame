@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { NextRequest } from 'next/server'
 import { fetchAllGameRecords } from '@/lib/happyview'
+import { getIgdbToken, igdbQuery } from '@/lib/igdb-server'
+import { abbreviatePlatform } from '@/lib/igdb'
 
 const PENTARACT_URL = 'https://gamesgamesgamesgames.games'
 const PENTARACT_KEY = process.env.GAMES_CLIENT_KEY!
@@ -14,6 +16,7 @@ type GameEntry = {
   lastActivity: string
   ratingSum: number
   ratingCount: number
+  platforms?: string[]
 }
 
 let _cache: { data: unknown; expiresAt: number } | null = null
@@ -69,6 +72,17 @@ async function buildTrending(): Promise<unknown> {
     .filter(g => g.avgRating >= 7)
     .sort((a, b) => b.avgRating - a.avgRating || b.ratingCount - a.ratingCount)
     .slice(0, 48)
+
+  try {
+    const ids = [...new Set([...trending, ...topRated].map(g => g.igdbId))]
+    const token = await getIgdbToken()
+    const platformData = await igdbQuery(token, 'games', `fields id,platforms.name; where id = (${ids.join(',')}); limit ${ids.length};`) as { id: number; platforms?: { name: string }[] }[]
+    const platformMap = new Map(platformData.map(g => [g.id, (g.platforms ?? []).map(p => abbreviatePlatform(p.name))]))
+    for (const g of [...trending, ...topRated]) {
+      const platforms = platformMap.get(g.igdbId)
+      if (platforms?.length) g.platforms = platforms
+    }
+  } catch {}
 
   return { trending, topRated }
 }

@@ -1,4 +1,5 @@
 import GameBannerStats from '@/components/GameBannerStats'
+import ParallaxBannerImg from '@/components/ParallaxBannerImg'
 
 interface Props {
   igdbId: number
@@ -11,10 +12,7 @@ interface Props {
 export default function GamePageBanner({ igdbId, bannerUrl, coverUrl, title, subtitle }: Props) {
   return (
     <div className="game-detail-banner-block">
-      <div
-        className="game-detail-banner-img"
-        style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined}
-      />
+      <ParallaxBannerImg className="game-detail-banner-img" url={bannerUrl} />
       <div className="container">
         <div className="game-detail-banner-content">
           <img src={coverUrl ?? '/no-cover.png'} alt={title} className="game-detail-cover" />

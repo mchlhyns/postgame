@@ -40,7 +40,7 @@ const sections: Section[] = [
     items: [
       {
         q: 'Are my games, collections, and lists public?',
-        a: 'AT Protocol repositories are public by default, the same way Bluesky posts are. Anyone who knows your DID or handle can look up your collection records directly via the AT Protocol.',
+        a: 'AT Protocol repositories are public by default, the same way Bluesky posts are. Anyone who knows your DID or handle can look up your collection records directly via the AT Protocol. Like many other apps on the AT Protocol, we show user activity in the Network section of the /social page.',
       },
       {
         q: 'What analytics or tracking does the site use?',

@@ -520,6 +520,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-started-meta {
   font-size: 0.75rem;
   color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+}
+.game-card-started-meta:hover {
+  text-decoration: none;
+  color: var(--text-muted);
 }
 
 /* View toggle */
@@ -1972,10 +1978,10 @@ p.error-msg {
 }
 
 .profile-banner-img {
+  position: relative;
   width: 100%;
   height: 420px;
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
   background-color: var(--tertiary);
 }
 
@@ -2096,7 +2102,7 @@ a.social-link:hover {
 .settings-banner-preview {
   position: relative;
   width: 100%;
-  height: 120px;
+  height: 160px;
   background: var(--tertiary);
   border-radius: var(--radius);
   background-size: cover;
@@ -2139,6 +2145,7 @@ a.social-link:hover {
   letter-spacing: 0.06em;
   color: var(--text-muted);
   margin-bottom: 16px;
+  font-size: .875rem;
   padding-bottom: 6px;
   border-bottom: 2px solid var(--border);
 }
@@ -2439,6 +2446,12 @@ p.faq-answer a:hover {
   font-family: 'Space Grotesk', sans-serif;
   color: var(--text-muted);
   margin-top: 2px;
+}
+
+.browse-card-platforms {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Custom Select */
@@ -2874,10 +2887,10 @@ p.faq-answer a:hover {
 }
 
 .game-detail-banner-img {
+  position: relative;
   width: 100%;
   height: 420px;
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
   background-color: var(--tertiary);
 }
 
@@ -3302,7 +3315,8 @@ footer .container {
     padding-right: 16px;
   }
 
-  .game-detail-banner-img {
+  .game-detail-banner-img,
+  .profile-banner-img {
     height: 140px;
   }
 

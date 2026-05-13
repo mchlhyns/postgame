@@ -205,7 +205,9 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
     return (
       <>
         <div className="game-card-started">
-          <div className="game-card-started-banner" style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined} />
+          <a href={gameHref} style={{ display: 'block', lineHeight: 0 }}>
+            <div className="game-card-started-banner" style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined} />
+          </a>
           <div className="game-card-started-bottom">
             <div className="game-card-started-cover-wrap">{coverEl}</div>
             <div className="game-card-started-info">
@@ -217,7 +219,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 const parts: string[] = []
                 if (platform) parts.push(platform)
                 if (value.startedAt) parts.push(`Started ${formatDate(value.startedAt)}`)
-                return parts.length > 0 ? <div className="game-card-started-meta">{parts.join(' • ')}</div> : null
+                return parts.length > 0 ? <a href={gameHref} className="game-card-started-meta">{parts.join(' • ')}</a> : null
               })()}
               {value.rating && normalizeStatus(value.status) !== 'playing' && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
             </div>

@@ -8,6 +8,7 @@ import { COLLECTION, SETTINGS_COLLECTION, LIST_COLLECTION, FOLLOW_COLLECTION, re
 import { GameRecordView, GameRef, ListRecordView } from '@/types'
 import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
+import ParallaxBannerImg from '@/components/ParallaxBannerImg'
 import { Stars } from '@/components/Stars'
 import { applyAccent, loadStoredAccent } from '@/components/AccentColorApplier'
 
@@ -368,7 +369,7 @@ export default function ProfilePage() {
       <main>
         {!loading && !error && (
           <div className="profile-banner-block">
-            <div className="profile-banner-img" style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined} />
+            <ParallaxBannerImg className="profile-banner-img" url={bannerUrl} />
             <div className="container profile-banner-content">
               <div style={{ position: 'relative', height: 72, flexShrink: 0 }}>
                 {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}
@@ -578,7 +579,7 @@ export default function ProfilePage() {
                                   {' '}
                                   <a href={`/${resolvedHandle ?? handle}/lists/${item.record.uri.split('/').pop()}`} className="feed-game-title">{item.record.value.name}</a>
                                 </div>
-                                <span style={{ fontSize: '0.875rem', marginLeft: 'auto', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                <span style={{ fontSize: '0.875rem', marginLeft: 'auto', color: 'var(--text-muted)', whiteSpace: 'nowrap', width: 50, textAlign: 'right', display: 'inline-block' }}>
                                   {relativeTime(item.date)}
                                 </span>
                               </>
@@ -593,7 +594,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                                   {item.record.value.rating && <Stars rating={item.record.value.rating / 2} />}
-                                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', width: 50, textAlign: 'right', display: 'inline-block' }}>
                                     {relativeTime(item.date)}
                                   </span>
                                 </div>

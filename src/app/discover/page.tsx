@@ -15,6 +15,7 @@ type AppviewGame = {
   coverUrl?: string
   count: number
   avgRating?: number
+  platforms?: string[]
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -227,9 +228,11 @@ export default function HomePage() {
                         </div>
                         <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
                           <div className="game-card-grid-title">{game.title}</div>
-                          <div className="browse-card-meta" style={{ color: 'var(--text-muted)' }}>
-                            {game.count} {game.count === 1 ? 'player' : 'players'}
-                          </div>
+                          {game.platforms && game.platforms.length > 0 && (
+                            <div className="browse-card-meta browse-card-platforms">
+                              {game.platforms.join(' · ')}
+                            </div>
+                          )}
                         </a>
                       </div>
                     ))}

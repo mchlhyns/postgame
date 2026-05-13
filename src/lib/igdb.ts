@@ -43,6 +43,24 @@ export const COMMON_PLATFORMS = [
   'iOS', 'Android',
 ]
 
+const PLATFORM_ABBREVS: Record<string, string> = {
+  'PC (Microsoft Windows)': 'PC',
+  'PlayStation 5': 'PS5',
+  'PlayStation 4': 'PS4',
+  'PlayStation 3': 'PS3',
+  'PlayStation 2': 'PS2',
+  'PlayStation': 'PS1',
+  'Xbox Series X|S': 'Xbox Series X/S',
+  'Nintendo Switch 2': 'Switch 2',
+  'Nintendo Switch': 'Switch',
+  'Nintendo 3DS': '3DS',
+  'New Nintendo 3DS': '3DS',
+}
+
+export function abbreviatePlatform(name: string): string {
+  return PLATFORM_ABBREVS[name] ?? name
+}
+
 export const PRIMARY_STATUSES = ['playing', 'backlogged', 'wishlisted', 'played'] as const
 export type PrimaryStatus = typeof PRIMARY_STATUSES[number]
 

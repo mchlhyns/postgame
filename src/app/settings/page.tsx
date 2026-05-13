@@ -323,7 +323,7 @@ export default function SettingsPage() {
               {/* Banner */}
               <div className="form-field">
                 <label>Profile banner</label>
-                <span className="settings-subtext">1600 x 500 for best results</span>
+                <span className="settings-subtext">2560 x 860 for best results</span>
                 <div
                   className="settings-banner-preview"
                   style={currentBanner ? { backgroundImage: `url(${currentBanner})` } : undefined}

@@ -10,7 +10,6 @@ import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
 import ParallaxBannerImg from '@/components/ParallaxBannerImg'
 import { Stars } from '@/components/Stars'
-import { applyAccent, loadStoredAccent } from '@/components/AccentColorApplier'
 
 const ALL_STATUSES = PRIMARY_STATUSES
 
@@ -79,7 +78,7 @@ function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
   return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
 }
 
-async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; accentColor?: string; pronouns?: string; newScreenshots: Record<number, string> }> {
+async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; pronouns?: string; newScreenshots: Record<number, string> }> {
   const cleanHandle = handle.replace(/^@/, '')
   const { did, pdsUrl } = await resolveHandleToPds(cleanHandle)
 
@@ -152,7 +151,6 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
   let ctaAvatarUrl: string | undefined
   let bannerUrl: string | undefined
   let favouriteGame: GameRef | undefined
-  let accentColor: string | undefined
   let pronouns: string | undefined
   if (settingsRes.ok) {
     const settings = await settingsRes.json()
@@ -160,7 +158,6 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     if (settings.value?.avatarBlob) ctaAvatarUrl = blobUrl(pdsUrl, did, settings.value.avatarBlob) ?? undefined
     if (settings.value?.bannerBlob) bannerUrl = blobUrl(pdsUrl, did, settings.value.bannerBlob) ?? undefined
     if (settings.value?.favouriteGame) favouriteGame = settings.value.favouriteGame
-    if (settings.value?.accentColor) accentColor = settings.value.accentColor
     if (settings.value?.pronouns) pronouns = settings.value.pronouns
   }
 
@@ -172,7 +169,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     avatar = profile.avatar
   }
 
-  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, pronouns, newScreenshots }
+  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, pronouns, newScreenshots }
 }
 
 export default function ProfilePage() {
@@ -262,12 +259,10 @@ export default function ProfilePage() {
     try { screenshotCache = JSON.parse(sessionStorage.getItem('cta_screenshots') ?? '{}') } catch {}
 
     setFollows(null)
-    const ownAccent = loadStoredAccent()
 
     fetchPublicGames(handle, screenshotCache)
-      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, accentColor, pronouns, newScreenshots }) => {
+      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, pronouns, newScreenshots }) => {
         if (cancelled) return
-        if (accentColor) applyAccent(accentColor)
         setProfileDid(did)
         setProfilePdsUrl(pdsUrl)
         setResolvedHandle(resolvedHandle)
@@ -285,11 +280,7 @@ export default function ProfilePage() {
       .catch((err) => { if (!cancelled) setError(err.message ?? 'Something went wrong') })
       .finally(() => { if (!cancelled) setLoading(false) })
 
-    return () => {
-      cancelled = true
-      if (ownAccent) applyAccent(ownAccent)
-      else document.documentElement.style.removeProperty('--accent')
-    }
+    return () => { cancelled = true }
   }, [handle])
 
   useEffect(() => {
@@ -534,8 +525,8 @@ export default function ProfilePage() {
                       <div key={f.did} className="game-card-grid" style={{ padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
                         <a href={`/${f.handle}`} style={{ display: 'block', flexShrink: 0 }}>
                           {f.avatar
-                            ? <img src={f.avatar} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
-                            : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)' }} />
+                            ? <img src={f.avatar} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block', border: '2px solid var(--border)' }} />
+                            : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)', border: '2px solid var(--border)' }} />
                           }
                         </a>
                         <div style={{ minWidth: 0, width: '100%' }}>

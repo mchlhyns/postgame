@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { IgdbGame, GameRecordView, PlayedStatus, BackloggedStatus } from '@/types'
 import { COLLECTION } from '@/lib/atproto'
@@ -117,7 +118,12 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Add game</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ margin: 0 }}>Add game</h2>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
 
         {!selected ? (
           <div className="form-field add-modal-field">

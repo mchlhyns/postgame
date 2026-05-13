@@ -3,7 +3,6 @@ import './globals.css'
 import SiteHeader from '@/components/SiteHeader'
 import FooterWrapper from '@/components/FooterWrapper'
 import BackToTop from '@/components/BackToTop'
-import AccentColorApplier from '@/components/AccentColorApplier'
 
 const APP_URL = 'https://crashthearcade.com'
 
@@ -35,7 +34,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <AccentColorApplier />
         <SiteHeader />
         {children}
         <FooterWrapper />

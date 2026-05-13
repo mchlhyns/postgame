@@ -115,12 +115,9 @@ export default function MyGamesPage() {
                   ...ALL_STATUSES.map((s) => ({ value: s, label: `${statusLabel(s)} (${countFor(s)})` })),
                 ]}
               />
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <div className="view-toggle">
-                  <button className={`view-toggle-btn${view === 'grid' ? ' active' : ''}`} onClick={() => setView('grid')} title="Grid view">⊞</button>
-                  <button className={`view-toggle-btn${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')} title="List view">☰</button>
-                </div>
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>+ Add game</button>
+              <div className="view-toggle">
+                <button className={`view-toggle-btn${view === 'grid' ? ' active' : ''}`} onClick={() => setView('grid')} title="Grid view">⊞</button>
+                <button className={`view-toggle-btn${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')} title="List view">☰</button>
               </div>
             </div>
 

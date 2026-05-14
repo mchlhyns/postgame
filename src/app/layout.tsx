@@ -33,6 +33,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script defer data-domain="crashthearcade.com" src="https://stats.crashthearcade.com/js/script.js" />
+      </head>
       <body>
         <SiteHeader />
         {children}

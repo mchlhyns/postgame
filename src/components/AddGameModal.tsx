@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { IgdbGame, GameRecordView, PlayedStatus, BackloggedStatus } from '@/types'
 import { COLLECTION } from '@/lib/atproto'
-import { formatIgdbGame, dateInputToISO, PLAYED_STATUS_LABELS, normalizeStatus } from '@/lib/igdb'
+import { formatIgdbGame, dateInputToISO, PLAYED_STATUS_LABELS, normalizeStatus, abbreviatePlatform } from '@/lib/igdb'
 import Select from '@/components/Select'
 import { StarRatingInput } from '@/components/Stars'
 
@@ -109,7 +109,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
     }
   }
 
-  const igdbPlatforms = selected?.platforms?.map((p) => p.name) ?? []
+  const igdbPlatforms = selected?.platforms?.map((p) => abbreviatePlatform(p.name)) ?? []
   const platformOptions = [
     { value: '', label: '—' },
     ...igdbPlatforms.map((p) => ({ value: p, label: p })),
@@ -147,7 +147,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
                     const year = game.first_release_date
                       ? new Date(game.first_release_date * 1000).getFullYear()
                       : null
-                    const platforms = game.platforms?.map((p) => p.name).join(', ')
+                    const platforms = game.platforms?.map((p) => abbreviatePlatform(p.name)).join(', ')
                     return (
                       <div
                         key={game.id}

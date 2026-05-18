@@ -38,6 +38,7 @@ export default function ScreenshotGallery({ screenshots }: Props) {
 
   return (
     <>
+      <div className="game-detail-meta-label" style={{ marginBottom: 12 }}>Screenshots</div>
       <div className="game-detail-screenshots">
         {screenshots.map((url, i) => (
           <button

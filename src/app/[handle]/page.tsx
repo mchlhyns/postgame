@@ -163,13 +163,15 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
 
   let bskyDisplayName: string | undefined
   let avatar: string | undefined
+  let bskyBannerUrl: string | undefined
   if (profileRes.ok) {
     const profile = await profileRes.json()
     bskyDisplayName = profile.displayName
     avatar = profile.avatar
+    bskyBannerUrl = profile.banner
   }
 
-  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, pronouns, newScreenshots }
+  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl: bannerUrl ?? bskyBannerUrl, favouriteGame, pronouns, newScreenshots }
 }
 
 export default function ProfilePage() {
@@ -396,22 +398,24 @@ export default function ProfilePage() {
                   { label: 'Backlogged', status: 'backlogged' },
                   { label: 'Wishlisted', status: 'wishlisted' },
                   { label: 'Played', status: 'played' },
-                ] as const).map(({ label, status }) => (
-                  <button
-                    key={status}
-                    style={{ textAlign: 'right', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
-                    onClick={() => {
-                      setSection('games')
-                      setSelectedList(null)
-                      setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
-                    }}
-                  >
-                    <div className="profile-stat-count">
-                      {deduped.filter(g => matchesStatus(g.value.status, status)).length}
-                    </div>
-                    <div className="profile-stat-label">{label}</div>
-                  </button>
-                ))}
+                ] as const).flatMap(({ label, status }) => {
+                  const count = deduped.filter(g => matchesStatus(g.value.status, status)).length
+                  if (count === 0) return []
+                  return [(
+                    <button
+                      key={status}
+                      style={{ textAlign: 'right', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
+                      onClick={() => {
+                        setSection('games')
+                        setSelectedList(null)
+                        setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+                      }}
+                    >
+                      <div className="profile-stat-count">{count}</div>
+                      <div className="profile-stat-label">{label}</div>
+                    </button>
+                  )]
+                })}
               </div>
             </div>
           </div>

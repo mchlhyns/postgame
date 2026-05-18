@@ -34,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link rel="preload" href="/fonts/Fustat/Fustat-VariableFont_wght.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <script defer data-domain="crashthearcade.com" src="https://stats.crashthearcade.com/js/script.js" />
       </head>
       <body>

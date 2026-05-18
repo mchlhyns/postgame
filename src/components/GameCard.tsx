@@ -268,7 +268,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 5 }}><RotateCcw size={13} style={{ color: 'var(--accent)' }} /></span>}
             </div>
             {platform && (
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 0 }}>
+              <div className="game-card-meta" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {platform}
               </div>
             )}
@@ -330,7 +330,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
 
       {!readonly && (
         <div style={{ flexShrink: 0 }}>
-          <button className="btn btn-ghost" onClick={startEdit}>Edit</button>
+          <button className="btn btn-basic" onClick={startEdit}>Edit</button>
         </div>
       )}
 

@@ -63,8 +63,7 @@ export default function SiteHeader() {
           href={sessionChecked && userHandle ? '/discover' : '/'}
           style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
         >
-          <img src="/logo.png" alt="" style={{ height: 18, lineHeight: 0 }} />
-          <span className="header-site-name">CRASH THE ARCADE</span>
+          <img src="/logo.png" alt="CRASH THE ARCADE" style={{ height: 18, lineHeight: 0 }} />
         </a>
         {sessionChecked && (
           userHandle ? (
@@ -73,7 +72,7 @@ export default function SiteHeader() {
                 <a href="/discover" className={`nav-link${isDiscover ? ' nav-link-active' : ''}`}>Discover</a>
                 <a href="/social" className={`nav-link${isSocial ? ' nav-link-active' : ''}`}>Social</a>
                 <HeaderMenu userHandle={userHandle} onSignOut={handleSignOut} active={isProfileSection} />
-                <button className="btn btn-primary btn-sm" style={{ marginLeft: 14 }} onClick={() => setShowAddModal(true)}>+ Add game</button>
+                <button className="btn btn-primary" style={{ marginLeft: 14 }} onClick={() => setShowAddModal(true)}>+ Add game</button>
               </nav>
               <MobileMenu userHandle={userHandle} onSignOut={handleSignOut} />
               {showAddModal && session && (

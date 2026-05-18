@@ -1,33 +1,9 @@
 @font-face {
-  font-family: 'Space Mono';
-  src: url('/fonts/SpaceMono/SpaceMono-Regular.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Fustat';
+  src: url('/fonts/Fustat/Fustat-VariableFont_wght.woff2') format('woff2-variations');
+  font-weight: 200 800;
   font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Space Mono';
-  src: url('/fonts/SpaceMono/SpaceMono-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Space Grotesk';
-  src: url('/fonts/SpaceGrotesk/SpaceGrotesk-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Space Grotesk';
-  src: url('/fonts/SpaceGrotesk/SpaceGrotesk-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 *, *::before, *::after {
@@ -43,16 +19,24 @@
   --border: #2E3133;
   --text: #ffffff;
   --text-muted: #808283;
-  --accent: #10D275;
-  --accent-hover: #99e8b2;
-  --accent-light: #0d2b1e;
-  --accent-text: #08121D;
+  --accent: #29ADFF;
+  --accent-hover: #94D6FF;
+  --accent-light: #155780;
+  --accent-text: #080B0E;
   --danger: #FF3668;
   --overlay: rgba(8, 11, 14, 0.7);
   --overlay-heavy: rgba(8, 11, 14, 0.92);
-  --radius: 4px;
+  --radius: 8px;
+  --radius-full: 999px;
   --shadow: 0 1px 3px rgba(8, 11, 14, 0.4);
-  --font-mono: 'Space Mono', monospace;
+  --text-2xs: 0.6875rem;
+  --text-xs:  0.75rem;
+  --text-sm:  0.875rem;
+  --text-base: 1rem;
+  --text-lg:  1.125rem;
+  --text-xl:  1.375rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.25rem;
 }
 
 
@@ -65,7 +49,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  font-family: 'Fustat', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -140,7 +124,7 @@ header .container {
 }
 
 .wordmark {
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--accent);
   letter-spacing: -0.3px;
@@ -152,8 +136,8 @@ header .container {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
   font-weight: 400;
   text-decoration: none;
   transition: background 0.15s;
@@ -185,7 +169,7 @@ header .container {
 
 .btn-sm {
   padding: 5px 10px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
 }
 
 .btn-basic {
@@ -206,7 +190,7 @@ header .container {
   border: 0;
   border-radius: var(--radius);
   background: var(--text);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   transition: border-color 0.15s;
   color: var(--bg);
 }
@@ -228,11 +212,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 /* Status badges */
 .status {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   border-radius: 2px;
   padding: 2px 6px;
   margin-top: 6px;
-  font-family: var(--font-mono);
+  font-family: 'Fustat', sans-serif;
   font-weight: normal;
   text-transform: uppercase;
 }
@@ -268,7 +252,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: none;
   border: none;
   color: var(--accent);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   padding: 0;
   cursor: pointer;
   font-family: inherit;
@@ -297,7 +281,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.375rem;
+  font-size: var(--text-xl);
 }
 
 .game-card-body {
@@ -322,6 +306,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 700;
 }
 
 .game-card-title a {
@@ -334,8 +319,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .game-card-meta {
-  font-size: 0.75rem;
-  font-family: 'Space Grotesk', sans-serif;
+  font-size: var(--text-sm);
+  font-family: 'Fustat', sans-serif;
   color: var(--text-muted);
 }
 
@@ -399,14 +384,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: var(--text-2xl);
 }
 
 .game-card-grid-info {
-  padding: 12px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   transition: background 0.15s;
   border-radius: 0 0 var(--radius) var(--radius);
   color: inherit;
@@ -423,7 +408,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-grid-title {
   display: block;
   line-height: 1.4;
-  font-weight: 400;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -462,7 +447,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 12px;
+  padding: 18px;
   background: var(--surface);
   transition: background 0.15s;
 }
@@ -472,13 +457,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .game-card-started-cover-wrap {
-  margin-top: -54px;
+  margin-top: -98px;
   flex-shrink: 0;
 }
 
 .game-card-started-cover {
-  width: 74px;
-  height: 100px;
+  width: 110px;
+  height: 148px;
   object-fit: cover;
   border-radius: 2px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -518,7 +503,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .game-card-started-meta {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   text-decoration: none;
   display: block;
@@ -583,7 +568,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   padding: 10px 14px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   line-height: 1.5;
   white-space: normal;
@@ -622,13 +607,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .login-box h2 {
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
   margin-bottom: 4px;
 }
 
 .login-box p {
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   margin-bottom: 20px;
 }
 
@@ -685,8 +670,8 @@ main {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.125rem;
-  font-weight: bold;
+  font-size: var(--text-lg);
+  font-weight: 700;
   margin-top: 22px;
 }
 
@@ -706,10 +691,10 @@ main {
 }
 
 .game-list-divider-count {
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 400;
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: 'Fustat', sans-serif;
 }
 
 /* My Games layout */
@@ -861,8 +846,8 @@ main {
 }
 
 .social-section-title {
-  font-size: 1.125rem;
-  font-weight: bold;
+  font-size: var(--text-lg);
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -938,7 +923,7 @@ main {
 }
 
 .follow-name {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text);
   white-space: nowrap;
@@ -947,7 +932,7 @@ main {
 }
 
 .follow-handle {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1021,16 +1006,16 @@ main {
 }
 
 .list-card-name {
-  font-weight: 400;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .list-card-count {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
-  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  font-family: 'Fustat', system-ui, -apple-system, sans-serif;
 }
 
 /* List card actions */
@@ -1048,7 +1033,7 @@ main {
 
 .list-overflow-btn {
   color: var(--text-muted);
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
   padding: 9px;
   line-height: 1;
   letter-spacing: 0em;
@@ -1074,7 +1059,7 @@ main {
   width: 100%;
   text-align: left;
   padding: 8px 14px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   background: none;
   border: none;
@@ -1085,7 +1070,7 @@ main {
 }
 
 .list-overflow-option > span {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--accent);
   flex-shrink: 0;
 }
@@ -1163,7 +1148,7 @@ main {
   background: none;
   border: none;
   outline: none;
-  font-size: 1.375rem;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--text);
   font-family: inherit;
@@ -1250,8 +1235,8 @@ main {
 }
 
 .public-list-rank {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.875rem;
+  font-family: 'Fustat', sans-serif;
+  font-size: var(--text-sm);
   line-height: 1;
   color: var(--text-muted);
 }
@@ -1266,7 +1251,7 @@ main {
 }
 
 .public-list-award {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -1284,7 +1269,7 @@ main {
   border: 1px dashed var(--border);
   border-radius: 20px;
   padding: 3px 10px;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
@@ -1324,7 +1309,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 5px 10px;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   cursor: pointer;
   text-align: center;
@@ -1385,7 +1370,7 @@ main {
 
 .list-modal-section-label {
   display: block;
-  font-weight: bold;
+  font-weight: 700;
   color: var(--text);
   margin-bottom: 12px;
 }
@@ -1395,7 +1380,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   text-align: center;
   padding: 24px 0;
@@ -1404,8 +1389,8 @@ main {
 }
 
 .list-modal-results-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
+  font-size: var(--text-2xs);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
@@ -1413,18 +1398,18 @@ main {
 }
 
 .list-modal-add-item-year {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: 'Fustat', sans-serif;
   flex-shrink: 0;
   margin-left: auto;
   padding-left: 6px;
 }
 
 .list-modal-add-item-platforms {
-  font-size: 0.625rem;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Fustat', sans-serif;
   flex-shrink: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1452,9 +1437,9 @@ main {
 }
 
 .list-modal-item-rank {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: 'Fustat', sans-serif;
   width: 22px;
   text-align: right;
   flex-shrink: 0;
@@ -1487,7 +1472,7 @@ main {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   padding: 2px 5px;
   border-radius: 2px;
@@ -1516,7 +1501,7 @@ main {
 }
 
 .list-modal-add-title {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 500;
   color: var(--text-muted);
   margin-bottom: 8px;
@@ -1619,18 +1604,18 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
 .share-link-copy {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--accent);
   flex-shrink: 0;
 }
 
 .page-header h1 {
-  font-size: 1.375rem;
+  font-size: var(--text-xl);
   font-weight: 700;
 }
 
@@ -1648,7 +1633,7 @@ main {
 .header-search-input {
   width: 200px;
   height: 32px;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   padding: 0 10px;
 }
 
@@ -1709,8 +1694,8 @@ main {
 }
 
 .search-result-info span {
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-family: 'Fustat', sans-serif;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -1718,9 +1703,9 @@ main {
 .search-result-platforms,
 .search-result-info .search-result-platforms {
   display: block;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Fustat', sans-serif;
   text-transform: none;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1753,7 +1738,7 @@ main {
 }
 
 .modal h2 {
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
   margin-bottom: 20px;
 }
 
@@ -1767,7 +1752,7 @@ main {
 
 .form-field label {
   display: block;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 400;
   margin-bottom: 8px;
   color: var(--text);
@@ -1820,7 +1805,7 @@ main {
 
 p.error-msg {
   color: var(--danger);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   margin: 16px 0 0 0;
 }
 
@@ -1837,7 +1822,7 @@ p.error-msg {
 
 .filter-tab {
   padding: 0 0 12px 0;
-  font-size: 1rem;
+  font-size: var(--text-base);
   background: none;
   color: var(--text-muted);
   cursor: pointer;
@@ -1875,7 +1860,7 @@ p.error-msg {
 .nav-dropdown-item {
   display: block;
   padding: 8px 14px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   text-decoration: none;
   transition: color 0.15s, background 0.15s;
@@ -1907,7 +1892,7 @@ p.error-msg {
   gap: 3px;
   padding: 4px 10px;
   border-radius: var(--radius);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 400;
   color: var(--text-muted);
   text-decoration: none;
@@ -1962,7 +1947,7 @@ p.error-msg {
 }
 
 .now-playing-title {
-  font-size: 2.25rem;
+  font-size: var(--text-3xl);
   font-weight: 700;
   margin-bottom: 16px;
 }
@@ -2096,7 +2081,7 @@ a.social-link:hover {
 
 .settings-avatar-wrap .browse-card-action {
   border-radius: 50%;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 /* Settings banner preview */
@@ -2117,7 +2102,7 @@ a.social-link:hover {
 .settings-subtext {
   display: block;
   margin-top: -8px;
-  font-size: .875rem;
+  font-size: var(--text-sm);
   font-style: italic;
   margin-bottom: 8px;
   color: var(--text-muted);
@@ -2146,7 +2131,7 @@ a.social-link:hover {
   letter-spacing: 0.06em;
   color: var(--text-muted);
   margin-bottom: 16px;
-  font-size: .875rem;
+  font-size: var(--text-sm);
   padding-bottom: 6px;
   border-bottom: 2px solid var(--border);
 }
@@ -2189,7 +2174,7 @@ p.faq-answer a:hover {
 
 #recent,
 #upcoming {
-  margin-top: 48px;
+  margin-top: 32px;
 }
 
 .discover-pills {
@@ -2242,29 +2227,16 @@ p.faq-answer a:hover {
   display: flex;
   align-items: baseline;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
-.browse-section-header::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  background: var(--tertiary);
-  align-self: flex-end;
-  position: relative;
-  bottom: 9px;
-}
-
-#trending .browse-section-header::after {
-  background: var(--tertiary);
-}
 
 .browse-section-header .browse-section-title {
   margin-bottom: 0;
 }
 
 .browse-section-more {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   text-decoration: none;
   white-space: nowrap;
@@ -2276,8 +2248,8 @@ p.faq-answer a:hover {
 }
 
 .browse-section-title {
-  font-size: 1.375rem;
-  font-weight: bold;
+  font-size: var(--text-xl);
+  font-weight: 700;
   margin-bottom: 18px;
   display: flex;
   align-items: center;
@@ -2295,7 +2267,7 @@ p.faq-answer a:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   background: none;
   border: none;
@@ -2351,7 +2323,7 @@ p.faq-answer a:hover {
   justify-content: center;
   gap: 6px;
   color: var(--accent-text);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2369,7 +2341,7 @@ p.faq-answer a:hover {
   left: 8px;
   z-index: 1;
   pointer-events: none;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2404,7 +2376,7 @@ p.faq-answer a:hover {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text);
 }
 
@@ -2426,7 +2398,7 @@ p.faq-answer a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: var(--text-2xl);
 }
 
 .browse-card-cover-wrap:hover ~ .browse-card-title a {
@@ -2443,10 +2415,9 @@ p.faq-answer a:hover {
 }
 
 .browse-card-meta {
-  font-size: 0.75rem;
-  font-family: 'Space Grotesk', sans-serif;
+  font-size: var(--text-sm);
+  font-family: 'Fustat', sans-serif;
   color: var(--text-muted);
-  margin-top: 2px;
 }
 
 .browse-card-platforms {
@@ -2494,7 +2465,7 @@ p.faq-answer a:hover {
 
 .select-option {
   padding: 8px 14px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   white-space: nowrap;
   color: var(--text-muted);
@@ -2517,7 +2488,7 @@ p.faq-answer a:hover {
 
 .select-option-header {
   padding: 8px 14px 4px;
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2529,8 +2500,8 @@ p.faq-answer a:hover {
 .select-filter .select-trigger,
 .lists-page-header {
   gap: 6px;
-  font-size: 1.375rem;
-  font-weight: bold;
+  font-size: var(--text-xl);
+  font-weight: 700;
   color: var(--text);
   padding: 4px 0;
 }
@@ -2550,7 +2521,7 @@ p.faq-answer a:hover {
   height: 31px;
   padding: 0 10px;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   background: var(--surface);
   border: 1px solid var(--tertiary);
@@ -2570,7 +2541,7 @@ p.faq-answer a:hover {
   width: 100%;
   justify-content: space-between;
   padding: 10px 12px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--bg);
   background: var(--text);
   border: 0;
@@ -2593,7 +2564,7 @@ p.faq-answer a:hover {
   border: none;
   color: var(--text);
   cursor: pointer;
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   padding: 4px 28px 4px 0;
 }
@@ -2610,7 +2581,7 @@ p.faq-answer a:hover {
   border-radius: var(--radius);
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   height: 31px;
   padding: 0 28px 0 10px;
 }
@@ -2676,14 +2647,13 @@ p.faq-answer a:hover {
 }
 
 .handle-suggestion-name {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 500;
 }
 
 .handle-suggestion-handle {
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
+  font-size: var(--text-xs);
+  font-family: 'Fustat', sans-serif;
   color: var(--text-muted);
 }
 
@@ -2697,7 +2667,7 @@ p.faq-answer a:hover {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   background: none;
   border: none;
@@ -2738,7 +2708,7 @@ p.faq-answer a:hover {
   width: 100%;
   text-align: left;
   padding: 8px 14px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   background: none;
   border: none;
@@ -2818,7 +2788,7 @@ p.faq-answer a:hover {
   width: 100%;
   text-align: left;
   padding: 8px 16px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   text-decoration: none;
   background: transparent;
@@ -2924,7 +2894,7 @@ p.faq-answer a:hover {
 }
 
 .game-detail-title {
-  font-size: 2rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
@@ -2935,7 +2905,6 @@ p.faq-answer a:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 4px;
 }
 
 .game-detail-layout {
@@ -2956,16 +2925,14 @@ p.faq-answer a:hover {
 }
 
 .game-detail-meta-label {
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: var(--text-sm);
+  font-family: 'Fustat', sans-serif;
   color: var(--text-muted);
   margin-bottom: 4px;
 }
 
 .game-detail-meta-value {
-  font-size: 0.875rem;
+  font-size: var(--text);
   color: var(--text);
   line-height: 1.5;
 }
@@ -3011,7 +2978,7 @@ p.faq-answer a:hover {
 .game-detail-link {
   color: var(--text);
   text-decoration: underline;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
 }
 
 .game-detail-link:hover {
@@ -3143,7 +3110,7 @@ p.faq-answer a:hover {
   left: 50%;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.6);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   pointer-events: none;
 }
 
@@ -3167,9 +3134,8 @@ footer .container {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 700;
-  letter-spacing: 0.04em;
   color: var(--text);
 }
 
@@ -3182,7 +3148,7 @@ footer .container {
 }
 
 .footer-links a {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   border-radius: var(--radius);
   transition: color 0.15s, background 0.15s;
@@ -3200,15 +3166,15 @@ footer .container {
 }
 
 .profile-stat-count {
-  font-size: 2rem;
+  font-size: var(--text-2xl);
   line-height: 1.2;
   font-weight: 700;
 }
 
 .profile-stat-label {
   color: var(--text-muted);
-  font-size: 1rem;
-  margin-top: 4px;
+  font-size: var(--text-base);
+  margin-top: 0px;
 }
 
 /* Responsive */
@@ -3283,7 +3249,7 @@ footer .container {
   }
 
   .list-modal-item-title {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .list-edit-body {
@@ -3332,7 +3298,7 @@ footer .container {
   }
 
   .game-detail-title {
-    font-size: 1.375rem;
+    font-size: var(--text-xl);
   }
 
   .game-detail-layout {

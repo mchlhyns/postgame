@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatIgdbGame } from '@/lib/igdb'
+import { formatIgdbGame, abbreviatePlatform } from '@/lib/igdb'
 import { IgdbGame } from '@/types'
 
 type FormattedGame = IgdbGame & { coverUrl?: string }
@@ -55,7 +55,7 @@ export default function HeaderSearch() {
             const year = game.first_release_date
               ? new Date(game.first_release_date * 1000).getFullYear()
               : null
-            const platforms = game.platforms?.map((p) => p.name).join(', ')
+            const platforms = game.platforms?.map((p) => abbreviatePlatform(p.name)).join(', ')
             return (
               <div
                 key={game.id}

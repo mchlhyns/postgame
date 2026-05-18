@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { restoreSession, COLLECTION } from '@/lib/atproto'
 import { IgdbGame, GameRecordView } from '@/types'
-import { formatIgdbGame } from '@/lib/igdb'
+import { formatIgdbGame, abbreviatePlatform } from '@/lib/igdb'
 import { CalendarDays, Sparkles, TrendingUp } from 'lucide-react'
 
 type FormattedGame = IgdbGame & { coverUrl?: string }
@@ -27,13 +27,18 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function BrowseCard({ game, existingRecord, showReleaseDate }: {
+function BrowseCard({ game, existingRecord, showReleaseDate, showPlatforms }: {
   game: FormattedGame
   existingRecord?: GameRecordView
   showReleaseDate?: boolean
+  showPlatforms?: boolean
 }) {
   const releaseDateMeta = showReleaseDate && game.first_release_date
     ? new Date(game.first_release_date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+
+  const platformsMeta = showPlatforms && game.platforms && game.platforms.length > 0
+    ? game.platforms.map((p) => abbreviatePlatform(p.name)).join(' · ')
     : null
 
   const gameHref = `/games/${game.id}`
@@ -48,6 +53,7 @@ function BrowseCard({ game, existingRecord, showReleaseDate }: {
         <div className="game-card-grid-title">
           {game.name}
         </div>
+        {platformsMeta && <div className="browse-card-meta browse-card-platforms">{platformsMeta}</div>}
         {releaseDateMeta && <div className="browse-card-meta">{releaseDateMeta}</div>}
       </a>
     </div>
@@ -161,7 +167,7 @@ export default function HomePage() {
           )}
           <div className="container">
             <div className="now-playing-content">
-              <h2 className="now-playing-title">What are you playing?</h2>
+              <h2 className="now-playing-title">What are we playing?</h2>
               <div className="search-wrapper" ref={searchRef}>
                 <input
                   className="input now-playing-input"
@@ -178,7 +184,7 @@ export default function HomePage() {
                       const year = game.first_release_date
                         ? new Date(game.first_release_date * 1000).getFullYear()
                         : null
-                      const platforms = game.platforms?.map((p) => p.name).join(', ')
+                      const platforms = game.platforms?.map((p) => abbreviatePlatform(p.name)).join(', ')
                       return (
                         <div
                           key={game.id}
@@ -249,7 +255,7 @@ export default function HomePage() {
                 ) : (
                   <div className="browse-grid">
                     {recentlyReleased.slice(0, 12).map((game) => (
-                      <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                      <BrowseCard key={game.id} game={game} showPlatforms existingRecord={myGamesMap.get(game.id)} />
                     ))}
                   </div>
                 )}

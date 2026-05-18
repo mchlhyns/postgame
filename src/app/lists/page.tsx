@@ -115,13 +115,13 @@ export default function MyListsPage() {
                     </div>
                     <div className="list-card-actions" onClick={(e) => e.stopPropagation()}>
                       <button
-                        className="btn btn-basic"
+                        className="btn btn-ghost"
                         onClick={() => setSharingList(list)}
                         disabled={list.value.items.length === 0}
                       >
                         Share
                       </button>
-                      <button className="btn btn-ghost" onClick={() => window.location.href = `/lists/${rkey}`}>Edit</button>
+                      <button className="btn btn-basic" onClick={() => window.location.href = `/lists/${rkey}`}>Edit</button>
                     </div>
                   </div>
                 )

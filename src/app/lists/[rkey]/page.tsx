@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { Agent } from '@atproto/api'
 import { restoreSession, COLLECTION, LIST_COLLECTION } from '@/lib/atproto'
 import { GameRecordView, IgdbGame, ListItem, ListRecord, ListRecordView } from '@/types'
-import { formatIgdbGame } from '@/lib/igdb'
+import { formatIgdbGame, abbreviatePlatform } from '@/lib/igdb'
 import ListShareModal from '@/components/ListShareModal'
 
 type SearchResult = { igdbId: number; title: string; coverUrl?: string; year?: number; platforms?: string }
@@ -146,7 +146,7 @@ export default function ListEditPage() {
           title: g.name,
           coverUrl: g.coverUrl,
           year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : undefined,
-          platforms: g.platforms?.map((p) => p.name).join(', '),
+          platforms: g.platforms?.map((p) => abbreviatePlatform(p.name)).join(', '),
         })))
       } catch { /* ignore */ } finally {
         setSearching(false)

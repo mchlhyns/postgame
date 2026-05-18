@@ -68,7 +68,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
           <div
             style={{
               color: '#ffffff',
-              fontFamily: 'SpaceGrotesk',
+              fontFamily: 'Fustat',
               fontSize: listName.length > 36 ? 40 : listName.length > 24 ? 48 : 56,
               fontWeight: 700,
               lineHeight: 1.2,

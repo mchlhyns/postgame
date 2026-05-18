@@ -87,7 +87,7 @@ async function generateImage(list: ListRecord, showNumbers: boolean): Promise<Bl
   ctx.fillRect(0, 0, W, HEADER_H)
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = '700 32px "Space Grotesk"'
+  ctx.font = '700 32px "Fustat"'
   ctx.fillText(truncate(ctx, list.name, W * 0.6), 24, (HEADER_H + 28) / 2)
 
   if (logoImg) {
@@ -126,23 +126,23 @@ async function generateImage(list: ListRecord, showNumbers: boolean): Promise<Bl
 
     if (item.award) {
       if (showNumbers) {
-        ctx.font = '700 15px "Space Grotesk"'
+        ctx.font = '700 15px "Fustat"'
         ctx.textAlign = 'left'
         const rankText = `#${item.position}`
         ctx.fillText(rankText, x + 9, baselineY)
         const rankW = ctx.measureText(rankText).width
-        ctx.font = '500 13px "Space Grotesk"'
+        ctx.font = '500 13px "Fustat"'
         ctx.textAlign = 'right'
         ctx.fillText(truncate(ctx, item.award, CELL_W - rankW - 28), x + CELL_W - 9, baselineY)
         ctx.textAlign = 'left'
       } else {
-        ctx.font = '500 13px "Space Grotesk"'
+        ctx.font = '500 13px "Fustat"'
         ctx.textAlign = 'right'
         ctx.fillText(truncate(ctx, item.award, CELL_W - 18), x + CELL_W - 9, baselineY)
         ctx.textAlign = 'left'
       }
     } else if (showNumbers) {
-      ctx.font = '700 15px "Space Grotesk"'
+      ctx.font = '700 15px "Fustat"'
       ctx.fillText(`#${item.position}`, x + 9, baselineY)
     }
   }

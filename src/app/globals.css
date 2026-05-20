@@ -92,8 +92,8 @@ input, textarea, select {
 }
 
 main .container {
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 /* Header */
@@ -445,7 +445,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .game-card-started-bottom {
   display: flex;
-  gap: 12px;
+  gap: 18px;
   align-items: flex-start;
   padding: 18px;
   background: var(--surface);
@@ -457,7 +457,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .game-card-started-cover-wrap {
-  margin-top: -98px;
+  margin-top: -105px;
   flex-shrink: 0;
 }
 
@@ -484,7 +484,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-started-title {
   display: flex;
   align-items: center;
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
@@ -542,7 +542,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .tooltip-trigger {
-  color: var(--text-muted);
+  color: var(--text);
   cursor: default;
   text-decoration: underline;
   text-decoration-style: dashed;
@@ -568,8 +568,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   padding: 10px 14px;
+  border: 1px solid var(--border);
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--text);
   line-height: 1.5;
   white-space: normal;
   width: 250px;
@@ -612,7 +613,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .login-box p {
-  color: var(--text-muted);
+  color: var(--text);
   font-size: var(--text-sm);
   margin-bottom: 20px;
 }
@@ -1116,6 +1117,10 @@ main {
 
 .modal-lg {
   max-width: 680px !important;
+}
+
+.modal .form-field {
+  margin-bottom: 14px;
 }
 
 /* List edit page */
@@ -1928,7 +1933,7 @@ p.error-msg {
 }
 
 .now-playing-content {
-  max-width: 720px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -1974,7 +1979,7 @@ p.error-msg {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 21px 0;
+  padding: 18px 0;
 }
 
 .profile-banner-avatar {
@@ -2313,7 +2318,7 @@ p.faq-answer a:hover {
 .browse-card-action {
   position: absolute;
   inset: 0;
-  border-radius: var(--radius);
+  border-radius: var(--radius) var(--radius) 0 0;
   background: color-mix(in srgb, var(--accent) 90%, transparent);
   border: none;
   cursor: pointer;
@@ -2868,8 +2873,8 @@ p.faq-answer a:hover {
 .game-detail-banner-content {
   position: relative;
   padding-left: 232px;
-  padding-top: 24px;
-  padding-bottom: 24px;
+  padding-top: 18px;
+  padding-bottom: 18px;
 }
 
 .game-detail-cover {
@@ -2917,7 +2922,7 @@ p.faq-answer a:hover {
 
 .game-detail-sidebar {
   min-width: 0;
-  padding-top: 72px;
+  padding-top: 76px;
 }
 
 .game-detail-meta-section {
@@ -3142,7 +3147,7 @@ footer .container {
 .footer-links {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
@@ -3158,6 +3163,26 @@ footer .container {
 .footer-links a.footer-link-active {
   color: var(--text);
   text-decoration: none;
+}
+
+.footer-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--text-muted);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  transition: background-color 0.15s;
+}
+
+.footer-icon--lg {
+  width: 18px;
+  height: 18px;
+}
+
+.footer-icon-link:hover .footer-icon {
+  background-color: var(--text);
 }
 
 .profile-stats {
@@ -3236,16 +3261,14 @@ footer .container {
     display: block;
   }
 
-  .game-grid {
+  .game-grid,
+  .game-detail-related-grid,
+  .public-list-items {
     grid-template-columns: repeat(2, 1fr);
   }
 
   .game-card-started {
     grid-column: 1 / -1;
-  }
-
-  .public-list-items {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .list-modal-item-title {
@@ -3308,7 +3331,7 @@ footer .container {
   }
 
   .game-detail-sidebar {
-    padding-top: 40px;
+    padding-top: 0;
   }
 
   .game-detail-screenshots {

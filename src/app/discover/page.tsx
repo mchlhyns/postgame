@@ -167,7 +167,7 @@ export default function HomePage() {
           )}
           <div className="container">
             <div className="now-playing-content">
-              <h2 className="now-playing-title">What are we playing?</h2>
+              <h2 className="now-playing-title">What are you playing?</h2>
               <div className="search-wrapper" ref={searchRef}>
                 <input
                   className="input now-playing-input"

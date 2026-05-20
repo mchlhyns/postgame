@@ -36,7 +36,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
       platform: value.platform,
       rating: value.rating,
       notes: value.notes,
-      startedAt: value.startedAt,
+      startedAt: value.startedAt ?? value.createdAt,
       finishedAt: value.finishedAt,
       isReplay: value.isReplay,
       backloggedStatus: value.backloggedStatus,
@@ -112,46 +112,39 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <Select
             variant="input"
             value={encodeStatusKey(draft.status ?? value.status, draft.playedStatus, draft.backloggedStatus)}
-            onChange={(key) => { const d = decodeStatusKey(key); setDraft((prev) => ({ ...prev, status: d.status as GameStatus, playedStatus: d.playedStatus, backloggedStatus: d.backloggedStatus })) }}
+            onChange={(key) => { const d = decodeStatusKey(key); setDraft((prev) => ({ ...prev, status: d.status as GameStatus, playedStatus: d.playedStatus, backloggedStatus: d.backloggedStatus, rating: d.status === 'played' ? prev.rating : undefined, finishedAt: d.status === 'played' ? (prev.finishedAt ?? new Date().toISOString()) : prev.finishedAt })) }}
             options={STATUS_OPTIONS}
           />
         </div>
 
-        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr' }}>
-          <div className="form-field">
-            <label>Platform</label>
-            <Select
-              variant="input"
-              value={draft.platform ?? ''}
-              onChange={(v) => setDraft((d) => ({ ...d, platform: v || undefined }))}
-              options={[
-                { value: '', label: '—' },
-                ...COMMON_PLATFORMS.map((p) => ({ value: p, label: p })),
-                ...(draft.platform && !COMMON_PLATFORMS.includes(draft.platform) ? [{ value: draft.platform, label: draft.platform }] : []),
-              ]}
-            />
+        {(() => { const statusKey = encodeStatusKey(draft.status ?? value.status, draft.playedStatus, draft.backloggedStatus); return (
+          <div className="form-row" style={{ gridTemplateColumns: statusKey === 'wishlisted' ? '1fr' : '2fr 1fr' }}>
+            <div className="form-field">
+              <label>Platform</label>
+              <Select
+                variant="input"
+                value={draft.platform ?? ''}
+                onChange={(v) => setDraft((d) => ({ ...d, platform: v || undefined }))}
+                options={[
+                  { value: '', label: '—' },
+                  ...COMMON_PLATFORMS.map((p) => ({ value: p, label: p })),
+                  ...(draft.platform && !COMMON_PLATFORMS.includes(draft.platform) ? [{ value: draft.platform, label: draft.platform }] : []),
+                ]}
+              />
+            </div>
+            {statusKey !== 'wishlisted' && (
+              <div className="form-field">
+                <label>Replay</label>
+                <Select
+                  variant="input"
+                  value={draft.isReplay ? 'yes' : ''}
+                  onChange={(v) => setDraft((d) => ({ ...d, isReplay: v === 'yes' || undefined }))}
+                  options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
+                />
+              </div>
+            )}
           </div>
-          <div className="form-field">
-            <label>Replay</label>
-            <Select
-              variant="input"
-              value={draft.isReplay ? 'yes' : ''}
-              onChange={(v) => setDraft((d) => ({ ...d, isReplay: v === 'yes' || undefined }))}
-              options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
-            />
-          </div>
-        </div>
-
-        <div className="form-field" style={{ marginBottom: 8 }}>
-          <label>Notes</label>
-          <textarea
-            className="input"
-            rows={3}
-            value={draft.notes ?? ''}
-            onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value || undefined }))}
-            placeholder="Optional notes"
-          />
-        </div>
+        )})()}
 
         <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <div className="form-field">
@@ -174,10 +167,12 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           </div>
         </div>
 
-        <div className="form-field">
-          <label style={{ marginBottom: 4 }}>Rating</label>
-          <StarRatingInput value={draft.rating} onChange={(v) => setDraft((d) => ({ ...d, rating: v }))} />
-        </div>
+        {normalizeStatus(draft.status ?? value.status) === 'played' && (
+          <div className="form-field">
+            <label style={{ marginBottom: 4 }}>Rating</label>
+            <StarRatingInput value={draft.rating} onChange={(v) => setDraft((d) => ({ ...d, rating: v }))} />
+          </div>
+        )}
 
         <div className="form-actions">
           <button className="btn btn-ghost" style={{ color: 'var(--danger)', borderColor: 'var(--danger)',marginRight: 'auto' }} onClick={() => { setEditing(false); deleteRecord() }}>
@@ -195,36 +190,30 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
   if (view === 'started') {
     const bannerSrc = value.game.screenshotUrl
     const gameHref = `/games/${value.game.igdbId}`
-    const coverEl = value.game.coverUrl ? (
-      <a href={gameHref} style={{ display: 'block', lineHeight: 0, flexShrink: 0 }}>
-        <img className="game-card-started-cover" src={value.game.coverUrl} alt={value.game.title} />
-      </a>
-    ) : (
-      <img className="game-card-started-cover" src="/no-cover.png" alt={value.game.title} />
+    const coverEl = (
+      <img className="game-card-started-cover" src={value.game.coverUrl ?? '/no-cover.png'} alt={value.game.title} />
     )
     return (
       <>
-        <div className="game-card-started">
-          <a href={gameHref} style={{ display: 'block', lineHeight: 0 }}>
-            <div className="game-card-started-banner" style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined} />
-          </a>
+        <a href={gameHref} className="game-card-started" style={{ display: 'block', textDecoration: 'none', position: 'relative' }}>
+          <div className="game-card-started-banner" style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined} />
           <div className="game-card-started-bottom">
             <div className="game-card-started-cover-wrap">{coverEl}</div>
             <div className="game-card-started-info">
               <div className="game-card-started-title">
-                <a href={gameHref}>{value.game.title}</a>
+                <span>{value.game.title}</span>
                 {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 6 }}><RotateCcw size={15} style={{ color: 'var(--accent)' }} /></span>}
               </div>
               {(() => {
                 const parts: string[] = []
                 if (platform) parts.push(platform)
                 if (value.startedAt) parts.push(`Started ${formatDate(value.startedAt)}`)
-                return parts.length > 0 ? <a href={gameHref} className="game-card-started-meta">{parts.join(' • ')}</a> : null
+                return parts.length > 0 ? <span className="game-card-started-meta">{parts.join(' • ')}</span> : null
               })()}
               {value.rating && normalizeStatus(value.status) !== 'playing' && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
             </div>
           </div>
-        </div>
+        </a>
         {!readonly && editModal}
       </>
     )

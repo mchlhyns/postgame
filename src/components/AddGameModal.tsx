@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { IgdbGame, GameRecordView, PlayedStatus, BackloggedStatus } from '@/types'
 import { COLLECTION } from '@/lib/atproto'
-import { formatIgdbGame, dateInputToISO, PLAYED_STATUS_LABELS, normalizeStatus, abbreviatePlatform } from '@/lib/igdb'
+import { formatIgdbGame, PLAYED_STATUS_LABELS, normalizeStatus, abbreviatePlatform } from '@/lib/igdb'
 import Select from '@/components/Select'
 import { StarRatingInput } from '@/components/Stars'
 
@@ -23,12 +23,9 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
   const [results, setResults] = useState<IgdbGame[]>([])
   const [searching, setSearching] = useState(false)
   const [selected, setSelected] = useState<IgdbGame | null>(initialGame ?? null)
-  const [statusKey, setStatusKey] = useState('backlogged')
+  const [statusKey, setStatusKey] = useState('')
   const [platform, setPlatform] = useState('')
   const [rating, setRating] = useState<number | undefined>()
-  const [notes, setNotes] = useState('')
-  const [startedAt, setStartedAt] = useState('')
-  const [finishedAt, setFinishedAt] = useState('')
   const [isReplay, setIsReplay] = useState(defaultIsReplay ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -57,6 +54,12 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
 
   const { status, playedStatus, backloggedStatus } = decodeStatusKey(statusKey)
 
+  function handleStatusChange(key: string) {
+    const { status: newStatus } = decodeStatusKey(key)
+    if (newStatus !== 'played') setRating(undefined)
+    setStatusKey(key)
+  }
+
   async function handleAdd() {
     if (!selected) return
     setSaving(true)
@@ -81,9 +84,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
         playedStatus,
         platform: platform || undefined,
         rating: ratingNum,
-        notes: notes || undefined,
-        startedAt: dateInputToISO(startedAt),
-        finishedAt: dateInputToISO(finishedAt) ?? (status === 'played' ? new Date().toISOString() : undefined),
+        finishedAt: status === 'played' ? new Date().toISOString() : undefined,
         backloggedStatus,
         isReplay: isReplay || undefined,
         createdAt: new Date().toISOString(),
@@ -191,12 +192,12 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
               <Select
                 variant="input"
                 value={statusKey}
-                onChange={setStatusKey}
-                options={STATUS_OPTIONS}
+                onChange={handleStatusChange}
+                options={[{ value: '', label: '—' }, ...STATUS_OPTIONS]}
               />
             </div>
 
-            <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr' }}>
+            <div className="form-row" style={{ gridTemplateColumns: statusKey === 'wishlisted' ? '1fr' : '2fr 1fr' }}>
               <div className="form-field">
                 <label>Platform</label>
                 <Select
@@ -206,59 +207,31 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
                   options={platformOptions}
                 />
               </div>
-              <div className="form-field">
-                <label>Replay</label>
-                <Select
-                  variant="input"
-                  value={isReplay ? 'yes' : ''}
-                  onChange={(v) => setIsReplay(v === 'yes')}
-                  options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
-                />
-              </div>
+              {statusKey !== 'wishlisted' && (
+                <div className="form-field">
+                  <label>Replay</label>
+                  <Select
+                    variant="input"
+                    value={isReplay ? 'yes' : ''}
+                    onChange={(v) => setIsReplay(v === 'yes')}
+                    options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
+                  />
+                </div>
+              )}
             </div>
 
-            <div className="form-field" style={{ marginBottom: 8 }}>
-              <label>Notes</label>
-              <textarea
-                className="input"
-                rows={2}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional notes"
-              />
-            </div>
-
-            <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            {status === 'played' && (
               <div className="form-field">
-                <label>Started</label>
-                <input
-                  className="input"
-                  type="date"
-                  value={startedAt}
-                  onChange={(e) => setStartedAt(e.target.value)}
-                />
+                <label style={{ marginBottom: 4 }}>Rating</label>
+                <StarRatingInput value={rating} onChange={setRating} />
               </div>
-              <div className="form-field">
-                <label>Finished</label>
-                <input
-                  className="input"
-                  type="date"
-                  value={finishedAt}
-                  onChange={(e) => setFinishedAt(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="form-field">
-              <label style={{ marginBottom: 4 }}>Rating</label>
-              <StarRatingInput value={rating} onChange={setRating} />
-            </div>
+            )}
 
             {error && <p className="error-msg">{error}</p>}
 
             <div className="form-actions">
               <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleAdd} disabled={saving}>
+              <button className="btn btn-primary" onClick={handleAdd} disabled={saving || !statusKey}>
                 {saving ? 'Saving…' : 'Add to collection'}
               </button>
             </div>

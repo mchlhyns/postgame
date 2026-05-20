@@ -100,7 +100,7 @@ export default function Home() {
   return (
     <div className="login-page">
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
           <img src="/logo.png" alt="CRASH THE ARCADE" style={{ height: 24 }} />
           <h1>CRASH THE ARCADE</h1>
         </div>
@@ -108,7 +108,7 @@ export default function Home() {
       </div>
       <div className="login-box">
         <h2>Sign in</h2>
-        <p>Enter your <Tooltip text="Use your handle from Bluesky, Blacksky, or Eurosky.">Atmosphere account</Tooltip> to get started</p>
+        <p>Enter your <Tooltip text="Use your handle from Bluesky, Blacksky, Eurosky, or your own PDS.">Atmosphere account</Tooltip> to get started</p>
         <form onSubmit={handleSignIn}>
           <div ref={typeaheadRef} className="handle-typeahead" style={{ marginBottom: 10 }}>
               <input
@@ -151,9 +151,8 @@ export default function Home() {
       <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <a href="/faq">FAQ</a>
         <span>•</span>
-        <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer">Bluesky</a>
-        <span>•</span>
-        <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer" aria-label="Bluesky" className="footer-icon-link"><span className="footer-icon" style={{ maskImage: 'url(/bluesky.svg)' }} /></a>
+        <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="footer-icon-link"><span className="footer-icon footer-icon--lg" style={{ maskImage: 'url(/github.svg)' }} /></a>
       </p>
     </div>
   )

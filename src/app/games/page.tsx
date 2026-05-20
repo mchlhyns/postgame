@@ -31,6 +31,18 @@ export default function MyGamesPage() {
       .catch(() => { window.location.href = '/' })
   }, [])
 
+  useEffect(() => {
+    const savedView = localStorage.getItem('games-view-preference')
+    if (savedView === 'list' || savedView === 'grid') {
+      setView(savedView)
+    }
+  }, [])
+
+  const updateView = (newView: 'list' | 'grid') => {
+    setView(newView)
+    localStorage.setItem('games-view-preference', newView)
+  }
+
   const fetchGames = useCallback(async (agent: Agent, did: string) => {
     setGamesLoading(true)
     try {
@@ -116,8 +128,8 @@ export default function MyGamesPage() {
                 ]}
               />
               <div className="view-toggle">
-                <button className={`view-toggle-btn${view === 'grid' ? ' active' : ''}`} onClick={() => setView('grid')} title="Grid view">⊞</button>
-                <button className={`view-toggle-btn${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')} title="List view">☰</button>
+                <button className={`view-toggle-btn${view === 'grid' ? ' active' : ''}`} onClick={() => updateView('grid')} title="Grid view">⊞</button>
+                <button className={`view-toggle-btn${view === 'list' ? ' active' : ''}`} onClick={() => updateView('list')} title="List view">☰</button>
               </div>
             </div>
 

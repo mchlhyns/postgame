@@ -226,6 +226,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .status-started,
 .status-played,
 .status-completed,
+.status-mastered,
 .status-finished,
 .status-retired,
 .status-shelved,
@@ -2355,6 +2356,7 @@ p.faq-answer a:hover {
 }
 
 .game-card-badge--completed,
+.game-card-badge--mastered,
 .game-card-badge--finished,
 .game-card-badge--retired,
 .game-card-badge--abandoned,

@@ -16,6 +16,8 @@ const iconLinks = [
 export default function SiteFooter() {
   const pathname = usePathname()
 
+  if (pathname === '/' || pathname === '/oauth/callback') return null
+
   return (
     <footer>
       <div className="container">

@@ -5,6 +5,7 @@ export type HVGameRecord = {
   uri: string
   game: { igdbId: number; title: string; coverUrl?: string }
   status: string
+  playedStatus?: string
   rating?: number
   createdAt: string
 }

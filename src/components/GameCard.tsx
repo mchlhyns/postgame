@@ -237,7 +237,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               const sc = norm === 'played' || (norm === 'backlogged' && inferBackloggedStatus(value.status, value.backloggedStatus))
                 ? statusClass(value.status, value.playedStatus, value.backloggedStatus)
                 : null
-              const hideBadge = sc === 'completed' || sc === 'finished'
+              const hideBadge = sc === 'played'
               return sc && !hideBadge ? (
                 <span className={`game-card-badge game-card-badge--${sc}`}>
                   {statusLabel(value.status, value.playedStatus, value.backloggedStatus)}

@@ -247,14 +247,16 @@ export const STATUS_OPTIONS = [
   { value: 'backlogged', label: 'Backlogged' },
   { value: 'shelved',    label: 'Shelved', indent: true },
   { value: 'wishlisted', label: 'Wishlisted' },
-  { value: 'completed',  label: PLAYED_STATUS_LABELS.completed },
-  { value: 'retired',    label: PLAYED_STATUS_LABELS.retired,    indent: true },
-  { value: 'abandoned',  label: PLAYED_STATUS_LABELS.abandoned,  indent: true },
+  { value: 'played',     label: 'Played' },
+  { value: 'completed',  label: 'Completed', indent: true },
+  { value: 'mastered',   label: 'Mastered', indent: true },
+  { value: 'retired',    label: 'Retired', indent: true },
+  { value: 'abandoned',  label: 'Abandoned', indent: true },
 ]
 
 export function encodeStatusKey(status: string, playedStatus?: string, backloggedStatus?: string): string {
   const norm = normalizeStatus(status)
-  if (norm === 'played') return playedStatus ?? 'completed'
+  if (norm === 'played') return playedStatus ?? 'played'
   if (norm === 'backlogged' && backloggedStatus === 'shelved') return 'shelved'
   return norm
 }
@@ -265,7 +267,9 @@ export function decodeStatusKey(key: string): {
   backloggedStatus?: BackloggedStatus
 } {
   switch (key) {
+    case 'played':    return { status: 'played' }
     case 'completed': return { status: 'played', playedStatus: 'completed' }
+    case 'mastered':  return { status: 'played', playedStatus: 'mastered' }
     case 'retired':   return { status: 'played', playedStatus: 'retired' }
     case 'abandoned': return { status: 'played', playedStatus: 'abandoned' }
     case 'shelved':   return { status: 'backlogged', backloggedStatus: 'shelved' }

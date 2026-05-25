@@ -134,6 +134,7 @@ export async function GET(req: NextRequest) {
         gameCoverUrl: r.game.coverUrl ?? null,
         igdbId: r.game.igdbId,
         status: r.status,
+        playedStatus: r.playedStatus ?? null,
         rating: r.rating,
         createdAt: r.createdAt,
       }

@@ -31,6 +31,7 @@ interface FeedItem {
   gameCoverUrl: string | null
   igdbId: number
   status: string
+  playedStatus?: string
   rating?: number
   createdAt: string
 }
@@ -54,7 +55,7 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function feedActionText(status: string): string {
+function feedActionText(status: string, playedStatus?: string): string {
   switch (status) {
     case 'playing':
     case 'started': return 'started playing'
@@ -62,7 +63,15 @@ function feedActionText(status: string): string {
     case 'wishlisted':
     case 'wishlist': return 'wishlisted'
     case 'played':
-    case 'finished': return 'played'
+    case 'finished': {
+      switch (playedStatus) {
+        case 'completed': return 'completed'
+        case 'mastered': return 'mastered'
+        case 'retired': return 'retired'
+        case 'abandoned': return 'abandoned'
+        default: return 'played'
+      }
+    }
     case 'completed': return 'completed'
     case 'shelved': return 'shelved'
     case 'abandoned': return 'abandoned'
@@ -106,7 +115,7 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
               <a href={`/${item.handle}`} className="feed-username">
                 {item.displayName ?? `@${item.handle}`}
               </a>
-              {' '}{feedActionText(item.status)}{' '}
+              {' '}{feedActionText(item.status, item.playedStatus)}{' '}
               <a href={`/games/${item.igdbId}`} className="feed-game-title">{item.gameTitle}</a>
             </div>
             <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>

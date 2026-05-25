@@ -50,6 +50,7 @@ function feedActionText(status: string, playedStatus?: string): string {
     case 'played': {
       switch (playedStatus) {
         case 'completed': return 'completed'
+        case 'mastered': return 'mastered'
         case 'retired': return 'retired'
         case 'shelved': return 'shelved'
         case 'abandoned': return 'abandoned'

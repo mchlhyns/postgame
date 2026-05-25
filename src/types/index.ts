@@ -10,7 +10,7 @@ export type GameStatus =
   | 'shelved'
   | 'abandoned'
 
-export type PlayedStatus = 'completed' | 'retired' | 'abandoned'
+export type PlayedStatus = 'completed' | 'mastered' | 'retired' | 'abandoned'
 export type BackloggedStatus = 'shelved'
 
 export interface GameRef {

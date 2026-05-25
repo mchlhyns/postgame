@@ -151,8 +151,9 @@ export default function Home() {
       <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <a href="/faq">FAQ</a>
         <span>•</span>
-        <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer" aria-label="Bluesky" className="footer-icon-link"><span className="footer-icon" style={{ maskImage: 'url(/bluesky.svg)' }} /></a>
-        <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="footer-icon-link"><span className="footer-icon footer-icon--lg" style={{ maskImage: 'url(/github.svg)' }} /></a>
+        <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer">Bluesky</a>
+        <span>•</span>
+        <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer">GitHub</a>
       </p>
     </div>
   )

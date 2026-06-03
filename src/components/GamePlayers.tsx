@@ -33,7 +33,7 @@ export default function GamePlayers({ igdbId }: { igdbId: number }) {
             key={p.did}
             href={`/${p.handle}`}
             className="game-player-avatar-wrap"
-            title={p.displayName ?? `@${p.handle}`}
+            title={p.displayName || `@${p.handle}`}
           >
             {p.avatar
               ? <img src={p.avatar} alt={p.handle} className="game-player-avatar" />

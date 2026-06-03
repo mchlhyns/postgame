@@ -18,7 +18,7 @@ export default function Home() {
   useEffect(() => {
     const timeout = setTimeout(() => setChecking(false), 3000)
     restoreSession()
-      .then((s) => { clearTimeout(timeout); if (s) { window.location.href = '/discover'; return } setChecking(false) })
+      .then((s) => { clearTimeout(timeout); if (s) { window.location.href = '/home'; return } setChecking(false) })
       .catch(() => { clearTimeout(timeout); setChecking(false) })
   }, [])
 
@@ -101,7 +101,7 @@ export default function Home() {
     <div className="login-page">
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-          <img src="/logo.png" alt="CRASH THE ARCADE" style={{ height: 24 }} />
+          <img src="/logo.svg" alt="CRASH THE ARCADE" style={{ height: 32, marginBottom: 5 }} />
           <h1>CRASH THE ARCADE</h1>
         </div>
         <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Track and manage your gaming backlog</p>

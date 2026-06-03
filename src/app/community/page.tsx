@@ -5,15 +5,7 @@ import { Agent } from '@atproto/api'
 import { restoreSession, FOLLOW_COLLECTION } from '@/lib/atproto'
 import { Stars } from '@/components/Stars'
 import AddGameModal from '@/components/AddGameModal'
-import Select from '@/components/Select'
-
-interface FollowProfile {
-  did: string
-  handle: string
-  displayName?: string
-  avatar?: string
-  followUri: string
-}
+import { relativeTime, feedActionText } from '@/lib/feed'
 
 interface SearchActor {
   did: string
@@ -33,51 +25,8 @@ interface FeedItem {
   status: string
   playedStatus?: string
   rating?: number
+  platform?: string | null
   createdAt: string
-}
-
-interface Profile {
-  did: string
-  handle: string
-  displayName: string | null
-  avatar: string | null
-}
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d`
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-function feedActionText(status: string, playedStatus?: string): string {
-  switch (status) {
-    case 'playing':
-    case 'started': return 'started playing'
-    case 'backlogged': return 'backlogged'
-    case 'wishlisted':
-    case 'wishlist': return 'wishlisted'
-    case 'played':
-    case 'finished': {
-      switch (playedStatus) {
-        case 'completed': return 'completed'
-        case 'mastered': return 'mastered'
-        case 'retired': return 'retired'
-        case 'abandoned': return 'abandoned'
-        default: return 'played'
-      }
-    }
-    case 'completed': return 'completed'
-    case 'shelved': return 'shelved'
-    case 'abandoned': return 'abandoned'
-    case 'retired': return 'retired'
-    default: return status
-  }
 }
 
 function FeedList({ items, loading, emptyTitle, emptyBody }: {
@@ -102,26 +51,62 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
   )
   return (
     <>
-      <div className="social-feed">
+      <div className="browse-grid">
         {items.map((item, i) => (
-          <div key={i} className="feed-item">
-            <a href={`/${item.handle}`} className="feed-avatar-link">
-              {item.avatar
-                ? <img src={item.avatar} alt="" className="feed-avatar" />
-                : <div className="feed-avatar feed-avatar-placeholder" />
-              }
-            </a>
-            <div className="feed-text">
-              <a href={`/${item.handle}`} className="feed-username">
-                {item.displayName ?? `@${item.handle}`}
+          <div key={i} className="game-card-grid social-grid-card">
+            <div className="social-grid-user-top" onClick={() => window.location.href = `/${item.handle}`}>
+              <a href={`/${item.handle}`} className="social-grid-avatar-link" onClick={(e) => e.stopPropagation()}>
+                {item.avatar ? (
+                  <img src={item.avatar} alt="" className="social-grid-avatar" />
+                ) : (
+                  <div className="social-grid-avatar social-grid-avatar-placeholder" />
+                )}
               </a>
-              {' '}{feedActionText(item.status, item.playedStatus)}{' '}
-              <a href={`/games/${item.igdbId}`} className="feed-game-title">{item.gameTitle}</a>
+              <div className="social-grid-user-text" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flex: 1 }}>
+                <a href={`/${item.handle}`} className="social-grid-username" onClick={(e) => e.stopPropagation()} style={{ fontSize: 'var(--text-base)', lineHeight: 1.2 }}>
+                  {item.displayName || `@${item.handle}`}
+                </a>
+                <span className="social-grid-time" style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', flexShrink: 0 }}>
+                  {relativeTime(item.createdAt)}
+                </span>
+              </div>
             </div>
-            <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-              {item.rating && <Stars rating={item.rating / 2} />}
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', width: 50, textAlign: 'right', display: 'inline-block' }}>{relativeTime(item.createdAt)}</span>
+
+            <div className="game-card-grid-cover-wrap">
+              <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                <img
+                  className="game-card-grid-cover"
+                  src={item.gameCoverUrl || '/no-cover.png'}
+                  alt={item.gameTitle}
+                />
+              </a>
             </div>
+            
+            <a className="game-card-grid-info" href={`/games/${item.igdbId}`}>
+              <div className="game-card-grid-title">
+                {item.gameTitle}
+              </div>
+              {(() => {
+                const parts: string[] = []
+                if (item.platform) {
+                  parts.push(item.platform.replace(/\s*\(Microsoft Windows\)/gi, ''))
+                }
+                const action = feedActionText(item.status, item.playedStatus)
+                if (action) {
+                  parts.push(action.charAt(0).toUpperCase() + action.slice(1))
+                }
+                return parts.length > 0 ? (
+                  <div className="game-card-meta" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {parts.join(' • ')}
+                  </div>
+                ) : null
+              })()}
+              {item.rating && (
+                <div style={{ marginTop: 0 }}>
+                  <Stars rating={item.rating / 2} />
+                </div>
+              )}
+            </a>
           </div>
         ))}
       </div>
@@ -140,9 +125,6 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
 
 export default function SocialPage() {
   const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
-  const [tab, setTab] = useState<'following' | 'network'>('following')
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([])
-  const [feedLoading, setFeedLoading] = useState(false)
   const [networkItems, setNetworkItems] = useState<FeedItem[]>([])
   const [networkLoading, setNetworkLoading] = useState(false)
   const [networkLoaded, setNetworkLoaded] = useState(false)
@@ -161,7 +143,7 @@ export default function SocialPage() {
         if (!s) { window.location.href = '/'; return }
         setSession(s)
         sessionRef.current = s
-        loadActivityFeed(s.agent, s.did)
+        loadFollowState(s.agent, s.did)
       })
       .catch(() => { window.location.href = '/' })
   }, [])
@@ -198,45 +180,26 @@ export default function SocialPage() {
   }, [])
 
   useEffect(() => {
-    if (tab === 'network' && !networkLoaded) {
-      setNetworkLoading(true)
-      fetch('/api/appview/network')
-        .then(r => r.json())
-        .then(data => setNetworkItems(data.feed ?? []))
-        .catch(() => {})
-        .finally(() => { setNetworkLoading(false); setNetworkLoaded(true) })
-    }
-  }, [tab, networkLoaded])
+    if (networkLoaded) return
+    setNetworkLoading(true)
+    fetch('/api/appview/network')
+      .then(r => r.json())
+      .then(data => setNetworkItems(data.feed ?? []))
+      .catch(() => {})
+      .finally(() => { setNetworkLoading(false); setNetworkLoaded(true) })
+  }, [])
 
-  async function loadActivityFeed(agent: Agent, did: string) {
-    setFeedLoading(true)
+  async function loadFollowState(agent: Agent, did: string) {
     try {
       const followsRes = await agent.com.atproto.repo.listRecords({ repo: did, collection: FOLLOW_COLLECTION, limit: 100 })
       const rawFollows = followsRes.data.records as unknown as { uri: string; value: { subject: string; createdAt: string } }[]
-
       const map = new Map<string, string>()
       for (const r of rawFollows) map.set(r.value.subject, r.uri)
       followedDids.current = map
-
-      if (!map.size) { setFeedItems([]); return }
-
-      const allDids = [...map.keys()]
-      const params = allDids.map(d => `dids=${encodeURIComponent(d)}`).join('&')
-      const res = await fetch(`/api/appview/feed?${params}`)
-      const data = await res.json()
-
-      const profileMap = new Map<string, Profile>((data.profiles ?? []).map((p: Profile) => [p.did, p]))
       const states: Record<string, { following: boolean; followUri?: string }> = {}
       for (const [did, uri] of map) states[did] = { following: true, followUri: uri }
       setFollowStates(states)
-
-      setFeedItems(data.feed ?? [])
-      void profileMap
-    } catch (err) {
-      console.error('Failed to load activity feed:', err)
-    } finally {
-      setFeedLoading(false)
-    }
+    } catch {}
   }
 
   async function handleFollow(actor: SearchActor) {
@@ -251,7 +214,6 @@ export default function SocialPage() {
         await s.agent.com.atproto.repo.deleteRecord({ repo: s.did, collection: FOLLOW_COLLECTION, rkey })
         followedDids.current.delete(actor.did)
         setFollowStates((prev) => ({ ...prev, [actor.did]: { following: false } }))
-        setFeedItems((prev) => prev.filter((f) => f.did !== actor.did))
       } else {
         const res = await s.agent.com.atproto.repo.createRecord({
           repo: s.did,
@@ -261,14 +223,6 @@ export default function SocialPage() {
         const followUri = res.data.uri
         followedDids.current.set(actor.did, followUri)
         setFollowStates((prev) => ({ ...prev, [actor.did]: { following: true, followUri } }))
-
-        const newRes = await fetch(`/api/appview/feed?dids=${encodeURIComponent(actor.did)}`)
-        const newData = await newRes.json()
-        if (newData.feed?.length) {
-          setFeedItems((prev) =>
-            [...prev, ...newData.feed].sort((a: FeedItem, b: FeedItem) => b.createdAt.localeCompare(a.createdAt)).slice(0, 50)
-          )
-        }
       }
     } catch (err) {
       console.error('Failed to update follow:', err)
@@ -279,27 +233,36 @@ export default function SocialPage() {
 
   return (
     <main>
-      <div className="container">
-        <div className="page-header">
-          <Select
-            variant="filter"
-            value={tab}
-            onChange={(v) => setTab(v as 'following' | 'network')}
-            options={[
-              { value: 'following', label: 'Following' },
-              { value: 'network', label: 'Network' },
-            ]}
-          />
-          <div ref={searchRef} className="search-wrapper" style={{ maxWidth: 320 }}>
+      <div className="container page-top">
+        <h1 className="browse-section-title">Community</h1>
+        <div className="page-header community-page-header" style={{ marginTop: 0 }}>
+          <div className="filter-tabs" style={{ margin: 0 }}>
+            <button className="filter-tab active">All Users</button>
+          </div>
+          <div ref={searchRef} className="search-wrapper community-search">
             <input
-              className="input"
+              className="input header-search-input"
               type="text"
-              placeholder="Search for a user"
+              placeholder="Search users"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
               autoComplete="off"
             />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="header-search-icon"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             {searchOpen && searchResults.length > 0 && (
               <div className="search-results">
                 {searchResults.map((actor) => {
@@ -332,22 +295,12 @@ export default function SocialPage() {
           </div>
         </div>
 
-        {tab === 'following' && (
-          <FeedList
-            items={feedItems}
-            loading={feedLoading}
-            emptyTitle="No activity yet"
-            emptyBody="Follow people to see what they're playing"
-          />
-        )}
-        {tab === 'network' && (
-          <FeedList
-            items={networkItems}
-            loading={networkLoading}
-            emptyTitle="Nothing here yet"
-            emptyBody="No recent activity across the network"
-          />
-        )}
+        <FeedList
+          items={networkItems}
+          loading={networkLoading}
+          emptyTitle="Nothing here yet"
+          emptyBody="No recent activity across the network"
+        />
       </div>
     </main>
   )

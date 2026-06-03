@@ -7,7 +7,7 @@ import { GameRecordView, GameStatus, GameRecord } from '@/types'
 import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
 import AddGameModal from '@/components/AddGameModal'
 import GameCard from '@/components/GameCard'
-import Select from '@/components/Select'
+
 
 const ALL_STATUSES = PRIMARY_STATUSES
 
@@ -27,6 +27,13 @@ export default function MyGamesPage() {
         if (!s) { window.location.href = '/'; return }
         setSession(s)
         setLoading(false)
+
+        // Parse status query parameter from URL
+        const params = new URLSearchParams(window.location.search)
+        const st = params.get('status')
+        if (st && (st === 'playing' || st === 'backlogged' || st === 'wishlisted' || st === 'played')) {
+          setFilterStatus(st as GameStatus)
+        }
       })
       .catch(() => { window.location.href = '/' })
   }, [])
@@ -112,21 +119,34 @@ export default function MyGamesPage() {
   return (
     <>
       <main>
-        <div className="container">
+        <div className="container page-top">
           <div className="my-games-main">
-            <div className="page-header">
-              <Select
-                variant="filter"
-                value={filterStatus}
-                onChange={(next) => {
-                  setFilterStatus(next as GameStatus | 'all')
-                  if (next !== 'all' && sortBy === 'type') setSortBy('added')
-                }}
-                options={[
-                  { value: 'all', label: `All (${deduped.length})` },
-                  ...ALL_STATUSES.map((s) => ({ value: s, label: `${statusLabel(s)} (${countFor(s)})` })),
-                ]}
-              />
+            <div style={{ marginBottom: '24px' }}>
+              <h1 className="browse-section-title" style={{ marginBottom: 0 }}>Library</h1>
+            </div>
+
+            {/* Status Filter Tabs & View Toggle Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
+              <div className="filter-tabs" style={{ margin: 0 }}>
+                {([
+                  { value: 'all', label: 'All' },
+                  ...ALL_STATUSES.map((s) => ({ value: s, label: statusLabel(s) })),
+                ] as const).map((t) => (
+                  <button
+                    key={t.value}
+                    className={`filter-tab${filterStatus === t.value ? ' active' : ''}`}
+                    onClick={() => {
+                      setFilterStatus(t.value as any)
+                      if (t.value !== 'all' && sortBy === 'type') setSortBy('added')
+                    }}
+                  >
+                    {t.label}
+                    <span style={{ marginLeft: 6, opacity: 0.6, fontWeight: 400 }}>
+                      ({t.value === 'all' ? deduped.length : countFor(t.value)})
+                    </span>
+                  </button>
+                ))}
+              </div>
               <div className="view-toggle">
                 <button className={`view-toggle-btn${view === 'grid' ? ' active' : ''}`} onClick={() => updateView('grid')} title="Grid view">⊞</button>
                 <button className={`view-toggle-btn${view === 'list' ? ' active' : ''}`} onClick={() => updateView('list')} title="List view">☰</button>
@@ -161,16 +181,22 @@ export default function MyGamesPage() {
                       />
                     )),
                   ]
-                }) : filteredGames.map((record) => (
-                  <GameCard
-                    key={record.uri}
-                    record={record}
-                    agent={session!.agent}
-                    view={view}
-                    onUpdated={handleGameUpdated}
-                    onDeleted={handleGameDeleted}
-                  />
-                ))}
+                }) : [
+                  <div key={`divider-${filterStatus}`} className="game-list-divider">
+                    {statusLabel(filterStatus)}
+                    <span className="game-list-divider-count">{filteredGames.length}</span>
+                  </div>,
+                  ...filteredGames.map((record) => (
+                    <GameCard
+                      key={record.uri}
+                      record={record}
+                      agent={session!.agent}
+                      view={view}
+                      onUpdated={handleGameUpdated}
+                      onDeleted={handleGameDeleted}
+                    />
+                  ))
+                ]}
               </div>
             )}
           </div>

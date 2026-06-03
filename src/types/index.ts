@@ -36,6 +36,8 @@ export interface GameRecord {
   startedAt?: string
   finishedAt?: string
   isReplay?: boolean
+  owned?: boolean
+  reviewBlogUri?: string
   createdAt: string
   updatedAt?: string
 }

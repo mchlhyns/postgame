@@ -33,10 +33,8 @@ export default function FeedbackPage() {
   return (
     <>
       <main>
-        <div className="container">
-          <div className="page-header" style={{ marginBottom: 24 }}>
-            <h1>Feedback</h1>
-          </div>
+        <div className="container page-top">
+          <h1 className="browse-section-title">Feedback</h1>
 
           <div className="faq-section-container feedback-form">
             {submitted ? (

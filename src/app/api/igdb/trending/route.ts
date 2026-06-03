@@ -3,19 +3,9 @@ import { getIgdbToken, igdbQuery } from '@/lib/igdb-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 let _cache: { data: unknown; expiresAt: number } | null = null
+let _inFlight: Promise<unknown> | null = null
 
-export async function GET(req: NextRequest) {
-  if (!rateLimit(`trending:${getClientIp(req)}`, 10, 60_000)) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-  }
-
-  if (_cache && Date.now() < _cache.expiresAt) {
-    return NextResponse.json(_cache.data, {
-      headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
-    })
-  }
-
-  try {
+async function buildTrending(): Promise<unknown> {
     const token = await getIgdbToken()
     const todayUtc = new Date()
     todayUtc.setUTCHours(0, 0, 0, 0)
@@ -58,9 +48,25 @@ export async function GET(req: NextRequest) {
       .map((a) => `https://images.igdb.com/igdb/image/upload/t_screenshot_big/${a.image_id}.jpg`)
       .sort(() => Math.random() - 0.5)
 
-    const payload = { upcoming, recentlyReleased, highlyRated, popular: popularOrdered, artworkUrls }
-    _cache = { data: payload, expiresAt: Date.now() + 3600 * 1000 }
-    return NextResponse.json(payload, {
+    return { upcoming, recentlyReleased, highlyRated, popular: popularOrdered, artworkUrls }
+}
+
+export async function GET(req: NextRequest) {
+  if (!rateLimit(`trending:${getClientIp(req)}`, 10, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
+  if (_cache && Date.now() < _cache.expiresAt) {
+    return NextResponse.json(_cache.data, {
+      headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
+    })
+  }
+
+  try {
+    if (!_inFlight) _inFlight = buildTrending().finally(() => { _inFlight = null })
+    const data = await _inFlight
+    _cache = { data, expiresAt: Date.now() + 3600 * 1000 }
+    return NextResponse.json(data, {
       headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
     })
   } catch (err) {

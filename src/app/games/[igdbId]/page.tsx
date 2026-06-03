@@ -131,7 +131,7 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
               )}
               {(game.similar_games?.length ?? 0) > 0 && (
                 <div className="game-detail-related">
-                  <div className="game-detail-meta-label" style={{ marginBottom: 12 }}>Similar games</div>
+                  <div className="game-list-divider" style={{ marginBottom: 12 }}>Similar games</div>
                   <RelatedGamesSection
                     games={game.similar_games!.slice(0, 4).map(sg => ({
                       id: sg.id,

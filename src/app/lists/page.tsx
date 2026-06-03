@@ -7,6 +7,18 @@ import { restoreSession, LIST_COLLECTION } from '@/lib/atproto'
 import { ListRecord, ListRecordView } from '@/types'
 import ListShareModal from '@/components/ListShareModal'
 
+export interface CommunityList {
+  uri: string
+  cid: string
+  value: ListRecord
+  user: {
+    did: string
+    handle: string
+    displayName: string | null
+    avatar: string | null
+  }
+}
+
 export default function MyListsPage() {
   const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -17,6 +29,11 @@ export default function MyListsPage() {
   const [newName, setNewName] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
+
+  // New tab and community list state
+  const [tab, setTab] = useState<'my' | 'community'>('my')
+  const [communityLists, setCommunityLists] = useState<CommunityList[]>([])
+  const [communityLoading, setCommunityLoading] = useState(false)
 
   useEffect(() => {
     restoreSession()
@@ -42,6 +59,23 @@ export default function MyListsPage() {
     if (!session) return
     fetchLists(session.agent, session.did)
   }, [session, fetchLists])
+
+
+
+  // Fetch all lists from the community when the Community tab is active
+  useEffect(() => {
+    if (tab !== 'community') return
+    setCommunityLoading(true)
+    fetch('/api/appview/all-lists')
+      .then((r) => r.json())
+      .then((data) => {
+        setCommunityLists(data.lists ?? [])
+      })
+      .catch(() => {})
+      .finally(() => {
+        setCommunityLoading(false)
+      })
+  }, [tab])
 
   async function handleCreateList(e: React.FormEvent) {
     e.preventDefault()
@@ -80,53 +114,172 @@ export default function MyListsPage() {
   return (
     <>
       <main>
-        <div className="container">
-          <div className="page-header">
-            <h1 className="lists-page-header">Lists</h1>
-            <button className="btn btn-primary" onClick={() => { setShowNewModal(true); setNewName(''); setCreateError('') }}>+ New list</button>
+        <div className="container page-top">
+          <h1 className="browse-section-title">Lists</h1>
+
+          <div className="page-header" style={{ marginTop: 0 }}>
+            <div className="filter-tabs" style={{ margin: 0 }}>
+              <button
+                className={`filter-tab${tab === 'my' ? ' active' : ''}`}
+                onClick={() => setTab('my')}
+              >
+                Your lists
+              </button>
+              <button
+                className={`filter-tab${tab === 'community' ? ' active' : ''}`}
+                onClick={() => setTab('community')}
+              >
+                Lists by others
+              </button>
+            </div>
+            {tab === 'my' && (
+              <button className="btn btn-primary" onClick={() => { setShowNewModal(true); setNewName(''); setCreateError('') }}>+ New list</button>
+            )}
           </div>
 
-          {sortedLists.length === 0 ? (
-            <div className="empty-state">
-              <h3>No lists yet</h3>
-              <p>Create a list to organize and rank your games.</p>
-            </div>
-          ) : (
-            <div className="lists-grid">
-              {sortedLists.map((list) => {
-                const rkey = list.uri.split('/').pop()!
-                return (
-                  <div key={list.uri} className="list-card" onClick={() => window.location.href = `/lists/${rkey}`}>
-                    <div className="list-card-covers">
-                      {list.value.items.slice(0, 3).map((item) => (
-                        item.coverUrl
-                          ? <img key={item.igdbId} src={item.coverUrl} alt={item.title} className="list-card-cover" />
-                          : <div key={item.igdbId} className="list-card-cover" />
-                      ))}
-                      {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
-                        <div key={`empty-${i}`} className="list-card-cover" />
-                      ))}
-                    </div>
-                    <div className="list-card-info">
-                      <div className="list-card-name">{list.value.name}</div>
-                      <div className="list-card-count">
-                        {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+          {tab === 'my' && (
+            sortedLists.length === 0 ? (
+              <div className="empty-state">
+                <h3>No lists yet</h3>
+                <p>Create a list to organize and rank your games.</p>
+              </div>
+            ) : (
+              <div className="lists-community-grid">
+                {sortedLists.map((list) => {
+                  const rkey = list.uri.split('/').pop()!
+                  return (
+                    <div
+                      key={list.uri}
+                      className="game-card-grid"
+                      onClick={() => window.location.href = `/lists/${rkey}`}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {/* Covers Wrap (Middle with background color divider) */}
+                      <div
+                        className="game-card-grid-cover-wrap"
+                        style={{
+                          background: 'var(--tertiary)',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding: '24px',
+                          aspectRatio: 'unset'
+                        }}
+                      >
+                        <div className="list-card-covers">
+                          {list.value.items.slice(0, 5).map((item) => (
+                            <img key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                          ))}
+                          {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
+                            <div key={`empty-${i}`} className="list-card-cover" />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Info Footer (Bottom, identical spacing/style to community cards) */}
+                      <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
+                          {list.value.name}
+                        </div>
+                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif', flexGrow: 1 }}>
+                          {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+                        </div>
+                        <div style={{ marginTop: '12px' }} onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="btn btn-basic"
+                            style={{ width: '100%' }}
+                            onClick={() => window.location.href = `/lists/${rkey}`}
+                          >
+                            Edit
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="list-card-actions" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="btn btn-ghost"
-                        onClick={() => setSharingList(list)}
-                        disabled={list.value.items.length === 0}
+                  )
+                })}
+              </div>
+            )
+          )}
+
+
+
+          {tab === 'community' && (
+            communityLoading ? (
+              <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading lists…</div>
+            ) : communityLists.length === 0 ? (
+              <div className="empty-state">
+                <h3>No lists yet</h3>
+                <p>Lists created by users across the network will appear here.</p>
+              </div>
+            ) : (
+              <div className="lists-community-grid">
+                {communityLists.map((list) => {
+                  const rkey = list.uri.split('/').pop()!
+                  const isOwnList = session && list.user.did === session.did
+                  const viewUrl = isOwnList ? `/lists/${rkey}` : `/${list.user.handle}/lists/${rkey}`
+                  return (
+                    <div key={list.uri} className="game-card-grid" onClick={() => window.location.href = viewUrl} style={{ cursor: 'pointer' }}>
+                      {/* Covers Wrap (Top with background color divider) */}
+                      <div
+                        className="game-card-grid-cover-wrap"
+                        style={{
+                          background: 'var(--tertiary)',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding: '24px',
+                          aspectRatio: 'unset'
+                        }}
                       >
-                        Share
-                      </button>
-                      <button className="btn btn-basic" onClick={() => window.location.href = `/lists/${rkey}`}>Edit</button>
+                        <div className="list-card-covers">
+                          {list.value.items.slice(0, 5).map((item) => (
+                            <img key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                          ))}
+                          {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
+                            <div key={`empty-${i}`} className="list-card-cover" />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Info Footer (Bottom, identical spacing/style to My Lists cards) */}
+                      <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
+                          {list.value.name}
+                        </div>
+                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif', flexGrow: 1 }}>
+                          {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+                        </div>
+
+                        {/* Creator Badge (Pill/Badge style, compact and below the game count) */}
+                        <div
+                          style={{
+                            alignSelf: 'flex-start',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: 'var(--tertiary)',
+                            padding: '4px 8px',
+                            borderRadius: 'var(--radius)',
+                            cursor: 'pointer',
+                            marginTop: '5px'
+                          }}
+                          onClick={(e) => { e.stopPropagation(); window.location.href = `/${list.user.handle}` }}
+                        >
+                          {list.user.avatar ? (
+                            <img src={list.user.avatar} alt="" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--tertiary)' }} />
+                          )}
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text)', fontWeight: 700 }}>
+                            {list.user.displayName || `@${list.user.handle}`}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )
           )}
         </div>
       </main>

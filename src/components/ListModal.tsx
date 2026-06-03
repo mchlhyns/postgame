@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { GameRecordView, IgdbGame, ListItem, ListRecordView, ListRecord } from '@/types'
 import { LIST_COLLECTION } from '@/lib/atproto'
@@ -165,9 +166,14 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
   const showNoResults = query.length >= 2 && !searching && collectionResults.length === 0 && filteredIgdbResults.length === 0
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
-        <h2>{isEdit ? 'Edit list' : 'New list'}</h2>
+    <div className="modal-fullscreen-overlay" onClick={onClose}>
+      <div className="modal modal-fullscreen list-modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+          <h2 style={{ margin: 0 }}>{isEdit ? 'Edit list' : 'New list'}</h2>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
+            <X size={24} style={{ color: 'var(--text-muted)' }} />
+          </button>
+        </div>
 
         <div className="list-modal-body">
           {/* Left: ordered items */}
@@ -264,7 +270,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
 
         {error && <p className="error-msg">{error}</p>}
 
-        <div className="form-actions" style={{ justifyContent: 'space-between', marginTop: 16 }}>
+        <div className="form-actions" style={{ justifyContent: 'space-between', marginTop: 'auto', paddingTop: 24 }}>
           {isEdit ? (
             <button
               className="btn btn-ghost"

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import SiteHeader from '@/components/SiteHeader'
-import FooterWrapper from '@/components/FooterWrapper'
 import BackToTop from '@/components/BackToTop'
 
 const APP_URL = 'https://crashthearcade.com'
@@ -32,15 +31,29 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preload" href="/fonts/Fustat/Fustat-VariableFont_wght.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <script defer data-domain="crashthearcade.com" src="https://stats.crashthearcade.com/js/script.js" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var path = window.location.pathname;
+                  if (path !== '/' && path !== '/oauth/callback') {
+                    document.documentElement.classList.add('has-header');
+                    document.documentElement.classList.add('has-sidebar');
+                  }
+                } catch (e) {}
+              })();
+            `
+          }}
+        />
       </head>
       <body>
         <SiteHeader />
         {children}
-        <FooterWrapper />
         <BackToTop />
       </body>
     </html>

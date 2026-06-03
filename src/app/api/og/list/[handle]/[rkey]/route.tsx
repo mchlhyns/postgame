@@ -70,7 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
               color: '#ffffff',
               fontFamily: 'Fustat',
               fontSize: listName.length > 36 ? 40 : listName.length > 24 ? 48 : 56,
-              fontWeight: 700,
+              fontWeight: 900,
               lineHeight: 1.2,
               display: 'flex',
               flexWrap: 'wrap',

@@ -37,7 +37,7 @@ export default function PublicListPage() {
   return (
     <>
       <main>
-        <div className="container">
+        <div className="container page-top">
           {loading ? (
             <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
           ) : error || !list ? (
@@ -47,17 +47,10 @@ export default function PublicListPage() {
             </div>
           ) : (
             <>
-              <div className="list-edit-header" style={{ marginBottom: 24 }}>
-                <a href={profileHref} className="list-edit-back">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                </a>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: 1, gap: 16, flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: '1.375rem', fontWeight: 700 }}>{list.value.name}</div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', flexShrink: 0 }}>
-                    <a href={profileHref} style={{ color: 'inherit', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>@{resolvedHandle ?? cleanHandle}</a> · {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
-                  </div>
+              <div style={{ marginBottom: 24 }}>
+                <h1 className="browse-section-title">{list.value.name}</h1>
+                <div style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginTop: -24, marginBottom: 32 }}>
+                  <a href={profileHref} style={{ color: 'inherit', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>@{resolvedHandle ?? cleanHandle}</a> · {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
                 </div>
               </div>
 
@@ -71,10 +64,7 @@ export default function PublicListPage() {
                   {list.value.items.map((item, i) => (
                     <div key={item.igdbId} className="game-card-grid">
                       <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                        {item.coverUrl
-                          ? <img src={item.coverUrl} alt={item.title} className="game-card-grid-cover" />
-                          : <div className="game-card-grid-cover" />
-                        }
+                        <img src={item.coverUrl || '/no-cover.png'} alt={item.title} className="game-card-grid-cover" />
                       </a>
                       <div className="game-card-grid-info">
                         {list.value.numbered !== false && <span className="public-list-rank">#{i + 1}</span>}

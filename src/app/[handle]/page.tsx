@@ -10,23 +10,9 @@ import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
 import ParallaxBannerImg from '@/components/ParallaxBannerImg'
 import { Stars } from '@/components/Stars'
+import { extractCid, blobUrl, resolvePds } from '@/lib/appview-fetch'
 
 const ALL_STATUSES = PRIMARY_STATUSES
-
-async function pdsFromDid(did: string): Promise<string> {
-  try {
-    const url = did.startsWith('did:web:')
-      ? `https://${did.slice('did:web:'.length).split(':')[0]}/.well-known/did.json`
-      : `https://plc.directory/${did}`
-    const res = await fetch(url)
-    if (res.ok) {
-      const doc = await res.json()
-      const svc = doc.service?.find((s: { id: string; serviceEndpoint: string }) => s.id === '#atproto_pds')
-      if (svc?.serviceEndpoint) return svc.serviceEndpoint
-    }
-  } catch {}
-  return 'https://bsky.social'
-}
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -64,22 +50,16 @@ function feedActionText(status: string, playedStatus?: string): string {
   }
 }
 
-function extractCid(ref: unknown): string | null {
-  if (!ref) return null
-  if (typeof (ref as any)['$link'] === 'string') return (ref as any)['$link']
-  if (typeof (ref as any)['/'] === 'string') return (ref as any)['/']
-  const s = (ref as any).toString?.()
-  if (typeof s === 'string' && s !== '[object Object]') return s
-  return null
+function getBlogPostUrl(docValue: any, publicationValue: any): string {
+  const path = docValue.path || ''
+  const domain = publicationValue?.domain || publicationValue?.url || ''
+  if (!domain) return 'https://bsky.app'
+  const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '')
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `https://${cleanDomain}${cleanPath}`
 }
 
-function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
-  const cid = extractCid((blob as any)?.ref)
-  if (!cid) return null
-  return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
-}
-
-async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; pronouns?: string; newScreenshots: Record<number, string> }> {
+async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; pronouns?: string; blogPublicationUri?: string; blogTag?: string; newScreenshots: Record<number, string> }> {
   const cleanHandle = handle.replace(/^@/, '')
   const { did, pdsUrl } = await resolveHandleToPds(cleanHandle)
 
@@ -153,6 +133,8 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
   let bannerUrl: string | undefined
   let favouriteGame: GameRef | undefined
   let pronouns: string | undefined
+  let blogPublicationUri: string | undefined
+  let blogTag: string | undefined
   if (settingsRes.ok) {
     const settings = await settingsRes.json()
     displayName = settings.value?.displayName
@@ -160,6 +142,8 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     if (settings.value?.bannerBlob) bannerUrl = blobUrl(pdsUrl, did, settings.value.bannerBlob) ?? undefined
     if (settings.value?.favouriteGame) favouriteGame = settings.value.favouriteGame
     if (settings.value?.pronouns) pronouns = settings.value.pronouns
+    blogPublicationUri = settings.value?.blogPublicationUri
+    blogTag = settings.value?.blogTag
   }
 
   let bskyDisplayName: string | undefined
@@ -172,7 +156,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     bskyBannerUrl = profile.banner
   }
 
-  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl: bannerUrl ?? bskyBannerUrl, favouriteGame, pronouns, newScreenshots }
+  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl: bannerUrl ?? bskyBannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, newScreenshots }
 }
 
 export default function ProfilePage() {
@@ -189,7 +173,7 @@ export default function ProfilePage() {
   const [pronouns, setPronouns] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [section, setSection] = useState<'games' | 'lists' | 'activity' | 'following'>('games')
+  const [section, setSection] = useState<'overview' | 'games' | 'lists' | 'activity' | 'following' | 'blog'>('overview')
   const [activityLimit, setActivityLimit] = useState(20)
   const [profilePdsUrl, setProfilePdsUrl] = useState<string | null>(null)
   const [follows, setFollows] = useState<Array<{ did: string; handle: string; displayName?: string; avatar?: string }> | null>(null)
@@ -201,6 +185,13 @@ export default function ProfilePage() {
   const [followUri, setFollowUri] = useState<string | null>(null)
   const [followLoading, setFollowLoading] = useState(false)
   const [followBtnHover, setFollowBtnHover] = useState(false)
+  
+  const [blogPublicationUri, setBlogPublicationUri] = useState<string | null>(null)
+  const [blogTag, setBlogTag] = useState<string | null>(null)
+  const [blogPosts, setBlogPosts] = useState<any[]>([])
+  const [blogLoading, setBlogLoading] = useState(false)
+  const [publicationValue, setPublicationValue] = useState<any>(null)
+  const [favScreenshotUrl, setFavScreenshotUrl] = useState<string | null>(null)
 
   useEffect(() => {
     restoreSession()
@@ -264,17 +255,31 @@ export default function ProfilePage() {
     setFollows(null)
 
     fetchPublicGames(handle, screenshotCache)
-      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, pronouns, newScreenshots }) => {
+      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, newScreenshots }) => {
         if (cancelled) return
         setProfileDid(did)
         setProfilePdsUrl(pdsUrl)
         setResolvedHandle(resolvedHandle)
-        setDisplayName(displayName ?? bskyDisplayName ?? null)
-        setAvatar(ctaAvatarUrl ?? avatar ?? null)
+        setDisplayName(displayName || bskyDisplayName || null)
+        setAvatar(ctaAvatarUrl || avatar || null)
         setBannerUrl(bannerUrl ?? null)
         setLists(fetchedLists)
         setFavouriteGame(favouriteGame ?? null)
+        setFavScreenshotUrl(null)
+        if (favouriteGame?.igdbId) {
+          const cached = newScreenshots[favouriteGame.igdbId] ?? screenshotCache[favouriteGame.igdbId]
+          if (cached) {
+            if (!cancelled) setFavScreenshotUrl(cached)
+          } else {
+            fetch(`/api/igdb/screenshots?ids=${favouriteGame.igdbId}`)
+              .then(r => r.ok ? r.json() : null)
+              .then(data => { if (!cancelled && data?.[favouriteGame.igdbId]) setFavScreenshotUrl(data[favouriteGame.igdbId]) })
+              .catch(() => {})
+          }
+        }
         setPronouns(pronouns ?? null)
+        setBlogPublicationUri(blogPublicationUri ?? null)
+        setBlogTag(blogTag ?? null)
         if (Object.keys(newScreenshots).length > 0) {
           try { sessionStorage.setItem('cta_screenshots', JSON.stringify({ ...screenshotCache, ...newScreenshots })) } catch {}
         }
@@ -285,6 +290,86 @@ export default function ProfilePage() {
 
     return () => { cancelled = true }
   }, [handle])
+
+  useEffect(() => {
+    if (!profileDid || !profilePdsUrl || !blogPublicationUri) {
+      setBlogPosts([])
+      setPublicationValue(null)
+      return
+    }
+
+    let cancelled = false
+    setBlogLoading(true)
+
+    async function loadBlog() {
+      try {
+        // 1. Fetch publication record
+        const pubRkey = blogPublicationUri!.split('/').pop()!
+        const pubRes = await fetch(
+          `${profilePdsUrl}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(profileDid!)}&collection=site.standard.publication&rkey=${encodeURIComponent(pubRkey)}`
+        )
+        let pubVal = null
+        if (pubRes.ok) {
+          const pubData = await pubRes.json()
+          if (!cancelled) {
+            pubVal = pubData.value
+            setPublicationValue(pubVal)
+          }
+        }
+
+        // 2. Fetch documents
+        let posts: any[] = []
+        let cursor: string | undefined
+        do {
+          const url = `${profilePdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(profileDid!)}&collection=site.standard.document&limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`
+          const res = await fetch(url)
+          if (!res.ok) break
+          const data = await res.json()
+          posts = [...posts, ...(data.records ?? [])]
+          cursor = data.cursor
+        } while (cursor)
+
+        if (cancelled) return
+
+        // Filter posts
+        const filtered = posts.filter((post: any) => {
+          const val = post.value
+          if (!val) return false
+          if (val.site !== blogPublicationUri) return false
+          if (blogTag) {
+            const tags: string[] = val.tags || []
+            const matchTag = blogTag.trim().toLowerCase()
+            const hasTag = tags.some((t: string) => t.toLowerCase() === matchTag)
+            if (!hasTag) return false
+          }
+          return true
+        })
+
+        // Sort posts descending by publishedAt, updatedAt, or createdAt
+        filtered.sort((a: any, b: any) => {
+          const aDate = a.value?.publishedAt || a.value?.updatedAt || a.value?.createdAt || ''
+          const bDate = b.value?.publishedAt || b.value?.updatedAt || b.value?.createdAt || ''
+          return bDate.localeCompare(aDate)
+        })
+
+        if (!cancelled) {
+          setBlogPosts(filtered)
+        }
+      } catch (err) {
+        console.error('Failed to load blog:', err)
+      } finally {
+        if (!cancelled) {
+          setBlogLoading(false)
+        }
+      }
+    }
+
+    loadBlog()
+
+    return () => {
+      cancelled = true
+    }
+  }, [profileDid, profilePdsUrl, blogPublicationUri, blogTag])
 
   useEffect(() => {
     if (section !== 'following' || follows !== null || !profileDid || !profilePdsUrl) return
@@ -315,7 +400,7 @@ export default function ProfilePage() {
         const ctaMap = new Map<string, { displayName?: string; avatarUrl?: string }>()
         await Promise.allSettled(subjectDids.map(async (did) => {
           try {
-            const pds = await pdsFromDid(did)
+            const pds = await resolvePds(did)
             const r = await fetch(`${pds}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(SETTINGS_COLLECTION)}&rkey=self`)
             if (!r.ok) return
             const { value } = await r.json()
@@ -330,7 +415,7 @@ export default function ProfilePage() {
           const bsky = bskyMap.get(did)
           if (!bsky) return []
           const cta = ctaMap.get(did)
-          return [{ did, handle: bsky.handle, displayName: cta?.displayName ?? bsky.displayName, avatar: cta?.avatarUrl ?? bsky.avatar }]
+          return [{ did, handle: bsky.handle, displayName: cta?.displayName || bsky.displayName, avatar: cta?.avatarUrl || bsky.avatar }]
         })
         setFollows(profiles.sort((a, b) => (followedAt.get(b.did) ?? '').localeCompare(followedAt.get(a.did) ?? '')))
       } catch {
@@ -358,6 +443,17 @@ export default function ProfilePage() {
     return bDate.localeCompare(aDate)
   })
 
+  type ActivityItem =
+    | { kind: 'game'; date: string; record: GameRecordView }
+    | { kind: 'list'; date: string; record: ListRecordView }
+  const activityItems: ActivityItem[] = [
+    ...games.map((r) => ({ kind: 'game' as const, date: r.value.updatedAt ?? r.value.createdAt, record: r })),
+    ...lists.map((r) => ({ kind: 'list' as const, date: r.value.createdAt, record: r })),
+  ].sort((a, b) => b.date.localeCompare(a.date))
+
+  const playingGames = sortedGames.filter((g) => matchesStatus(g.value.status, 'playing'))
+  const newestBlogPost = blogPosts[0] ?? null
+
   return (
     <>
       <main>
@@ -384,7 +480,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 700, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
+                <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 900, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
                 {(displayName || pronouns) && (
                   <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
                     {displayName && `@${resolvedHandle ?? handle}`}
@@ -431,20 +527,201 @@ export default function ProfilePage() {
             </div>
           ) : (
             <>
-              {/* Games / Lists / Activity tabs */}
+              {/* Overview / Games / Lists / Activity / Following / Posts tabs */}
               <div className="filter-tabs">
-                {(['games', 'lists', 'activity', 'following'] as const).map((s) => (
+                {(blogPublicationUri
+                  ? ['overview', 'games', 'lists', 'blog', 'activity', 'following'] as const
+                  : ['overview', 'games', 'lists', 'activity', 'following'] as const
+                ).map((s) => (
                   <button
                     key={s}
                     className={`filter-tab${section === s ? ' active' : ''}`}
-                    onClick={() => { setSection(s); setSelectedList(null); setActivityLimit(20) }}
+                    onClick={() => { setSection(s as any); setSelectedList(null); setActivityLimit(20) }}
                   >
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                    {s === 'blog' ? 'Posts' : s.charAt(0).toUpperCase() + s.slice(1)}
                   </button>
                 ))}
               </div>
 
-              {section === 'lists' ? (
+              {section === 'overview' ? (
+                <div className="profile-overview">
+                  {playingGames.length > 0 && (newestBlogPost || favouriteGame) ? (
+                    <section className="profile-overview-section">
+                      {(() => {
+                        const favOnly = !!favouriteGame && !newestBlogPost
+                        const rightCount = (favouriteGame ? 1 : 0) + (newestBlogPost ? 1 : 0)
+                        return (
+                          <div className="profile-overview-highlight-row">
+                            <div className="profile-overview-playing" style={{ gridRow: `span ${rightCount}` }}>
+                              <h2 className="home-section-title">Playing now</h2>
+                              <GameCard record={playingGames[0]} view="started" readonly />
+                            </div>
+                            {favouriteGame && (
+                              favOnly ? (
+                                <div className="profile-overview-playing" style={{ gridColumn: 'span 2' }}>
+                                  <h2 className="home-section-title">Favourite game</h2>
+                                  <a href={`/games/${favouriteGame.igdbId}`} className="game-card-started" style={{ display: 'flex', flex: 1, textDecoration: 'none' }}>
+                                    <div className="game-card-started-banner" style={favScreenshotUrl ? { backgroundImage: `url(${favScreenshotUrl})` } : undefined} />
+                                    <div className="game-card-started-bottom">
+                                      <div className="game-card-started-cover-wrap">
+                                        <img className="game-card-started-cover" src={favouriteGame.coverUrl ?? '/no-cover.png'} alt={favouriteGame.title} />
+                                      </div>
+                                      <div className="game-card-started-info">
+                                        <div className="game-card-started-title">{favouriteGame.title}</div>
+                                        {favouriteGame.releaseYear && <span className="game-card-started-meta">{favouriteGame.releaseYear}</span>}
+                                      </div>
+                                    </div>
+                                  </a>
+                                </div>
+                              ) : (
+                                <div>
+                                  <h2 className="home-section-title">Favourite game</h2>
+                                  <div className="game-card-grid overview-fav-card">
+                                    <div className="game-card-grid-cover-wrap">
+                                      <a href={`/games/${favouriteGame.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                                        <img className="game-card-grid-cover" src={favouriteGame.coverUrl ?? '/no-cover.png'} alt={favouriteGame.title} />
+                                      </a>
+                                    </div>
+                                    <a className="game-card-grid-info" href={`/games/${favouriteGame.igdbId}`}>
+                                      <div className="game-card-grid-title"><span className="game-card-grid-title-text">{favouriteGame.title}</span></div>
+                                      {favouriteGame.releaseYear && <div className="browse-card-meta">{favouriteGame.releaseYear}</div>}
+                                    </a>
+                                  </div>
+                                </div>
+                              )
+                            )}
+                            {newestBlogPost && (() => {
+                              const postUrl = getBlogPostUrl(newestBlogPost.value, publicationValue)
+                              const pubDate = newestBlogPost.value.publishedAt
+                                ? new Date(newestBlogPost.value.publishedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                                : null
+                              const coverUrl = newestBlogPost.value.coverImage && profilePdsUrl && profileDid
+                                ? blobUrl(profilePdsUrl, profileDid, newestBlogPost.value.coverImage)
+                                : null
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <h2 className="home-section-title">Latest post</h2>
+                                  <div className="blog-post-card" style={{ flex: 1 }}>
+                                    <div className="blog-post-card-body">
+                                      {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" style={{ width: '100%', height: '50%', marginBottom: 12 }} />}
+                                      <div className="blog-post-card-header">
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <h3 style={{ margin: 0 }}>
+                                            <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
+                                              {newestBlogPost.value.title}
+                                            </a>
+                                          </h3>
+                                          {pubDate && <div className="blog-post-date">{pubDate}</div>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="blog-post-card-footer">
+                                      <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
+                                        Read post &rarr;
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            })()}
+                          </div>
+                        )
+                      })()}
+                    </section>
+                  ) : playingGames.length > 0 ? (
+                    <section className="profile-overview-section">
+                      <h2 className="home-section-title">Playing</h2>
+                      <div className="game-grid profile-game-grid">
+                        {playingGames.map((record) => (
+                          <GameCard key={record.uri} record={record} view="started" readonly />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+
+                  {activityItems.length > 0 && (
+                    <section className="profile-overview-section">
+                      <h2 className="home-section-title">Recent activity</h2>
+                      <div className="social-feed">
+                        {activityItems.slice(0, 10).map((item, i) => (
+                          <div key={i} className="feed-item">
+                            {item.kind === 'list' ? (
+                              <>
+                                <div className="feed-main">
+                                  <span className="feed-status">Created list</span>
+                                  <a href={`/${resolvedHandle ?? handle}/lists/${item.record.uri.split('/').pop()}`} className="feed-game-title">{item.record.value.name}</a>
+                                </div>
+                                <span className="feed-item-time">{relativeTime(item.date)}</span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="feed-main">
+                                  <span className="feed-status">
+                                    {(() => { const t = feedActionText(item.record.value.status, item.record.value.playedStatus); return t.charAt(0).toUpperCase() + t.slice(1) })()}
+                                  </span>
+                                  <a href={`/games/${item.record.value.game.igdbId}`} className="feed-game-title">{item.record.value.game.title}</a>
+                                  {item.record.value.rating && <Stars rating={item.record.value.rating / 2} />}
+                                </div>
+                                <span className="feed-item-time">{relativeTime(item.date)}</span>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {playingGames.length === 0 && activityItems.length === 0 && (
+                    <div className="empty-state">
+                      <h3>Nothing here yet</h3>
+                      <p>This user hasn't added any games.</p>
+                    </div>
+                  )}
+                </div>
+              ) : section === 'blog' ? (
+                blogLoading ? (
+                  <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+                ) : blogPosts.length === 0 ? (
+                  <div className="empty-state">
+                    <h3>No posts yet</h3>
+                    <p>This blog doesn't have any posts yet.</p>
+                  </div>
+                ) : (
+                  <div className="blog-posts-grid">
+                    {blogPosts.map((post) => {
+                      const postUrl = getBlogPostUrl(post.value, publicationValue)
+                      const pubDate = post.value.publishedAt
+                        ? new Date(post.value.publishedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                        : null
+                      const coverUrl = post.value.coverImage && profilePdsUrl && profileDid
+                        ? blobUrl(profilePdsUrl, profileDid, post.value.coverImage)
+                        : null
+                      return (
+                        <div key={post.uri} className="blog-post-card">
+                          <div className="blog-post-card-body">
+                            <div className="blog-post-card-header">
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ margin: 0 }}>
+                                  <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
+                                    {post.value.title}
+                                  </a>
+                                </h3>
+                                {pubDate && <div className="blog-post-date">{pubDate}</div>}
+                              </div>
+                              {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
+                            </div>
+                          </div>
+                          <div className="blog-post-card-footer">
+                            <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
+                              Read post &rarr;
+                            </a>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              ) : section === 'lists' ? (
                 selectedList ? (
                   <>
                     <div className="game-list-divider profile-lists">
@@ -495,22 +772,36 @@ export default function ProfilePage() {
                     <p>This user hasn't made any lists.</p>
                   </div>
                 ) : (
-                  <div className="lists-grid">
+                  <div className="lists-community-grid">
                     {[...lists].sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt)).map((list) => (
-                      <div key={list.uri} className="list-card" onClick={() => setSelectedList(list)} style={{ cursor: 'pointer' }}>
-                        <div className="list-card-covers">
-                          {list.value.items.slice(0, 3).map((item) => (
-                            item.coverUrl
-                              ? <img key={item.igdbId} src={item.coverUrl} alt={item.title} className="list-card-cover" />
-                              : <div key={item.igdbId} className="list-card-cover" />
-                          ))}
-                          {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="list-card-cover" />
-                          ))}
+                      <div key={list.uri} className="game-card-grid" onClick={() => setSelectedList(list)} style={{ cursor: 'pointer' }}>
+                        <div
+                          className="game-card-grid-cover-wrap"
+                          style={{
+                            background: 'var(--tertiary)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: '24px',
+                            aspectRatio: 'unset',
+                          }}
+                        >
+                          <div className="list-card-covers">
+                            {list.value.items.slice(0, 5).map((item) => (
+                              <img key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                            ))}
+                            {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
+                              <div key={`empty-${i}`} className="list-card-cover" />
+                            ))}
+                          </div>
                         </div>
-                        <div className="list-card-info">
-                          <div className="list-card-name">{list.value.name}</div>
-                          <div className="list-card-count">{list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}</div>
+                        <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
+                            {list.value.name}
+                          </div>
+                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif' }}>
+                            {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -536,7 +827,7 @@ export default function ProfilePage() {
                         </a>
                         <div style={{ minWidth: 0, width: '100%' }}>
                           <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            <a href={`/${f.handle}`}>{f.displayName ?? `@${f.handle}`}</a>
+                            <a href={`/${f.handle}`}>{f.displayName || `@${f.handle}`}</a>
                           </div>
                           {f.displayName && (
                             <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -550,14 +841,6 @@ export default function ProfilePage() {
                 )
               ) : section === 'activity' ? (
                 (() => {
-                  type ActivityItem =
-                    | { kind: 'game'; date: string; record: GameRecordView }
-                    | { kind: 'list'; date: string; record: ListRecordView }
-                  const activityItems: ActivityItem[] = [
-                    ...games.map((r) => ({ kind: 'game' as const, date: r.value.updatedAt ?? r.value.createdAt, record: r })),
-                    ...lists.map((r) => ({ kind: 'list' as const, date: r.value.createdAt, record: r })),
-                  ].sort((a, b) => b.date.localeCompare(a.date))
-
                   return activityItems.length === 0 ? (
                     <div className="empty-state">
                       <h3>No activity yet</h3>
@@ -567,33 +850,25 @@ export default function ProfilePage() {
                     <>
                       <div className="social-feed">
                         {activityItems.slice(0, activityLimit).map((item, i) => (
-                          <div key={i} className="feed-item" style={{ minHeight: 56 }}>
+                          <div key={i} className="feed-item">
                             {item.kind === 'list' ? (
                               <>
-                                <div className="feed-text">
-                                  <span style={{ color: 'var(--text-muted)' }}>Created list</span>
-                                  {' '}
+                                <div className="feed-main">
+                                  <span className="feed-status">Created list</span>
                                   <a href={`/${resolvedHandle ?? handle}/lists/${item.record.uri.split('/').pop()}`} className="feed-game-title">{item.record.value.name}</a>
                                 </div>
-                                <span style={{ fontSize: '0.875rem', marginLeft: 'auto', color: 'var(--text-muted)', whiteSpace: 'nowrap', width: 50, textAlign: 'right', display: 'inline-block' }}>
-                                  {relativeTime(item.date)}
-                                </span>
+                                <span className="feed-item-time">{relativeTime(item.date)}</span>
                               </>
                             ) : (
                               <>
-                                <div className="feed-text">
-                                  <span style={{ color: 'var(--text-muted)' }}>
+                                <div className="feed-main">
+                                  <span className="feed-status">
                                     {(() => { const t = feedActionText(item.record.value.status, item.record.value.playedStatus); return t.charAt(0).toUpperCase() + t.slice(1) })()}
                                   </span>
-                                  {' '}
                                   <a href={`/games/${item.record.value.game.igdbId}`} className="feed-game-title">{item.record.value.game.title}</a>
-                                </div>
-                                <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                                   {item.record.value.rating && <Stars rating={item.record.value.rating / 2} />}
-                                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', width: 50, textAlign: 'right', display: 'inline-block' }}>
-                                    {relativeTime(item.date)}
-                                  </span>
                                 </div>
+                                <span className="feed-item-time">{relativeTime(item.date)}</span>
                               </>
                             )}
                           </div>
@@ -613,7 +888,7 @@ export default function ProfilePage() {
                   <p>Nothing here yet.</p>
                 </div>
               ) : (
-                <div className="game-grid">
+                <div className="game-grid profile-game-grid">
                   {ALL_STATUSES.flatMap((status) => {
                     const group = sortedGames.filter((g) => matchesStatus(g.value.status, status))
                     if (group.length === 0) return []
@@ -622,7 +897,7 @@ export default function ProfilePage() {
                         {statusLabel(status)}
                       </div>,
                       ...group.map((record) => (
-                        <GameCard key={record.uri} record={record} view={status === 'playing' ? 'started' : 'grid'} readonly />
+                        <GameCard key={record.uri} record={record} view="grid" readonly />
                       )),
                     ]
                   })}

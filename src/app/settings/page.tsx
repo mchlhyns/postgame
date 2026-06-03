@@ -6,6 +6,7 @@ import { Agent } from '@atproto/api'
 import { restoreSession, signOut, COLLECTION, SETTINGS_COLLECTION, LIST_COLLECTION, FOLLOW_COLLECTION } from '@/lib/atproto'
 import { GameRef, IgdbGame } from '@/types'
 import { formatIgdbGame } from '@/lib/igdb'
+import { resolvePds, extractCid, blobUrl } from '@/lib/appview-fetch'
 
 type FormattedGame = IgdbGame & { coverUrl?: string }
 
@@ -16,48 +17,8 @@ interface Settings {
   avatarBlob?: unknown
   bannerBlob?: unknown
   favouriteGame?: GameRef
-}
-
-
-
-async function resolvePds(did: string): Promise<string> {
-  try {
-    let url: string
-    if (did.startsWith('did:web:')) {
-      const host = did.slice('did:web:'.length).split(':')[0]
-      if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) {
-        return 'https://bsky.social'
-      }
-      url = `https://${host}/.well-known/did.json`
-    } else {
-      url = `https://plc.directory/${did}`
-    }
-    const res = await fetch(url)
-    if (res.ok) {
-      const doc = await res.json()
-      const pds = doc.service?.find((s: { id: string; serviceEndpoint: string }) => s.id === '#atproto_pds')
-      if (pds?.serviceEndpoint) return pds.serviceEndpoint
-    }
-  } catch { /* fall back */ }
-  return 'https://bsky.social'
-}
-
-function extractCid(ref: unknown): string | null {
-  if (!ref) return null
-  // Plain ATProto JSON: { $link: '...' }
-  if (typeof (ref as any)['$link'] === 'string') return (ref as any)['$link']
-  // DAG-JSON: { '/': '...' }
-  if (typeof (ref as any)['/'] === 'string') return (ref as any)['/']
-  // CID class instance from @atproto/api
-  const s = (ref as any).toString?.()
-  if (typeof s === 'string' && s !== '[object Object]') return s
-  return null
-}
-
-function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
-  const cid = extractCid((blob as any)?.ref)
-  if (!cid) return null
-  return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
+  blogPublicationUri?: string
+  blogTag?: string
 }
 
 export default function SettingsPage() {
@@ -77,7 +38,10 @@ export default function SettingsPage() {
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [bannerFile, setBannerFile] = useState<File | null>(null)
-const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
+  const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
+  const [blogPublicationUri, setBlogPublicationUri] = useState('')
+  const [blogTag, setBlogTag] = useState('')
+  const [userBlogs, setUserBlogs] = useState<{ uri: string; name: string }[]>([])
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -123,7 +87,25 @@ const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
         if (value.avatarBlob) setAvatarBlob(value.avatarBlob)
         if (value.bannerBlob) setBannerBlob(value.bannerBlob)
         if (value.favouriteGame) setFavouriteGame(value.favouriteGame)
+        if (value.blogPublicationUri) setBlogPublicationUri(value.blogPublicationUri)
+        if (value.blogTag) setBlogTag(value.blogTag)
       } catch { if (bskyName) setDisplayName(bskyName) }
+
+      // Fetch user's blogs (site.standard.publication)
+      try {
+        const blogsRes = await s.agent.com.atproto.repo.listRecords({
+          repo: s.did,
+          collection: 'site.standard.publication',
+          limit: 100,
+        })
+        const list = (blogsRes.data.records ?? []).map((r: any) => ({
+          uri: r.uri,
+          name: r.value?.name || r.value?.title || 'Untitled Blog',
+        }))
+        setUserBlogs(list)
+      } catch (e) {
+        console.error('Failed to list publications:', e)
+      }
 
       setLoading(false)
     }).catch(() => { window.location.href = '/' })
@@ -188,6 +170,8 @@ const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
         ...(newAvatarBlob ? { avatarBlob: newAvatarBlob } : {}),
         ...(newBannerBlob ? { bannerBlob: newBannerBlob } : {}),
         ...(favouriteGame ? { favouriteGame } : {}),
+        ...(blogPublicationUri ? { blogPublicationUri } : {}),
+        ...(blogTag.trim() ? { blogTag: blogTag.trim() } : {}),
       }
       await session.agent.com.atproto.repo.putRecord({
         repo: session.did,
@@ -241,16 +225,14 @@ const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
   return (
     <>
       <main>
-        <div className="container">
-          <div className="page-header" style={{ marginBottom: 24 }}>
-            <h1>Settings</h1>
-          </div>
+        <div className="container page-top">
+          <h1 className="browse-section-title">Settings</h1>
 
           <div style={{ maxWidth: 480 }}>
             <form onSubmit={handleSave}>
 
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 8 }}>Profile</h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.4 }}>
+            <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 900, marginBottom: 8 }}>Profile</h2>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.4 }}>
               Adjust the look and feel of your public profile. By default, we'll use the avatar and display name from your Atmosphere Account.
             </p>
 
@@ -326,6 +308,114 @@ const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
                   style={{ display: 'none' }}
                   onChange={(e) => e.target.files?.[0] && pickFile('banner', e.target.files[0])}
                 />
+              </div>
+
+              {/* Favourite Game */}
+              <div className="form-field">
+                <label>Favourite game</label>
+                <span className="settings-subtext">Shown on your public profile overview</span>
+                {favouriteGame ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                    <img
+                      src={favouriteGame.coverUrl ?? '/no-cover.png'}
+                      alt={favouriteGame.title}
+                      style={{ width: 40, height: 54, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {favouriteGame.title}
+                      </div>
+                      {favouriteGame.releaseYear && (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{favouriteGame.releaseYear}</div>
+                      )}
+                    </div>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFavouriteGame(null)}>Remove</button>
+                  </div>
+                ) : (
+                  <div ref={favSearchRef} className="search-wrapper" style={{ marginTop: 8 }}>
+                    <input
+                      className="input"
+                      style={{ width: '100%' }}
+                      type="text"
+                      placeholder="Search for a game…"
+                      value={favSearchQuery}
+                      onChange={(e) => setFavSearchQuery(e.target.value)}
+                      autoComplete="off"
+                    />
+                    {favSearchOpen && favSearchResults.length > 0 && (
+                      <div className="search-results">
+                        {favSearchResults.slice(0, 8).map((game) => (
+                          <div
+                            key={game.id}
+                            className="search-result-item"
+                            onClick={() => {
+                              setFavouriteGame({
+                                igdbId: game.id,
+                                title: game.name,
+                                coverUrl: game.coverUrl,
+                                releaseYear: game.first_release_date ? new Date(game.first_release_date * 1000).getFullYear() : undefined,
+                              })
+                              setFavSearchQuery('')
+                              setFavSearchOpen(false)
+                            }}
+                          >
+                            <img className="search-result-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
+                            <div className="search-result-info">
+                              <strong>{game.name}</strong>
+                              {(game.first_release_date || game.platforms?.length) && (
+                                <span className="search-result-platforms">
+                                  {[
+                                    game.first_release_date && new Date(game.first_release_date * 1000).getFullYear(),
+                                    game.platforms?.map(p => p.name).join(', '),
+                                  ].filter(Boolean).join(' · ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Blog Settings Section */}
+              <div>
+                <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 900, marginBottom: 8 }}>Posts</h2>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.4 }}>
+                  Link a publication from your Atmosphere account to display your latest posts on your profile or link to published reviews.
+                </p>
+
+                <div className="form-field">
+                  <label>Select publication</label>
+                  <select
+                    className="input"
+                    style={{ width: '100%' }}
+                    value={blogPublicationUri}
+                    onChange={(e) => setBlogPublicationUri(e.target.value)}
+                  >
+                    <option value="">— None —</option>
+                    {userBlogs.map((b) => (
+                      <option key={b.uri} value={b.uri}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-field" style={{ marginTop: 16 }}>
+                  <label>Filter Tag (Optional)</label>
+                  <span className="settings-subtext">Only display posts tagged with this keyword (e.g. "video games")</span>
+                  <input
+                    className="input"
+                    style={{ width: '100%' }}
+                    type="text"
+                    placeholder="e.g. video games"
+                    value={blogTag}
+                    onChange={(e) => setBlogTag(e.target.value)}
+                    maxLength={50}
+                  />
+                </div>
               </div>
 
 

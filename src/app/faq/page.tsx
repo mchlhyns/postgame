@@ -40,7 +40,7 @@ const sections: Section[] = [
     items: [
       {
         q: 'Are my games, collections, and lists public?',
-        a: 'AT Protocol repositories are public by default, the same way Bluesky posts are. Anyone who knows your DID or handle can look up your collection records directly via the AT Protocol. Like many other apps on the AT Protocol, we show user activity in the Network section of the /social page.',
+        a: 'AT Protocol repositories are public by default, the same way Bluesky posts are. Anyone who knows your DID or handle can look up your collection records directly via the AT Protocol. Like many other apps on the AT Protocol, we show user activity in the Network section of the /community page.',
       },
       {
         q: 'What analytics or tracking does the site use?',
@@ -54,10 +54,8 @@ export default function FaqPage() {
   return (
     <>
       <main>
-        <div className="container">
-          <div className="page-header" style={{ marginBottom: 24 }}>
-            <h1>FAQ</h1>
-          </div>
+        <div className="container page-top">
+          <h1 className="browse-section-title">FAQ</h1>
 
           <div className="faq-section-container">
             {sections.map((section) => (

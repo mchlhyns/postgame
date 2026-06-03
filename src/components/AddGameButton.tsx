@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { IgdbGame, GameStatus, GameRecord, GameRecordView } from '@/types'
 import { restoreSession, COLLECTION } from '@/lib/atproto'
@@ -99,7 +99,7 @@ export default function AddGameButton({ game }: Props) {
           style={{ width: '100%', justifyContent: 'center', marginBottom: 20 }}
           onClick={() => setShowAddModal(true)}
         >
-          + Add to collection
+          + Add to library
         </button>
         {showAddModal && (
           <AddGameModal
@@ -114,6 +114,8 @@ export default function AddGameButton({ game }: Props) {
     )
   }
 
+  const hasAnyFinished = records.some((r) => normalizeStatus(r.value.status) === 'played')
+
   if (records.length === 1) {
     return (
       <>
@@ -123,15 +125,17 @@ export default function AddGameButton({ game }: Props) {
             style={{ width: '100%', justifyContent: 'center' }}
             onClick={() => setEditingRecord(records[0])}
           >
-            Edit in collection
+            Edit in library
           </button>
-          <button
-            className="btn btn-ghost"
-            style={{ width: '100%', justifyContent: 'center' }}
-            onClick={() => setShowAddModal(true)}
-          >
-            + New playthrough
-          </button>
+          {hasAnyFinished && (
+            <button
+              className="btn btn-ghost"
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => setShowAddModal(true)}
+            >
+              + New playthrough
+            </button>
+          )}
         </div>
         {editingRecord && (
           <EditModal
@@ -165,7 +169,7 @@ export default function AddGameButton({ game }: Props) {
           style={{ width: '100%', justifyContent: 'space-between' }}
           onClick={() => setDropdownOpen(o => !o)}
         >
-          <span>In collection</span>
+          <span>In library</span>
           <ChevronDown size={16} style={{ flexShrink: 0 }} />
         </button>
         {dropdownOpen && (
@@ -179,13 +183,17 @@ export default function AddGameButton({ game }: Props) {
                 {playthroughLabel(r, i)}
               </button>
             ))}
-            <div className="playthrough-dropdown-divider" />
-            <button
-              className="playthrough-dropdown-item playthrough-dropdown-new"
-              onClick={() => { setShowAddModal(true); setDropdownOpen(false) }}
-            >
-              + New playthrough
-            </button>
+            {hasAnyFinished && (
+              <>
+                <div className="playthrough-dropdown-divider" />
+                <button
+                  className="playthrough-dropdown-item playthrough-dropdown-new"
+                  onClick={() => { setShowAddModal(true); setDropdownOpen(false) }}
+                >
+                  + New playthrough
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -225,13 +233,48 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
     playedStatus: inferPlayedStatus(record.value.status, record.value.playedStatus),
     platform: record.value.platform,
     rating: record.value.rating,
-    notes: record.value.notes,
     startedAt: record.value.startedAt,
     finishedAt: record.value.finishedAt,
     isReplay: record.value.isReplay,
     backloggedStatus: record.value.backloggedStatus,
+    owned: record.value.owned ?? false,
+    reviewBlogUri: record.value.reviewBlogUri,
   })
   const [saving, setSaving] = useState(false)
+  const [blogPosts, setBlogPosts] = useState<{ uri: string; title: string }[]>([])
+
+  useEffect(() => {
+    async function fetchBlogPosts() {
+      try {
+        const settingsRes = await agent.com.atproto.repo.getRecord({
+          repo: did,
+          collection: 'com.crashthearcade.settings',
+          rkey: 'self'
+        }).catch(() => null)
+
+        const blogPublicationUri = (settingsRes?.data?.value as any)?.blogPublicationUri
+        if (!blogPublicationUri) return
+
+        const docsRes = await agent.com.atproto.repo.listRecords({
+          repo: did,
+          collection: 'site.standard.document',
+          limit: 100
+        })
+
+        const posts = (docsRes.data.records ?? [])
+          .filter((r: any) => r.value && r.value.site === blogPublicationUri)
+          .map((r: any) => ({
+            uri: r.uri,
+            title: r.value?.title || 'Untitled Post'
+          }))
+
+        setBlogPosts(posts)
+      } catch (err) {
+        console.error('Failed to load blog posts in modal:', err)
+      }
+    }
+    fetchBlogPosts()
+  }, [agent, did])
 
   async function save() {
     setSaving(true)
@@ -249,6 +292,8 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
         playedStatus: isDone ? (draft.playedStatus ?? inferPlayedStatus(newStatus)) : undefined,
         backloggedStatus: norm === 'backlogged' ? (draft.backloggedStatus ?? inferBackloggedStatus(newStatus)) : undefined,
         finishedAt: isDone ? (draft.finishedAt ?? new Date().toISOString()) : draft.finishedAt,
+        owned: draft.owned || undefined,
+        reviewBlogUri: draft.reviewBlogUri || undefined,
         updatedAt: new Date().toISOString(),
       }
       await agent.com.atproto.repo.putRecord({
@@ -278,34 +323,88 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
     }
   }
 
+  const currentStatusKey = encodeStatusKey(draft.status ?? record.value.status, draft.playedStatus, draft.backloggedStatus)
+  const decoded = decodeStatusKey(currentStatusKey)
+  const baseStatus = decoded.status
+
+  const statusOptions = [
+    { value: 'playing', title: 'Playing', subtitle: 'In progress now' },
+    { value: 'backlogged', title: 'Backlogged', subtitle: 'Queued to play' },
+    { value: 'shelved', title: 'Shelved', subtitle: 'Paused for now' },
+    { value: 'wishlisted', title: 'Wishlisted', subtitle: 'Want to buy or play' },
+    { value: 'played', title: 'Played', subtitle: 'Played, not finished' },
+    { value: 'completed', title: 'Completed', subtitle: 'Beat the main story' },
+    { value: 'mastered', title: 'Mastered', subtitle: 'Completed 100%' },
+    { value: 'abandoned', title: 'Abandoned', subtitle: 'Dropped for good' },
+  ]
+
+  function handleMainStatusSelect(mainVal: string) {
+    const d = decodeStatusKey(mainVal)
+    setDraft((prev) => ({
+      ...prev,
+      status: d.status as GameStatus,
+      playedStatus: d.playedStatus,
+      backloggedStatus: d.backloggedStatus,
+      rating: d.status !== 'played' ? undefined : prev.rating
+    }))
+  }
+
+  function handleSubStatusSelect(subVal: string) {
+    let targetKey = subVal
+    if (currentStatusKey === subVal) {
+      targetKey = subVal === 'shelved' ? 'backlogged' : 'played'
+    }
+    const d = decodeStatusKey(targetKey)
+    setDraft((prev) => ({
+      ...prev,
+      status: d.status as GameStatus,
+      playedStatus: d.playedStatus,
+      backloggedStatus: d.backloggedStatus
+    }))
+  }
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20, alignItems: 'center' }}>
+    <div className="modal-fullscreen-overlay" onClick={onClose}>
+      <div className="modal modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+          <h2 style={{ margin: 0 }}>Edit playthrough</h2>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
+            <X size={24} style={{ color: 'var(--text-muted)' }} />
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 16, marginBottom: 32, alignItems: 'center' }}>
           <img
             src={record.value.game.coverUrl ?? '/no-cover.png'}
             alt={record.value.game.title}
-            style={{ width: 48, height: 64, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+            style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}
           />
           <div>
-            <div style={{ fontWeight: 600 }}>{record.value.game.title}</div>
+            <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)' }}>{record.value.game.title}</div>
             {record.value.game.releaseYear && (
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{record.value.game.releaseYear}</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>{record.value.game.releaseYear}</div>
             )}
           </div>
         </div>
 
         <div className="form-field">
           <label>Status</label>
-          <Select
-            variant="input"
-            value={encodeStatusKey(draft.status ?? record.value.status, draft.playedStatus, draft.backloggedStatus)}
-            onChange={(key) => { const d = decodeStatusKey(key); setDraft((prev) => ({ ...prev, status: d.status as GameStatus, playedStatus: d.playedStatus, backloggedStatus: d.backloggedStatus })) }}
-            options={STATUS_OPTIONS}
-          />
+          <div className="status-pill-grid">
+            {statusOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`status-pill${currentStatusKey === opt.value ? ' active' : ''}`}
+                onClick={() => handleSubStatusSelect(opt.value)}
+              >
+                <span className="status-pill-title">{opt.title}</span>
+                <span className="status-pill-subtitle">{opt.subtitle}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr' }}>
+        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
           <div className="form-field">
             <label>Platform</label>
             <Select
@@ -328,22 +427,23 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
               options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
             />
           </div>
-        </div>
-
-        <div className="form-field" style={{ marginBottom: 8 }}>
-          <label>Notes</label>
-          <textarea
-            className="input"
-            rows={3}
-            value={draft.notes ?? ''}
-            onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value || undefined }))}
-            placeholder="Optional notes"
-          />
-        </div>
-
-        <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <div className="form-field">
-            <label>Started</label>
+            <label>Ownership</label>
+            <Select
+              variant="input"
+              value={draft.owned ? 'yes' : ''}
+              onChange={(v) => setDraft((d) => ({ ...d, owned: v === 'yes' }))}
+              options={[
+                { value: 'yes', label: 'Owned' },
+                { value: '', label: 'Not Owned' }
+              ]}
+            />
+          </div>
+        </div>
+
+        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+          <div className="form-field" style={{ marginBottom: 16 }}>
+            <label>Started Date</label>
             <input
               className="input"
               type="date"
@@ -351,32 +451,57 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
               onChange={(e) => setDraft((d) => ({ ...d, startedAt: dateInputToISO(e.target.value) }))}
             />
           </div>
-          <div className="form-field">
-            <label>Finished</label>
-            <input
-              className="input"
-              type="date"
-              value={isoToDateInput(draft.finishedAt)}
-              onChange={(e) => setDraft((d) => ({ ...d, finishedAt: dateInputToISO(e.target.value) }))}
-            />
+          {baseStatus === 'played' ? (
+            <div className="form-field" style={{ marginBottom: 16, gridColumn: 'span 2' }}>
+              <label>Finished Date</label>
+              <input
+                className="input"
+                type="date"
+                value={isoToDateInput(draft.finishedAt)}
+                onChange={(e) => setDraft((d) => ({ ...d, finishedAt: dateInputToISO(e.target.value) }))}
+              />
+            </div>
+          ) : (
+            <div style={{ gridColumn: 'span 2' }} />
+          )}
+        </div>
+
+        {baseStatus === 'played' && (
+          <div className="played-details-group">
+            <div className="form-field" style={{ margin: 0 }}>
+              <label style={{ marginBottom: 8 }}>Rating</label>
+              <StarRatingInput value={draft.rating} onChange={(v) => setDraft((d) => ({ ...d, rating: v }))} />
+            </div>
+
+            {blogPosts.length > 0 && (
+              <div className="form-field" style={{ margin: 0 }}>
+                <label>Link review</label>
+                <span className="settings-subtext">Attach a review from your linked publication</span>
+                <Select
+                  variant="input"
+                  value={draft.reviewBlogUri ?? ''}
+                  onChange={(v) => setDraft((d) => ({ ...d, reviewBlogUri: v || undefined }))}
+                  options={[
+                    { value: '', label: '— No review linked —' },
+                    ...blogPosts.map((p) => ({ value: p.uri, label: p.title }))
+                  ]}
+                />
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
-        <div className="form-field">
-          <label style={{ marginBottom: 4 }}>Rating</label>
-          <StarRatingInput value={draft.rating} onChange={(v) => setDraft((d) => ({ ...d, rating: v }))} />
-        </div>
-
-        <div className="form-actions">
+        <div className="form-actions" style={{ marginTop: 'auto', paddingTop: 24, gap: 12 }}>
           <button
+            type="button"
             className="btn btn-ghost"
             style={{ color: 'var(--danger)', borderColor: 'var(--danger)', marginRight: 'auto' }}
             onClick={remove}
           >
             Delete
           </button>
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={save} disabled={saving}>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>

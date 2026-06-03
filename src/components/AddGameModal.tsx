@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { IgdbGame, GameRecordView, PlayedStatus, BackloggedStatus } from '@/types'
 import { COLLECTION } from '@/lib/atproto'
-import { formatIgdbGame, PLAYED_STATUS_LABELS, normalizeStatus, abbreviatePlatform } from '@/lib/igdb'
+import { formatIgdbGame, PLAYED_STATUS_LABELS, normalizeStatus, abbreviatePlatform, isoToDateInput, dateInputToISO } from '@/lib/igdb'
 import Select from '@/components/Select'
 import { StarRatingInput } from '@/components/Stars'
 
@@ -27,9 +27,48 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
   const [platform, setPlatform] = useState('')
   const [rating, setRating] = useState<number | undefined>()
   const [isReplay, setIsReplay] = useState(defaultIsReplay ?? false)
+  const [owned, setOwned] = useState(false)
+  const [startedAt, setStartedAt] = useState<string | undefined>()
+  const [finishedAt, setFinishedAt] = useState<string | undefined>()
+  const [blogPosts, setBlogPosts] = useState<{ uri: string; title: string }[]>([])
+  const [reviewBlogUri, setReviewBlogUri] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!agent || !did) return
+    async function fetchBlogPosts() {
+      try {
+        const settingsRes = await agent.com.atproto.repo.getRecord({
+          repo: did,
+          collection: 'com.crashthearcade.settings',
+          rkey: 'self'
+        }).catch(() => null)
+
+        const blogPublicationUri = (settingsRes?.data?.value as any)?.blogPublicationUri
+        if (!blogPublicationUri) return
+
+        const docsRes = await agent.com.atproto.repo.listRecords({
+          repo: did,
+          collection: 'site.standard.document',
+          limit: 100
+        })
+
+        const posts = (docsRes.data.records ?? [])
+          .filter((r: any) => r.value && r.value.site === blogPublicationUri)
+          .map((r: any) => ({
+            uri: r.uri,
+            title: r.value?.title || 'Untitled Post'
+          }))
+
+        setBlogPosts(posts)
+      } catch (err) {
+        console.error('Failed to load blog posts in modal:', err)
+      }
+    }
+    fetchBlogPosts()
+  }, [agent, did])
 
   useEffect(() => {
     if (query.length < 2) {
@@ -56,7 +95,13 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
 
   function handleStatusChange(key: string) {
     const { status: newStatus } = decodeStatusKey(key)
-    if (newStatus !== 'played') setRating(undefined)
+    if (newStatus !== 'played') {
+      setRating(undefined)
+      setStartedAt(undefined)
+      setFinishedAt(undefined)
+    } else {
+      setFinishedAt(new Date().toISOString())
+    }
     setStatusKey(key)
   }
 
@@ -84,9 +129,12 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
         playedStatus,
         platform: platform || undefined,
         rating: ratingNum,
-        finishedAt: status === 'played' ? new Date().toISOString() : undefined,
+        startedAt: startedAt || undefined,
+        finishedAt: status === 'played' ? (finishedAt || new Date().toISOString()) : undefined,
         backloggedStatus,
         isReplay: isReplay || undefined,
+        owned: owned || undefined,
+        reviewBlogUri: reviewBlogUri || undefined,
         createdAt: new Date().toISOString(),
       }
 
@@ -116,13 +164,24 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
     ...igdbPlatforms.map((p) => ({ value: p, label: p })),
   ]
 
+  const statusOptions = [
+    { value: 'playing', title: 'Playing', subtitle: 'In progress now' },
+    { value: 'backlogged', title: 'Backlogged', subtitle: 'Queued to play' },
+    { value: 'shelved', title: 'Shelved', subtitle: 'Paused for now' },
+    { value: 'wishlisted', title: 'Wishlisted', subtitle: 'Want to buy or play' },
+    { value: 'played', title: 'Played', subtitle: 'Played, not finished' },
+    { value: 'completed', title: 'Completed', subtitle: 'Beat the main story' },
+    { value: 'mastered', title: 'Mastered', subtitle: 'Completed 100%' },
+    { value: 'abandoned', title: 'Abandoned', subtitle: 'Dropped for good' },
+  ]
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+    <div className="modal-fullscreen-overlay" onClick={onClose}>
+      <div className="modal modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <h2 style={{ margin: 0 }}>Add game</h2>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close">
-            <X size={18} />
+            <X size={24} style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
 
@@ -171,16 +230,16 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 20, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 32, alignItems: 'center' }}>
               <img
                 src={(selected as IgdbGame & { coverUrl?: string }).coverUrl ?? '/no-cover.png'}
                 alt={selected.name}
-                style={{ width: 48, height: 64, borderRadius: 4, objectFit: 'cover' }}
+                style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
               />
               <div>
-                <div style={{ fontWeight: 600 }}>{selected.name}</div>
+                <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)' }}>{selected.name}</div>
                 {selected.first_release_date && (
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>
                     {new Date(selected.first_release_date * 1000).getFullYear()}
                   </div>
                 )}
@@ -189,15 +248,22 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
 
             <div className="form-field">
               <label>Status</label>
-              <Select
-                variant="input"
-                value={statusKey}
-                onChange={handleStatusChange}
-                options={[{ value: '', label: '—' }, ...STATUS_OPTIONS]}
-              />
+              <div className="status-pill-grid">
+                {statusOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`status-pill${statusKey === opt.value ? ' active' : ''}`}
+                    onClick={() => handleStatusChange(opt.value)}
+                  >
+                    <span className="status-pill-title">{opt.title}</span>
+                    <span className="status-pill-subtitle">{opt.subtitle}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="form-row" style={{ gridTemplateColumns: statusKey === 'wishlisted' ? '1fr' : '2fr 1fr' }}>
+            <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
               <div className="form-field">
                 <label>Platform</label>
                 <Select
@@ -207,7 +273,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
                   options={platformOptions}
                 />
               </div>
-              {statusKey !== 'wishlisted' && (
+              {statusKey !== 'wishlisted' ? (
                 <div className="form-field">
                   <label>Replay</label>
                   <Select
@@ -217,22 +283,77 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
                     options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
                   />
                 </div>
+              ) : (
+                <div />
               )}
+              <div className="form-field">
+                <label>Ownership</label>
+                <Select
+                  variant="input"
+                  value={owned ? 'yes' : ''}
+                  onChange={(v) => setOwned(v === 'yes')}
+                  options={[
+                    { value: 'yes', label: 'Owned' },
+                    { value: '', label: 'Not Owned' }
+                  ]}
+                />
+              </div>
             </div>
 
             {status === 'played' && (
-              <div className="form-field">
-                <label style={{ marginBottom: 4 }}>Rating</label>
-                <StarRatingInput value={rating} onChange={setRating} />
+              <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div className="form-field" style={{ margin: 0 }}>
+                  <label>Started Date</label>
+                  <input
+                    className="input"
+                    type="date"
+                    value={isoToDateInput(startedAt)}
+                    onChange={(e) => setStartedAt(dateInputToISO(e.target.value))}
+                  />
+                </div>
+                <div className="form-field" style={{ margin: 0 }}>
+                  <label>Finished Date</label>
+                  <input
+                    className="input"
+                    type="date"
+                    value={isoToDateInput(finishedAt)}
+                    onChange={(e) => setFinishedAt(dateInputToISO(e.target.value))}
+                  />
+                </div>
               </div>
             )}
 
-            {error && <p className="error-msg">{error}</p>}
+            {status === 'played' && (
+              <div className="played-details-group">
+                <div className="form-field" style={{ margin: 0 }}>
+                  <label style={{ marginBottom: 8 }}>Rating</label>
+                  <StarRatingInput value={rating} onChange={setRating} />
+                </div>
 
-            <div className="form-actions">
+                {blogPosts.length > 0 && (
+                  <div className="form-field" style={{ margin: 0 }}>
+                    <label>Link review</label>
+                    <span className="settings-subtext">Attach a review from your linked publication</span>
+                    <Select
+                      variant="input"
+                      value={reviewBlogUri}
+                      onChange={setReviewBlogUri}
+                      options={[
+                        { value: '', label: '— No review linked —' },
+                        ...blogPosts.map((p) => ({ value: p.uri, label: p.title }))
+                      ]}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {error && <p className="error-msg" style={{ marginBottom: 24 }}>{error}</p>}
+
+            <div className="form-actions" style={{ marginTop: 'auto', paddingTop: 24, justifyContent: 'flex-end', gap: 12 }}>
               <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
               <button className="btn btn-primary" onClick={handleAdd} disabled={saving || !statusKey}>
-                {saving ? 'Saving…' : 'Add to collection'}
+                {saving ? 'Saving…' : 'Add to library'}
               </button>
             </div>
           </>

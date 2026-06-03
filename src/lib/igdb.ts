@@ -64,7 +64,7 @@ export function abbreviatePlatform(name: string): string {
 export const PRIMARY_STATUSES = ['playing', 'backlogged', 'wishlisted', 'played'] as const
 export type PrimaryStatus = typeof PRIMARY_STATUSES[number]
 
-export const PLAYED_STATUSES: PlayedStatus[] = ['completed', 'mastered', 'retired', 'abandoned']
+export const PLAYED_STATUSES: PlayedStatus[] = ['completed', 'mastered', 'abandoned']
 export const BACKLOGGED_STATUSES: BackloggedStatus[] = ['shelved']
 
 /** Normalize legacy status values to the current primary status */

@@ -1,65 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { fetchAllGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
-
-const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
-
-async function fetchBskyProfiles(dids: string[]) {
-  const map = new Map<string, { handle: string; displayName?: string; avatar?: string }>()
-  for (let i = 0; i < dids.length; i += 25) {
-    const batch = dids.slice(i, i + 25)
-    const params = batch.map(d => `actors=${encodeURIComponent(d)}`).join('&')
-    try {
-      const res = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfiles?${params}`)
-      if (!res.ok) continue
-      const data = await res.json()
-      for (const p of data.profiles ?? []) {
-        map.set(p.did, { handle: p.handle, displayName: p.displayName, avatar: p.avatar })
-      }
-    } catch {}
-  }
-  return map
-}
-
-async function resolvePds(did: string): Promise<string> {
-  try {
-    const docUrl = did.startsWith('did:web:')
-      ? `https://${did.slice('did:web:'.length)}/.well-known/did.json`
-      : `https://plc.directory/${did}`
-    const res = await fetch(docUrl, { next: { revalidate: 3600 } })
-    if (!res.ok) return 'https://bsky.social'
-    const doc = await res.json()
-    const svc = doc.service?.find((s: { id: string; serviceEndpoint: string }) => s.id === '#atproto_pds')
-    const url = svc?.serviceEndpoint
-    return url?.startsWith('https://') ? url : 'https://bsky.social'
-  } catch {
-    return 'https://bsky.social'
-  }
-}
-
-function blobUrl(pdsUrl: string, did: string, blob: unknown): string | null {
-  const cid = (blob as { ref?: { $link?: string }; cid?: string })?.ref?.$link ?? (blob as { cid?: string })?.cid
-  if (!cid) return null
-  return `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
-}
-
-async function fetchCtaProfile(did: string): Promise<{ displayName?: string; avatarUrl?: string }> {
-  try {
-    const pdsUrl = await resolvePds(did)
-    const res = await fetch(
-      `${pdsUrl}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=${SETTINGS_COLLECTION}&rkey=self`,
-      { next: { revalidate: 300 } }
-    )
-    if (!res.ok) return {}
-    const { value } = await res.json()
-    return {
-      displayName: value?.displayName,
-      avatarUrl: value?.avatarBlob ? blobUrl(pdsUrl, did, value.avatarBlob) ?? undefined : undefined,
-    }
-  } catch {
-    return {}
-  }
-}
+import { fetchBskyProfiles, fetchCtaProfile } from '@/lib/appview-fetch'
 
 export async function GET(req: NextRequest) {
   if (!rateLimit(`appview-feed:${getClientIp(req)}`, 10, 60_000)) {
@@ -116,8 +58,8 @@ export async function GET(req: NextRequest) {
       return {
         did,
         handle: bsky.handle,
-        displayName: cta?.displayName ?? bsky.displayName ?? null,
-        avatar: cta?.avatarUrl ?? bsky.avatar ?? null,
+        displayName: cta?.displayName || bsky.displayName || null,
+        avatar: cta?.avatarUrl || bsky.avatar || null,
       }
     }).filter(Boolean)
 
@@ -136,9 +78,10 @@ export async function GET(req: NextRequest) {
         status: r.status,
         playedStatus: r.playedStatus ?? null,
         rating: r.rating,
+        platform: r.platform ?? null,
         createdAt: r.createdAt,
       }
-    })
+    }).filter(r => r.handle && r.handle !== 'handle.invalid' && !r.handle.endsWith('.invalid'))
 
     return NextResponse.json({ feed, profiles })
   } catch (err) {

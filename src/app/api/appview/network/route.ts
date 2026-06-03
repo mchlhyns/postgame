@@ -1,75 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { fetchAllGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
-
-async function fetchBskyProfiles(dids: string[]) {
-  const map = new Map<string, { handle: string; displayName?: string; avatar?: string }>()
-  for (let i = 0; i < dids.length; i += 25) {
-    const batch = dids.slice(i, i + 25)
-    const params = batch.map(d => `actors=${encodeURIComponent(d)}`).join('&')
-    try {
-      const res = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfiles?${params}`)
-      if (!res.ok) continue
-      const data = await res.json()
-      for (const p of data.profiles ?? []) {
-        map.set(p.did, { handle: p.handle, displayName: p.displayName, avatar: p.avatar })
-      }
-    } catch {}
-  }
-  return map
-}
-
-function extractCid(ref: unknown): string | null {
-  if (!ref) return null
-  if (typeof (ref as any)['$link'] === 'string') return (ref as any)['$link']
-  if (typeof (ref as any)['/'] === 'string') return (ref as any)['/']
-  const s = (ref as any).toString?.()
-  if (typeof s === 'string' && s !== '[object Object]') return s
-  return null
-}
+import { fetchBskyProfiles, fetchCtaProfile } from '@/lib/appview-fetch'
 
 async function fetchCtaAvatars(dids: string[]): Promise<Map<string, string | null>> {
-  const map = new Map<string, string | null>()
-  await Promise.all(dids.map(async (did) => {
-    try {
-      let pdsUrl = 'https://bsky.social'
-      let didDocUrl: string
-      if (did.startsWith('did:web:')) {
-        const host = did.slice('did:web:'.length).split(':')[0]
-        if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) {
-          map.set(did, null); return
-        }
-        didDocUrl = `https://${host}/.well-known/did.json`
-      } else {
-        didDocUrl = `https://plc.directory/${did}`
-      }
-
-      const didRes = await fetch(didDocUrl)
-      if (didRes.ok) {
-        const didDoc = await didRes.json()
-        const pdsService = didDoc.service?.find(
-          (s: { id: string; serviceEndpoint: string }) => s.id === '#atproto_pds'
-        )
-        if (pdsService?.serviceEndpoint) {
-          const endpoint = new URL(pdsService.serviceEndpoint)
-          if (endpoint.protocol === 'https:') pdsUrl = pdsService.serviceEndpoint
-        }
-      }
-
-      const settingsRes = await fetch(
-        `${pdsUrl}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=com.crashthearcade.settings&rkey=self`
-      )
-      if (!settingsRes.ok) { map.set(did, null); return }
-
-      const settings = await settingsRes.json()
-      const blob = settings.value?.avatarBlob
-      const cid = extractCid(blob?.ref)
-      map.set(did, cid ? `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}` : null)
-    } catch {
-      map.set(did, null)
-    }
+  const results = await Promise.all(dids.map(async (did) => {
+    const profile = await fetchCtaProfile(did)
+    return [did, profile.avatarUrl ?? null] as const
   }))
-  return map
+  return new Map(results)
 }
 
 export async function GET(req: NextRequest) {
@@ -124,9 +63,10 @@ export async function GET(req: NextRequest) {
         igdbId: r.game.igdbId,
         status: r.status,
         rating: r.rating,
+        platform: r.platform ?? null,
         createdAt: r.createdAt,
       }
-    }).filter(r => r.handle)
+    }).filter(r => r.handle && r.handle !== 'handle.invalid' && !r.handle.endsWith('.invalid'))
 
     return NextResponse.json({ feed })
   } catch (err) {

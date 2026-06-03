@@ -68,18 +68,12 @@ export default function HomePage() {
   const [igdbLoading, setIgdbLoading] = useState(true)
   const [appviewLoading, setAppviewLoading] = useState(true)
   const [myGamesMap, setMyGamesMap] = useState<Map<number, GameRecordView>>(new Map())
-  const [bgImage, setBgImage] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<FormattedGame[]>([])
-  const [searchOpen, setSearchOpen] = useState(false)
-  const searchRef = useRef<HTMLDivElement>(null)
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const nowPlayingBgRef = useRef<HTMLDivElement>(null)
+  const [tab, setTab] = useState<'trending' | 'recent' | 'upcoming'>('trending')
 
   useEffect(() => {
     restoreSession()
       .then((s) => {
-        if (!s) { window.location.href = '/'; return }
+        if (!s) return
         ;(async () => {
           try {
             const map = new Map<number, GameRecordView>()
@@ -96,7 +90,7 @@ export default function HomePage() {
           } catch {}
         })()
       })
-      .catch(() => { window.location.href = '/' })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -105,8 +99,6 @@ export default function HomePage() {
       .then(igdb => {
         setUpcoming(shuffle((igdb.upcoming ?? []).map(formatIgdbGame)))
         setRecentlyReleased(shuffle((igdb.recentlyReleased ?? []).map(formatIgdbGame)))
-        const urls: string[] = igdb.artworkUrls ?? []
-        if (urls.length > 0) setBgImage(urls[Math.floor(Math.random() * urls.length)])
       })
       .catch(() => {})
       .finally(() => setIgdbLoading(false))
@@ -120,161 +112,92 @@ export default function HomePage() {
       .finally(() => setAppviewLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current)
-    if (searchQuery.length < 2) { setSearchResults([]); setSearchOpen(false); return }
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/igdb/search?q=${encodeURIComponent(searchQuery)}`)
-        const data = await res.json()
-        setSearchResults((data.games ?? []).map(formatIgdbGame))
-        setSearchOpen(true)
-      } catch { setSearchResults([]) }
-    }, 400)
-  }, [searchQuery])
-
-  useEffect(() => {
-    function onMouseDown(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onMouseDown)
-    return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [])
-
-  useEffect(() => {
-    function onScroll() {
-      if (nowPlayingBgRef.current) {
-        nowPlayingBgRef.current.style.transform = `translateY(${window.scrollY * 0.3}px)`
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
     <>
       <main>
-        <section className="now-playing-block">
-          {bgImage && (
-            <div
-              ref={nowPlayingBgRef}
-              className="now-playing-bg"
-              aria-hidden
-              style={{ backgroundImage: `url(${bgImage})` }}
-            />
-          )}
-          <div className="container">
-            <div className="now-playing-content">
-              <h2 className="now-playing-title">What are you playing?</h2>
-              <div className="search-wrapper" ref={searchRef}>
-                <input
-                  className="input now-playing-input"
-                  type="text"
-                  placeholder="Search for a game"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
-                  autoComplete="off"
-                />
-                {searchOpen && searchResults.length > 0 && (
-                  <div className="search-results">
-                    {searchResults.map((game) => {
-                      const year = game.first_release_date
-                        ? new Date(game.first_release_date * 1000).getFullYear()
-                        : null
-                      const platforms = game.platforms?.map((p) => abbreviatePlatform(p.name)).join(', ')
-                      return (
-                        <div
-                          key={game.id}
-                          className="search-result-item"
-                          onMouseDown={(e) => {
-                            e.preventDefault()
-                            setSearchQuery('')
-                            setSearchOpen(false)
-                            setSearchResults([])
-                            router.push(`/games/${game.id}`)
-                          }}
-                        >
-                          <img className="search-result-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
-                          <div className="search-result-info">
-                            <strong>{game.name}</strong>
-                            <span className="search-result-platforms">
-                              {[year ?? 'Unknown year', platforms].filter(Boolean).join(' • ')}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="container page-top">
+          <h1 className="browse-section-title">Discover</h1>
+          
+          <div className="filter-tabs" style={{ margin: '0 0 24px 0' }}>
+            <button
+              className={`filter-tab${tab === 'trending' ? ' active' : ''}`}
+              onClick={() => setTab('trending')}
+            >
+              Trending now
+            </button>
+            <button
+              className={`filter-tab${tab === 'recent' ? ' active' : ''}`}
+              onClick={() => setTab('recent')}
+            >
+              New releases
+            </button>
+            <button
+              className={`filter-tab${tab === 'upcoming' ? ' active' : ''}`}
+              onClick={() => setTab('upcoming')}
+            >
+              Coming soon
+            </button>
           </div>
-        </section>
 
-        <div className="container">
           {(igdbLoading || appviewLoading) ? (
             <div style={{ padding: '48px 0', color: 'var(--text-muted)', textAlign: 'center' }}>Loading…</div>
           ) : (
             <>
-              {trending.length > 0 && (
+              {tab === 'trending' && (
                 <section id="trending" className="browse-section">
-                  <div className="browse-section-header">
-                    <h2 className="browse-section-title">Trending now</h2>
-                  </div>
-                  <div className="browse-grid">
-                    {trending.slice(0, 12).map((game) => (
-                      <div key={game.igdbId} className="game-card-grid">
-                        <div className="game-card-grid-cover-wrap">
-                          <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                            <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+                  {trending.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                  ) : (
+                    <div className="browse-grid">
+                      {trending.slice(0, 24).map((game) => (
+                        <div key={game.igdbId} className="game-card-grid">
+                          <div className="game-card-grid-cover-wrap">
+                            <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
+                              <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+                            </a>
+                          </div>
+                          <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
+                            <div className="game-card-grid-title">{game.title}</div>
+                            {game.platforms && game.platforms.length > 0 && (
+                              <div className="browse-card-meta browse-card-platforms">
+                                {game.platforms.join(' · ')}
+                              </div>
+                            )}
                           </a>
                         </div>
-                        <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
-                          <div className="game-card-grid-title">{game.title}</div>
-                          {game.platforms && game.platforms.length > 0 && (
-                            <div className="browse-card-meta browse-card-platforms">
-                              {game.platforms.join(' · ')}
-                            </div>
-                          )}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </section>
               )}
 
-              <section id="recent" className="browse-section">
-                <div className="browse-section-header">
-                  <h2 className="browse-section-title">New releases</h2>
-                </div>
-                {recentlyReleased.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-                ) : (
-                  <div className="browse-grid">
-                    {recentlyReleased.slice(0, 12).map((game) => (
-                      <BrowseCard key={game.id} game={game} showPlatforms existingRecord={myGamesMap.get(game.id)} />
-                    ))}
-                  </div>
-                )}
-              </section>
+              {tab === 'recent' && (
+                <section id="recent" className="browse-section">
+                  {recentlyReleased.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                  ) : (
+                    <div className="browse-grid">
+                      {recentlyReleased.slice(0, 24).map((game) => (
+                        <BrowseCard key={game.id} game={game} showPlatforms existingRecord={myGamesMap.get(game.id)} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
 
-              <section id="upcoming" className="browse-section">
-                <div className="browse-section-header">
-                  <h2 className="browse-section-title">Coming soon</h2>
-                </div>
-                {upcoming.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
-                ) : (
-                  <div className="browse-grid">
-                    {upcoming.slice(0, 12).map((game) => (
-                      <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
-                    ))}
-                  </div>
-                )}
-              </section>
+              {tab === 'upcoming' && (
+                <section id="upcoming" className="browse-section">
+                  {upcoming.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                  ) : (
+                    <div className="browse-grid">
+                      {upcoming.slice(0, 24).map((game) => (
+                        <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
             </>
           )}
         </div>

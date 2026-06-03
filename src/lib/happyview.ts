@@ -7,11 +7,31 @@ export type HVGameRecord = {
   status: string
   playedStatus?: string
   rating?: number
+  platform?: string
   createdAt: string
+}
+
+export type HVListRecord = {
+  uri: string
+  name: string
+  items: Array<{
+    igdbId: number
+    title: string
+    coverUrl?: string
+    position: number
+    award?: string
+  }>
+  numbered?: boolean
+  url?: string
+  createdAt: string
+  updatedAt: string
 }
 
 let _recordsCache: { records: HVGameRecord[]; expiresAt: number } | null = null
 let _inFlight: Promise<HVGameRecord[]> | null = null
+
+let _listsCache: { records: HVListRecord[]; expiresAt: number } | null = null
+let _listsInFlight: Promise<HVListRecord[]> | null = null
 
 export async function fetchAllGameRecords(): Promise<HVGameRecord[]> {
   if (_recordsCache && Date.now() < _recordsCache.expiresAt) return _recordsCache.records
@@ -43,6 +63,38 @@ export async function fetchAllGameRecords(): Promise<HVGameRecord[]> {
   })()
 
   return _inFlight
+}
+
+export async function fetchAllListRecords(): Promise<HVListRecord[]> {
+  if (_listsCache && Date.now() < _listsCache.expiresAt) return _listsCache.records
+
+  // Deduplicate concurrent fetches
+  if (_listsInFlight) return _listsInFlight
+
+  _listsInFlight = (async () => {
+    const records: HVListRecord[] = []
+    let cursor: string | undefined
+    let pages = 0
+    do {
+      const url = new URL(`${HAPPYVIEW_URL}/xrpc/com.crashthearcade.getLists`)
+      url.searchParams.set('limit', '100')
+      if (cursor) url.searchParams.set('cursor', cursor)
+      const res = await fetch(url.toString(), {
+        headers: { 'X-Client-Key': HAPPYVIEW_KEY },
+        next: { revalidate: 300 },
+      })
+      if (!res.ok) break
+      const data = await res.json()
+      records.push(...(data.records ?? []))
+      cursor = data.cursor && data.records?.length === 100 ? data.cursor : undefined
+      pages++
+    } while (cursor && pages < 200)
+    _listsCache = { records, expiresAt: Date.now() + 60 * 1000 }
+    _listsInFlight = null
+    return records
+  })()
+
+  return _listsInFlight
 }
 
 export function didFromUri(uri: string): string | null {

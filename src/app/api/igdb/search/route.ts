@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'text/plain',
       },
-      body: `fields name,url,cover.url,screenshots.url,first_release_date,platforms.name; search "${query.replace(/[^a-zA-Z0-9 ]/g, '')}"; limit 15;`,
+      body: `fields name,url,cover.url,screenshots.url,first_release_date,platforms.name; search "${query.replace(/[^a-zA-Z0-9 ]/g, '')}"; limit 25;`,
     })
 
     if (res.status === 429) return NextResponse.json({ error: 'Rate limited', games: [] }, { status: 429 })

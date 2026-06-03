@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Pencil, RotateCcw } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Check, FileText, Pencil, RotateCcw, X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { GameRecordView, GameStatus, GameRecord } from '@/types'
 import { COLLECTION } from '@/lib/atproto'
@@ -35,11 +35,12 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
       playedStatus: inferPlayedStatus(value.status, value.playedStatus),
       platform: value.platform,
       rating: value.rating,
-      notes: value.notes,
       startedAt: value.startedAt ?? value.createdAt,
       finishedAt: value.finishedAt,
       isReplay: value.isReplay,
       backloggedStatus: value.backloggedStatus,
+      owned: value.owned ?? false,
+      reviewBlogUri: value.reviewBlogUri,
     })
     setEditing(true)
   }
@@ -58,6 +59,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         playedStatus: isDone ? (draft.playedStatus ?? inferPlayedStatus(newStatus)) : undefined,
         backloggedStatus: norm === 'backlogged' ? (draft.backloggedStatus ?? inferBackloggedStatus(newStatus)) : undefined,
         finishedAt: isDone ? (draft.finishedAt ?? new Date().toISOString()) : draft.finishedAt,
+        owned: draft.owned || undefined,
+        reviewBlogUri: draft.reviewBlogUri || undefined,
         updatedAt: new Date().toISOString(),
       }
       await agent.com.atproto.repo.putRecord({
@@ -90,65 +93,182 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
     }
   }
 
+  const currentStatusKey = editing ? encodeStatusKey(draft.status ?? value.status, draft.playedStatus, draft.backloggedStatus) : ''
+  const decoded = editing ? decodeStatusKey(currentStatusKey) : { status: '' }
+  const baseStatus = decoded.status
+
+  const statusOptions = [
+    { value: 'playing', title: 'Playing', subtitle: 'In progress now' },
+    { value: 'backlogged', title: 'Backlogged', subtitle: 'Queued to play' },
+    { value: 'shelved', title: 'Shelved', subtitle: 'Paused for now' },
+    { value: 'wishlisted', title: 'Wishlisted', subtitle: 'Want to buy or play' },
+    { value: 'played', title: 'Played', subtitle: 'Played, not finished' },
+    { value: 'completed', title: 'Completed', subtitle: 'Beat the main story' },
+    { value: 'mastered', title: 'Mastered', subtitle: 'Completed 100%' },
+    { value: 'abandoned', title: 'Abandoned', subtitle: 'Dropped for good' },
+  ]
+
+  const [blogPosts, setBlogPosts] = useState<{ url: string; title: string }[]>([])
+
+  useEffect(() => {
+    if (!agent || !editing) return
+    const existingReviewUri = draft.reviewBlogUri
+    async function fetchBlogPosts() {
+      try {
+        const settingsRes = await agent!.com.atproto.repo.getRecord({
+          repo: agent!.assertDid,
+          collection: 'com.crashthearcade.settings',
+          rkey: 'self'
+        }).catch(() => null)
+
+        const blogPublicationUri = (settingsRes?.data?.value as any)?.blogPublicationUri
+        if (!blogPublicationUri) return
+
+        const pubRkey = blogPublicationUri.split('/').pop()
+        const pubRes = await agent!.com.atproto.repo.getRecord({
+          repo: agent!.assertDid,
+          collection: 'site.standard.publication',
+          rkey: pubRkey,
+        }).catch(() => null)
+        const pubDomain: string = (pubRes?.data?.value as any)?.domain || (pubRes?.data?.value as any)?.url || ''
+        const cleanDomain = pubDomain.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '')
+
+        const docsRes = await agent!.com.atproto.repo.listRecords({
+          repo: agent!.assertDid,
+          collection: 'site.standard.document',
+          limit: 100
+        })
+
+        const posts = (docsRes.data.records ?? [])
+          .filter((r: any) => r.value && r.value.site === blogPublicationUri)
+          .map((r: any) => {
+            const path: string = r.value?.path || ''
+            const cleanPath = path.startsWith('/') ? path : `/${path}`
+            const url = cleanDomain ? `https://${cleanDomain}${cleanPath}` : ''
+            return { atUri: r.uri as string, url, title: r.value?.title || 'Untitled Post' }
+          })
+          .filter((p) => p.url)
+
+        setBlogPosts(posts.map(({ url, title }) => ({ url, title })))
+
+        // Migrate legacy AT URI to HTTP URL in the draft
+        if (existingReviewUri?.startsWith('at://')) {
+          const match = posts.find((p) => p.atUri === existingReviewUri)
+          if (match) setDraft((d) => ({ ...d, reviewBlogUri: match.url }))
+        }
+      } catch (err) {
+        console.error('Failed to load blog posts in modal:', err)
+      }
+    }
+    fetchBlogPosts()
+  }, [agent, editing])
+
+  function handleMainStatusSelect(mainVal: string) {
+    const d = decodeStatusKey(mainVal)
+    setDraft((prev) => ({
+      ...prev,
+      status: d.status as GameStatus,
+      playedStatus: d.playedStatus,
+      backloggedStatus: d.backloggedStatus,
+      rating: d.status !== 'played' ? undefined : prev.rating
+    }))
+  }
+
+  function handleSubStatusSelect(subVal: string) {
+    let targetKey = subVal
+    if (currentStatusKey === subVal) {
+      targetKey = subVal === 'shelved' ? 'backlogged' : 'played'
+    }
+    const d = decodeStatusKey(targetKey)
+    setDraft((prev) => ({
+      ...prev,
+      status: d.status as GameStatus,
+      playedStatus: d.playedStatus,
+      backloggedStatus: d.backloggedStatus
+    }))
+  }
+
   const editModal = editing ? (
-    <div className="modal-overlay" onClick={() => setEditing(false)}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20, alignItems: 'center' }}>
+    <div className="modal-fullscreen-overlay" onClick={() => setEditing(false)}>
+      <div className="modal modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+          <h2 style={{ margin: 0 }}>Edit playthrough</h2>
+          <button className="modal-close-btn" onClick={() => setEditing(false)} aria-label="Close">
+            <X size={24} style={{ color: 'var(--text-muted)' }} />
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 16, marginBottom: 32, alignItems: 'center' }}>
           <img
             src={value.game.coverUrl ?? '/no-cover.png'}
             alt={value.game.title}
-            style={{ width: 48, height: 64, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+            style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}
           />
           <div>
-            <div style={{ fontWeight: 600 }}>{value.game.title}</div>
+            <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)' }}>{value.game.title}</div>
             {value.game.releaseYear && (
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{value.game.releaseYear}</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>{value.game.releaseYear}</div>
             )}
           </div>
         </div>
 
         <div className="form-field">
           <label>Status</label>
-          <Select
-            variant="input"
-            value={encodeStatusKey(draft.status ?? value.status, draft.playedStatus, draft.backloggedStatus)}
-            onChange={(key) => { const d = decodeStatusKey(key); setDraft((prev) => ({ ...prev, status: d.status as GameStatus, playedStatus: d.playedStatus, backloggedStatus: d.backloggedStatus, rating: d.status === 'played' ? prev.rating : undefined, finishedAt: d.status === 'played' ? (prev.finishedAt ?? new Date().toISOString()) : prev.finishedAt })) }}
-            options={STATUS_OPTIONS}
-          />
+          <div className="status-pill-grid">
+            {statusOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`status-pill${currentStatusKey === opt.value ? ' active' : ''}`}
+                onClick={() => handleSubStatusSelect(opt.value)}
+              >
+                <span className="status-pill-title">{opt.title}</span>
+                <span className="status-pill-subtitle">{opt.subtitle}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {(() => { const statusKey = encodeStatusKey(draft.status ?? value.status, draft.playedStatus, draft.backloggedStatus); return (
-          <div className="form-row" style={{ gridTemplateColumns: statusKey === 'wishlisted' ? '1fr' : '2fr 1fr' }}>
-            <div className="form-field">
-              <label>Platform</label>
-              <Select
-                variant="input"
-                value={draft.platform ?? ''}
-                onChange={(v) => setDraft((d) => ({ ...d, platform: v || undefined }))}
-                options={[
-                  { value: '', label: '—' },
-                  ...COMMON_PLATFORMS.map((p) => ({ value: p, label: p })),
-                  ...(draft.platform && !COMMON_PLATFORMS.includes(draft.platform) ? [{ value: draft.platform, label: draft.platform }] : []),
-                ]}
-              />
-            </div>
-            {statusKey !== 'wishlisted' && (
-              <div className="form-field">
-                <label>Replay</label>
-                <Select
-                  variant="input"
-                  value={draft.isReplay ? 'yes' : ''}
-                  onChange={(v) => setDraft((d) => ({ ...d, isReplay: v === 'yes' || undefined }))}
-                  options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
-                />
-              </div>
-            )}
-          </div>
-        )})()}
-
-        <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
           <div className="form-field">
-            <label>Started</label>
+            <label>Platform</label>
+            <Select
+              variant="input"
+              value={draft.platform ?? ''}
+              onChange={(v) => setDraft((d) => ({ ...d, platform: v || undefined }))}
+              options={[
+                { value: '', label: '—' },
+                ...COMMON_PLATFORMS.map((p) => ({ value: p, label: p })),
+                ...(draft.platform && !COMMON_PLATFORMS.includes(draft.platform) ? [{ value: draft.platform, label: draft.platform }] : []),
+              ]}
+            />
+          </div>
+          <div className="form-field">
+            <label>Replay</label>
+            <Select
+              variant="input"
+              value={draft.isReplay ? 'yes' : ''}
+              onChange={(v) => setDraft((d) => ({ ...d, isReplay: v === 'yes' || undefined }))}
+              options={[{ value: '', label: 'No' }, { value: 'yes', label: 'Yes' }]}
+            />
+          </div>
+          <div className="form-field">
+            <label>Ownership</label>
+            <Select
+              variant="input"
+              value={draft.owned ? 'yes' : ''}
+              onChange={(v) => setDraft((d) => ({ ...d, owned: v === 'yes' }))}
+              options={[
+                { value: 'yes', label: 'Owned' },
+                { value: '', label: 'Not Owned' }
+              ]}
+            />
+          </div>
+        </div>
+
+        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+          <div className="form-field" style={{ marginBottom: 16 }}>
+            <label>Started Date</label>
             <input
               className="input"
               type="date"
@@ -156,30 +276,57 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               onChange={(e) => setDraft((d) => ({ ...d, startedAt: dateInputToISO(e.target.value) }))}
             />
           </div>
-          <div className="form-field">
-            <label>Finished</label>
-            <input
-              className="input"
-              type="date"
-              value={isoToDateInput(draft.finishedAt)}
-              onChange={(e) => setDraft((d) => ({ ...d, finishedAt: dateInputToISO(e.target.value) }))}
-            />
-          </div>
+          {baseStatus === 'played' ? (
+            <div className="form-field" style={{ marginBottom: 16, gridColumn: 'span 2' }}>
+              <label>Finished Date</label>
+              <input
+                className="input"
+                type="date"
+                value={isoToDateInput(draft.finishedAt)}
+                onChange={(e) => setDraft((d) => ({ ...d, finishedAt: dateInputToISO(e.target.value) }))}
+              />
+            </div>
+          ) : (
+            <div style={{ gridColumn: 'span 2' }} />
+          )}
         </div>
 
-        {normalizeStatus(draft.status ?? value.status) === 'played' && (
-          <div className="form-field">
-            <label style={{ marginBottom: 4 }}>Rating</label>
-            <StarRatingInput value={draft.rating} onChange={(v) => setDraft((d) => ({ ...d, rating: v }))} />
+        {baseStatus === 'played' && (
+          <div className="played-details-group">
+            <div className="form-field" style={{ margin: 0 }}>
+              <label style={{ marginBottom: 8 }}>Rating</label>
+              <StarRatingInput value={draft.rating} onChange={(v) => setDraft((d) => ({ ...d, rating: v }))} />
+            </div>
+
+            {blogPosts.length > 0 && (
+              <div className="form-field" style={{ margin: 0 }}>
+                <label>Link review</label>
+                <span className="settings-subtext">Attach a review from your linked publication</span>
+                <Select
+                  variant="input"
+                  value={draft.reviewBlogUri ?? ''}
+                  onChange={(v) => setDraft((d) => ({ ...d, reviewBlogUri: v || undefined }))}
+                  options={[
+                    { value: '', label: '— No review linked —' },
+                    ...blogPosts.map((p) => ({ value: p.url, label: p.title }))
+                  ]}
+                />
+              </div>
+            )}
           </div>
         )}
 
-        <div className="form-actions">
-          <button className="btn btn-ghost" style={{ color: 'var(--danger)', borderColor: 'var(--danger)',marginRight: 'auto' }} onClick={() => { setEditing(false); deleteRecord() }}>
+        <div className="form-actions" style={{ marginTop: 'auto', paddingTop: 24, gap: 12 }}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ color: 'var(--danger)', borderColor: 'var(--danger)', marginRight: 'auto' }}
+            onClick={() => { setEditing(false); deleteRecord() }}
+          >
             Delete
           </button>
-          <button className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
-          <button className="btn btn-primary" onClick={saveEdit} disabled={saving}>
+          <button type="button" className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={saveEdit} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
@@ -201,8 +348,9 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             <div className="game-card-started-cover-wrap">{coverEl}</div>
             <div className="game-card-started-info">
               <div className="game-card-started-title">
-                <span>{value.game.title}</span>
-                {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 6 }}><RotateCcw size={15} style={{ color: 'var(--accent)' }} /></span>}
+                <span className="game-card-started-title-text">{value.game.title}</span>
+                {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={15} /></span>}
+                {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={15} /></span>}
               </div>
               {(() => {
                 const parts: string[] = []
@@ -210,7 +358,12 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 if (value.startedAt) parts.push(`Started ${formatDate(value.startedAt)}`)
                 return parts.length > 0 ? <span className="game-card-started-meta">{parts.join(' • ')}</span> : null
               })()}
-              {value.rating && normalizeStatus(value.status) !== 'playing' && <div style={{ marginTop: 6 }}><Stars rating={value.rating / 2}  /></div>}
+              {(value.rating && normalizeStatus(value.status) !== 'playing') || value.reviewBlogUri ? (
+                <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {value.rating && normalizeStatus(value.status) !== 'playing' && <Stars rating={value.rating / 2} />}
+                  {value.reviewBlogUri && <a href={value.reviewBlogUri.startsWith('http') ? value.reviewBlogUri : undefined} target="_blank" rel="noopener noreferrer" data-tooltip="Read review" className="card-badge"><FileText size={15} /></a>}
+                </div>
+              ) : null}
             </div>
           </div>
         </a>
@@ -232,18 +385,6 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             ) : (
               <img className="game-card-grid-cover" src="/no-cover.png" alt={value.game.title} />
             )}
-            {(() => {
-              const norm = normalizeStatus(value.status)
-              const sc = norm === 'played' || (norm === 'backlogged' && inferBackloggedStatus(value.status, value.backloggedStatus))
-                ? statusClass(value.status, value.playedStatus, value.backloggedStatus)
-                : null
-              const hideBadge = sc === 'played'
-              return sc && !hideBadge ? (
-                <span className={`game-card-badge game-card-badge--${sc}`}>
-                  {statusLabel(value.status, value.playedStatus, value.backloggedStatus)}
-                </span>
-              ) : null
-            })()}
             {!readonly && (
               <button className="browse-card-action" onClick={(e) => { e.stopPropagation(); startEdit() }}>
                 <Pencil size={16} strokeWidth={2} />
@@ -253,17 +394,40 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           </div>
           <a className="game-card-grid-info" href={gameHref}>
             <div className="game-card-grid-title">
-              {value.game.title}
-              {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 5 }}><RotateCcw size={13} style={{ color: 'var(--accent)' }} /></span>}
+              <span className="game-card-grid-title-text">{value.game.title}</span>
+              {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={13} /></span>}
+              {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={13} /></span>}
             </div>
-            {platform && (
-              <div className="game-card-meta" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {platform}
+            {(() => {
+              const parts: string[] = []
+              if (platform) parts.push(platform)
+              
+              const norm = normalizeStatus(value.status)
+              let subLabel: string | undefined
+              if (norm === 'backlogged') {
+                const bs = inferBackloggedStatus(value.status, value.backloggedStatus)
+                if (bs === 'shelved') subLabel = 'Shelved'
+              } else if (norm === 'played') {
+                const ps = inferPlayedStatus(value.status, value.playedStatus)
+                if (ps) {
+                  subLabel = PLAYED_STATUS_LABELS[ps] || ps.charAt(0).toUpperCase() + ps.slice(1)
+                }
+              }
+              
+              if (subLabel) parts.push(subLabel)
+              
+              return parts.length > 0 ? (
+                <div className="game-card-meta" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {parts.join(' • ')}
+                </div>
+              ) : null
+            })()}
+            {(normalizeStatus(value.status) === 'played' && value.rating) || value.reviewBlogUri ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {normalizeStatus(value.status) === 'played' && value.rating && <Stars rating={value.rating / 2} />}
+                {value.reviewBlogUri && <a href={value.reviewBlogUri.startsWith('http') ? value.reviewBlogUri : undefined} target="_blank" rel="noopener noreferrer" data-tooltip="Read review" className="card-badge note-icon"><FileText size={13} /></a>}
               </div>
-            )}
-            {normalizeStatus(value.status) === 'played' && value.rating && (
-              <div><Stars rating={value.rating / 2}  /></div>
-            )}
+            ) : null}
           </a>
         </div>
         {!readonly && editModal}
@@ -283,8 +447,9 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
 
       <a className="game-card-body" href={gameHref}>
         <div className="game-card-title">
-          {value.game.title}
-          {value.isReplay && <span title="Replay" style={{ display: 'inline-flex', flexShrink: 0, marginLeft: 6 }}><RotateCcw size={12} style={{ color: 'var(--accent)' }} /></span>}
+          <span className="game-card-title-text">{value.game.title}</span>
+          {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={12} /></span>}
+          {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={12} /></span>}
         </div>
 
         {(() => {
@@ -308,18 +473,17 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           ) : null
         })()}
 
-        {value.rating && (
-          <div><Stars rating={value.rating / 2}  /></div>
-        )}
-
-        {value.notes && (
-          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{value.notes}</p>
-        )}
+        {value.rating || value.reviewBlogUri ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {value.rating && <Stars rating={value.rating / 2} />}
+            {value.reviewBlogUri && <a href={value.reviewBlogUri.startsWith('http') ? value.reviewBlogUri : undefined} target="_blank" rel="noopener noreferrer" data-tooltip="Read review" className="card-badge note-icon"><FileText size={12} /></a>}
+          </div>
+        ) : null}
       </a>
 
       {!readonly && (
         <div style={{ flexShrink: 0 }}>
-          <button className="btn btn-basic" onClick={startEdit}>Edit</button>
+          <button className="btn btn-ghost" onClick={startEdit}>Edit</button>
         </div>
       )}
 

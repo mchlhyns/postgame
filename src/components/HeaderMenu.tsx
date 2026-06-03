@@ -43,8 +43,8 @@ export default function HeaderMenu({ userHandle, onSignOut, active }: Props) {
               Profile
             </a>
           )}
-          <a href="/games" className="header-menu-item" onClick={() => setOpen(false)}>
-            Games
+          <a href="/library" className="header-menu-item" onClick={() => setOpen(false)}>
+            Library
           </a>
           <a href="/lists" className="header-menu-item" onClick={() => setOpen(false)}>
             Lists

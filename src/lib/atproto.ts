@@ -56,6 +56,19 @@ export async function signOut(did: string): Promise<void> {
   await client.revoke(did)
 }
 
+export async function fetchBlockedDids(agent: Agent): Promise<Set<string>> {
+  const blocked = new Set<string>()
+  try {
+    let cursor: string | undefined
+    do {
+      const res = await agent.app.bsky.graph.getBlocks({ limit: 100, cursor })
+      for (const block of res.data.blocks) blocked.add(block.did)
+      cursor = res.data.cursor
+    } while (cursor)
+  } catch {}
+  return blocked
+}
+
 export async function resolveHandleToPds(handle: string): Promise<{ did: string; pdsUrl: string }> {
   const cleanHandle = handle.replace(/^@/, '')
   const resolveRes = await fetch(
@@ -69,8 +82,8 @@ export async function resolveHandleToPds(handle: string): Promise<{ did: string;
     let didDocUrl: string
     if (did.startsWith('did:web:')) {
       const host = did.slice('did:web:'.length).split(':')[0] // strip any path segments
-      // Block localhost and private ranges masquerading as did:web hosts
-      if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) {
+      // Block localhost, private IPv4 ranges, and IPv6 loopback/link-local/private
+      if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$|\[::1\]|fe80:|fc00:|fd)/.test(host)) {
         throw new Error('Blocked did:web host')
       }
       didDocUrl = `https://${host}/.well-known/did.json`

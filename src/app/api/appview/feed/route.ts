@@ -33,21 +33,27 @@ export async function GET(req: NextRequest) {
       byDid.set(did, existing)
     }
 
-    // Deduplicate by igdbId per user (most recent), take top 10 per user
-    const feedRecords: Array<HVGameRecord & { did: string }> = []
+    // Deduplicate by igdbId per user: keep newest record data but sort by the
+    // oldest createdAt seen for that game so edits never re-surface it in the feed.
+    const feedRecords: Array<HVGameRecord & { did: string; sortAt: string }> = []
     for (const [did, records] of byDid) {
-      const deduped = new Map<number, HVGameRecord>()
+      const deduped = new Map<number, HVGameRecord & { sortAt: string }>()
       for (const r of records) {
         const existing = deduped.get(r.game.igdbId)
-        if (!existing || r.createdAt > existing.createdAt) deduped.set(r.game.igdbId, r)
+        if (!existing) {
+          deduped.set(r.game.igdbId, { ...r, sortAt: r.createdAt })
+        } else if (r.createdAt > existing.createdAt) {
+          // Newer data (current status/cover) but preserve the original sort date
+          deduped.set(r.game.igdbId, { ...r, sortAt: existing.sortAt })
+        }
       }
       const top = [...deduped.values()]
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .sort((a, b) => b.sortAt.localeCompare(a.sortAt))
         .slice(0, 10)
       for (const r of top) feedRecords.push({ ...r, did })
     }
 
-    feedRecords.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    feedRecords.sort((a, b) => b.sortAt.localeCompare(a.sortAt))
     const topFeed = feedRecords.slice(0, 50)
 
     // Build profiles for all requested DIDs (not just those with records)

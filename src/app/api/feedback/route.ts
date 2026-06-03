@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
+  if (!rateLimit(`feedback:${getClientIp(req)}`, 3, 3_600_000)) {
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
+  }
+
   const { name, email, message } = await req.json()
 
   if (!name?.trim() || !email?.trim() || !message?.trim()) {

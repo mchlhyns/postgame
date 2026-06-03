@@ -104,7 +104,7 @@ export default function Home() {
           <img src="/logo.svg" alt="CRASH THE ARCADE" style={{ height: 32, marginBottom: 5 }} />
           <h1>CRASH THE ARCADE</h1>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Track and manage your gaming backlog</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>Track and manage your gaming backlog</p>
       </div>
       <div className="login-box">
         <h2>Sign in</h2>
@@ -148,7 +148,7 @@ export default function Home() {
           {loginError && <p className="error-msg">{loginError}</p>}
         </form>
       </div>
-      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <a href="/faq">FAQ</a>
         <span>•</span>
         <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer">Bluesky</a>

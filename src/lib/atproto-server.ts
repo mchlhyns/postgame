@@ -16,7 +16,7 @@ export async function resolveHandleToPds(handle: string): Promise<{ did: string;
     let didDocUrl: string
     if (did.startsWith('did:web:')) {
       const host = did.slice('did:web:'.length).split(':')[0]
-      if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) {
+      if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$|\[::1\]|fe80:|fc00:|fd)/.test(host)) {
         throw new Error('Blocked did:web host')
       }
       didDocUrl = `https://${host}/.well-known/did.json`

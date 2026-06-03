@@ -43,8 +43,29 @@ const sections: Section[] = [
         a: 'AT Protocol repositories are public by default, the same way Bluesky posts are. Anyone who knows your DID or handle can look up your collection records directly via the AT Protocol. Like many other apps on the AT Protocol, we show user activity in the Network section of the /community page.',
       },
       {
+        q: 'Can I block other users?',
+        a: 'CRASH THE ARCADE inherits your blocks directly from Bluesky. If you block someone on Bluesky, they\'ll automatically be hidden from your feeds and search results here too. There\'s no separate block action, just manage blocks on Bluesky and they\'ll be reflected here on your next login.',
+      },
+      {
         q: 'What analytics or tracking does the site use?',
         a: <>We use <a href="https://plausible.io/">Plausible</a> to track basic information like page visits and referrers. No cookies, no personal data.</>,
+      },
+    ],
+  },
+  {
+    heading: 'Posts',
+    items: [
+      {
+        q: 'How do I show my blog posts on my profile?',
+        a: <>CRASH THE ARCADE integrates with <a href="https://standard.site" target="_blank">Standard Site</a>, a shared publishing standard for the AT Protocol. If you publish on a supported service, go to <a href="/settings">Settings</a> and select your publication under the Posts section. Your latest post will then appear on your profile's overview screen, and you can link individual reviews to specific games in your library.</>,
+      },
+      {
+        q: 'What is Standard Site?',
+        a: <>Standard Site provides shared lexicons for long-form publishing on the AT Protocol. Apps that support it include <a href="https://pckt.net" target="_blank">Pckt</a>, <a href="https://leaflet.pub" target="_blank">Leaflet</a>, <a href="https://offprint.pub" target="_blank">Offprint</a>, and WordPress blogs with the Standard Site plugin installed. Learn more at <a href="https://standard.site" target="_blank">standard.site</a>.</>,
+      },
+      {
+        q: 'Can I filter which posts show up?',
+        a: 'You can! In Settings under Posts, you can set a filter tag and only posts with that tag will appear on your profile. This is useful if your blog covers multiple topics and you only want to surface gaming related posts.',
       },
     ],
   },

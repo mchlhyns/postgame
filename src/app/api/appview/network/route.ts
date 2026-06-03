@@ -29,20 +29,24 @@ export async function GET(req: NextRequest) {
       byDid.set(did, existing)
     }
 
-    const feedRecords: Array<HVGameRecord & { did: string }> = []
+    const feedRecords: Array<HVGameRecord & { did: string; sortAt: string }> = []
     for (const [did, records] of byDid) {
-      const deduped = new Map<number, HVGameRecord>()
+      const deduped = new Map<number, HVGameRecord & { sortAt: string }>()
       for (const r of records) {
         const existing = deduped.get(r.game.igdbId)
-        if (!existing || r.createdAt > existing.createdAt) deduped.set(r.game.igdbId, r)
+        if (!existing) {
+          deduped.set(r.game.igdbId, { ...r, sortAt: r.createdAt })
+        } else if (r.createdAt > existing.createdAt) {
+          deduped.set(r.game.igdbId, { ...r, sortAt: existing.sortAt })
+        }
       }
       const top = [...deduped.values()]
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .sort((a, b) => b.sortAt.localeCompare(a.sortAt))
         .slice(0, 5)
       for (const r of top) feedRecords.push({ ...r, did })
     }
 
-    feedRecords.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    feedRecords.sort((a, b) => b.sortAt.localeCompare(a.sortAt))
     const topFeed = feedRecords.slice(0, 50)
 
     const uniqueDids = [...new Set(topFeed.map(r => r.did))]

@@ -141,7 +141,7 @@ export default function MyGamesPage() {
                     }}
                   >
                     {t.label}
-                    <span style={{ marginLeft: 6, opacity: 0.6, fontWeight: 400 }}>
+                    <span style={{ marginLeft: 6, opacity: 0.6, fontWeight: 500 }}>
                       ({t.value === 'all' ? deduped.length : countFor(t.value)})
                     </span>
                   </button>

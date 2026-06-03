@@ -78,7 +78,7 @@ export default function SectionPage() {
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <h1 style={{ fontSize: '1.375rem', fontWeight: 700 }}>
+          <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 900 }}>
             {meta.title}
           </h1>
         </div>
@@ -86,7 +86,7 @@ export default function SectionPage() {
         {loading ? (
           <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
         ) : games.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Nothing to show right now.</p>
         ) : (
           <div className="browse-grid">
             {games.map(game => {

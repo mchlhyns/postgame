@@ -359,14 +359,14 @@ export default function ListEditPage() {
                     </>
                   )}
                   {showNoResults && (
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', padding: '8px 12px' }}>No results found.</div>
+                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', padding: '8px 12px' }}>No results found.</div>
                   )}
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {saved && <span style={{ fontSize: '0.8125rem', color: 'var(--accent)' }}>Saved</span>}
-              {error && <span style={{ fontSize: '0.8125rem', color: 'var(--danger)' }}>{error}</span>}
+              {saved && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>Saved</span>}
+              {error && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>{error}</span>}
               <div className="list-overflow-wrap" ref={overflowRef}>
                 <button
                   className="btn btn-ghost list-overflow-btn"
@@ -481,7 +481,7 @@ export default function ListEditPage() {
                             <div className="list-award-custom" style={{ gridColumn: '1 / -1' }}>
                               <input
                                 className="input"
-                                style={{ flex: 1, fontSize: '0.75rem', padding: '7px 8px' }}
+                                style={{ flex: 1, fontSize: 'var(--text-xs)', padding: '7px 8px' }}
                                 placeholder="Custom award…"
                                 value={customAward}
                                 onChange={(e) => setCustomAward(e.target.value)}
@@ -544,7 +544,7 @@ export default function ListEditPage() {
         <div className="modal-overlay" onClick={() => setConfirmDelete(false)}>
           <div className="modal" style={{ maxWidth: 360 }} onClick={(e) => e.stopPropagation()}>
             <h2>Delete list?</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: '8px 0 20px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', margin: '8px 0 20px' }}>
               This will permanently delete "{list?.value.name}". This cannot be undone.
             </p>
             <div className="form-actions">

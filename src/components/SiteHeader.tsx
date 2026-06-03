@@ -16,7 +16,6 @@ export default function SiteHeader() {
   const [session, setSession] = useState<{ agent: Agent; did: string } | null>(null)
   const [sessionChecked, setSessionChecked] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const headerRef = useRef<HTMLElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -103,16 +102,6 @@ export default function SiteHeader() {
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [])
 
-  useEffect(() => {
-    function onScroll() {
-      if (headerRef.current) {
-        headerRef.current.classList.toggle('scrolled', window.scrollY > 4)
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   async function handleSignOut() {
     const s = await restoreSession()
     if (!s) return
@@ -186,12 +175,10 @@ export default function SiteHeader() {
               <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer" aria-label="Bluesky">
                 <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/bluesky.svg)', WebkitMaskImage: 'url(/bluesky.svg)' }} />
               </a>
-              <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer" aria-label="GitHub" style={{ height: 18, display: 'inline-flex', alignItems: 'center' }}>
-                <span className="sidebar-footer-social-icon" style={{ width: 18, height: 18, maskImage: 'url(/github.svg)', WebkitMaskImage: 'url(/github.svg)' }} />
+              <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/github.svg)', WebkitMaskImage: 'url(/github.svg)' }} />
               </a>
-              <a href="https://ko-fi.com/crashthearcade" target="_blank" rel="noopener noreferrer" aria-label="Ko-fi" style={{ height: 20, display: 'inline-flex', alignItems: 'center' }}>
-                <span className="sidebar-footer-social-icon" style={{ width: 20, height: 20, marginBottom: 2, maskImage: 'url(/ko-fi.svg)', WebkitMaskImage: 'url(/ko-fi.svg)' }} />
-              </a>
+
             </div>
           </div>
 
@@ -218,7 +205,7 @@ export default function SiteHeader() {
                     </span>
                   )}
                   {userHandle && (
-                    <span className="sidebar-profile-handle" style={displayName ? { color: 'var(--text-muted)', fontWeight: 400, fontSize: 'var(--text-xs)' } : undefined}>
+                    <span className="sidebar-profile-handle" style={displayName ? { color: 'var(--text-muted)', fontWeight: 500, fontSize: 'var(--text-xs)' } : undefined}>
                       @{userHandle}
                     </span>
                   )}
@@ -265,31 +252,6 @@ export default function SiteHeader() {
         </div>
       )}
 
-      <header ref={headerRef} className="site-header-top">
-        <div className="container">
-          <div className="header-left-group">
-            <a
-              href={sessionChecked && userHandle ? '/home' : '/'}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}
-            >
-              <img src="/logo.svg" alt="CRASH THE ARCADE" style={{ height: 28, lineHeight: 0 }} />
-              <span style={{ fontSize: '0.9375rem', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                Crash the Arcade
-              </span>
-            </a>
-            
-            <div className="header-search-container">
-              <HeaderSearch />
-            </div>
-          </div>
-
-          <div className="mobile-only-header-right desktop-only">
-            {userHandle && (
-              <MobileMenu userHandle={userHandle} onSignOut={handleSignOut} />
-            )}
-          </div>
-        </div>
-      </header>
     </>
   )
 }

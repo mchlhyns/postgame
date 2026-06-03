@@ -38,7 +38,7 @@ export default function FeedbackPage() {
 
           <div className="faq-section-container feedback-form">
             {submitted ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>
                 Thanks for your feedback! We'll be in touch if we have any questions.
               </p>
             ) : (

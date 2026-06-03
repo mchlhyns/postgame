@@ -193,7 +193,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
 
             <label className="list-modal-section-label">
               Games
-              {items.length > 0 && <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6 }}>({items.length})</span>}
+              {items.length > 0 && <span style={{ color: 'var(--text-muted)', fontWeight: 500, marginLeft: 6 }}>({items.length})</span>}
             </label>
 
             {items.length === 0 ? (
@@ -262,7 +262,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
               )}
 
               {showNoResults && (
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', padding: '8px 4px' }}>No results found.</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', padding: '8px 4px' }}>No results found.</div>
               )}
             </div>
           </div>

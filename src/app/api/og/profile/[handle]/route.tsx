@@ -104,7 +104,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
                 justifyContent: 'center',
               }}
             >
-              <div style={{ color: '#363c46', fontSize: '4rem', fontWeight: 700, display: 'flex' }}>?</div>
+              <div style={{ color: '#363c46', fontSize: '4rem', fontWeight: 900, display: 'flex' }}>?</div>
             </div>
           )}
 
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
                 color: '#ffffff',
                 fontFamily: 'Fustat',
                 fontSize: nameLabel.length > 24 ? 44 : nameLabel.length > 16 ? 52 : 60,
-                fontWeight: 700,
+                fontWeight: 900,
                 lineHeight: 1.1,
                 display: 'flex',
                 flexWrap: 'wrap',

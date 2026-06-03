@@ -322,7 +322,7 @@ export default function SettingsPage() {
                       style={{ width: 40, height: 54, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontWeight: 900, fontSize: 'var(--text-sm)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {favouriteGame.title}
                       </div>
                       {favouriteGame.releaseYear && (
@@ -420,20 +420,20 @@ export default function SettingsPage() {
 
 
 
-{fileError && <p style={{ fontSize: '0.8125rem', color: 'var(--danger)', marginTop: 8 }}>{fileError}</p>}
+{fileError && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)', marginTop: 8 }}>{fileError}</p>}
 
 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 24 }}>
                 <button className="btn btn-primary" type="submit" disabled={saving}>
                   {saving ? 'Saving…' : 'Save'}
                 </button>
-                {saved && <span style={{ fontSize: '0.8125rem', color: 'var(--accent)' }}>Saved</span>}
+                {saved && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>Saved</span>}
               </div>
             </form>
           </div>
 
           <div style={{ maxWidth: 480, marginTop: 42, paddingTop: 32, borderTop: '2px solid var(--tertiary)' }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 8 }}>Danger zone</h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+            <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 900, marginBottom: 8 }}>Danger zone</h2>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
               Permanently delete all your CRASH THE ARCADE data, including games, lists, follows, and settings. Your Atmosphere Account and other connected apps will not be affected.
             </p>
             {!confirmDelete ? (
@@ -446,7 +446,7 @@ export default function SettingsPage() {
               </button>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <p style={{ fontSize: '0.875rem', color: 'var(--danger)' }}>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>
                   This will delete all your games, lists, follows, and settings. This cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -466,7 +466,7 @@ export default function SettingsPage() {
                     Cancel
                   </button>
                 </div>
-                {deleteError && <p style={{ fontSize: '0.8125rem', color: 'var(--danger)' }}>{deleteError}</p>}
+                {deleteError && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>{deleteError}</p>}
               </div>
             )}
           </div>

@@ -203,7 +203,7 @@ export default function ListShareModal({ list, showNumbers, onClose }: Props) {
           {previewUrl ? (
             <img src={previewUrl} alt="Share preview" />
           ) : (
-            <div style={{ width: '100%', aspectRatio: `${W} / ${H}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+            <div style={{ width: '100%', aspectRatio: `${W} / ${H}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>
               {error ? 'Error' : 'Generating…'}
             </div>
           )}
@@ -216,7 +216,7 @@ export default function ListShareModal({ list, showNumbers, onClose }: Props) {
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                style={{ fontSize: '0.75rem', padding: '2px 0 2px 8px', border: 'none', color: 'var(--accent)' }}
+                style={{ fontSize: 'var(--text-xs)', padding: '2px 0 2px 8px', border: 'none', color: 'var(--accent)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.textDecoration = 'underline' }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = ''; e.currentTarget.style.textDecoration = '' }}
                 onClick={() => {

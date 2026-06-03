@@ -91,7 +91,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
                 color: '#ffffff',
                 fontFamily: 'Fustat',
                 fontSize: name.length > 40 ? 38 : name.length > 24 ? 46 : 54,
-                fontWeight: 700,
+                fontWeight: 900,
                 lineHeight: 1.15,
                 display: 'flex',
                 flexWrap: 'wrap',

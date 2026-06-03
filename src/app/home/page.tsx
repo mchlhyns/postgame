@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Agent } from '@atproto/api'
-import { restoreSession, COLLECTION, SETTINGS_COLLECTION, FOLLOW_COLLECTION } from '@/lib/atproto'
+import { restoreSession, COLLECTION, SETTINGS_COLLECTION, FOLLOW_COLLECTION, fetchBlockedDids } from '@/lib/atproto'
 import { GameRecordView, GameRecord } from '@/types'
 import { matchesStatus } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
@@ -64,9 +64,10 @@ export default function HomePage() {
           collection: FOLLOW_COLLECTION,
           limit: 100
         }).catch(() => null)
+        const blocksFetch = fetchBlockedDids(s.agent)
 
-        const [recordsRes, profileRes, settingsRes] = await Promise.all([
-          recordsFetch, profileFetch, settingsFetch
+        const [recordsRes, profileRes, settingsRes, blockedDids] = await Promise.all([
+          recordsFetch, profileFetch, settingsFetch, blocksFetch
         ])
 
         let rawRecords = (recordsRes.data.records ?? []) as unknown as GameRecordView[]
@@ -128,9 +129,12 @@ export default function HomePage() {
 
         setGames(patched)
 
-        // Refresh release dates for any game that has one stored (they can change on IGDB)
+        // Refresh release dates: all games with a stored date (can change) + all wishlisted/backlogged (may have gained a date)
         const releaseDateIds = patched
-          .filter((r) => r.value.game.releaseDate != null)
+          .filter((r) => r.value.game.releaseDate != null ||
+            matchesStatus(r.value.status, 'wishlisted') ||
+            matchesStatus(r.value.status, 'backlogged')
+          )
           .map((r) => r.value.game.igdbId)
         if (releaseDateIds.length > 0) {
           fetch(`/api/igdb/release-dates?ids=${releaseDateIds.join(',')}`)
@@ -182,7 +186,7 @@ export default function HomePage() {
             const res = await fetch(`/api/appview/feed?${params}`)
             if (res.ok) {
               const data = await res.json()
-              setFeedItems(data.feed ?? [])
+              setFeedItems((data.feed ?? []).filter((item: FeedItem) => !blockedDids.has(item.did)))
             }
           })
           .catch((err) => console.error('Failed to load social feed:', err))
@@ -223,17 +227,25 @@ export default function HomePage() {
       return bDate.localeCompare(aDate)
     })
 
+  const nowTs = Math.floor(Date.now() / 1000)
+  const currentYear = new Date().getFullYear()
   const upcomingUserGames = [...dedupedGames]
     .filter((g) => {
       const isBackloggedOrWishlisted = matchesStatus(g.value.status, 'backlogged') || matchesStatus(g.value.status, 'wishlisted')
       if (!isBackloggedOrWishlisted) return false
-      const releaseDate = g.value.game.releaseDate
-      return releaseDate && releaseDate > Math.floor(Date.now() / 1000)
+      const { releaseDate, releaseYear } = g.value.game
+      if (releaseDate != null) return releaseDate > nowTs
+      if (releaseYear != null) return releaseYear >= currentYear
+      // No date info at all — include it; IGDB refresh may populate it
+      return true
     })
     .sort((a, b) => {
-      const aDate = a.value.game.releaseDate ?? 0
-      const bDate = b.value.game.releaseDate ?? 0
-      return aDate - bDate
+      const toTs = (g: typeof a) => {
+        if (g.value.game.releaseDate != null) return g.value.game.releaseDate
+        if (g.value.game.releaseYear != null) return new Date(g.value.game.releaseYear, 6, 1).getTime() / 1000
+        return Infinity
+      }
+      return toTs(a) - toTs(b)
     })
 
   const countFor = (status: string) => {

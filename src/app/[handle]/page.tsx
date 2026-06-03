@@ -480,9 +480,9 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <h1 style={{ fontSize: '2rem', lineHeight: 1.2, fontWeight: 900, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
+                <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.2, fontWeight: 900, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
                 {(displayName || pronouns) && (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>
                     {displayName && `@${resolvedHandle ?? handle}`}
                     {displayName && pronouns && ' • '}
                     {pronouns}
@@ -603,8 +603,8 @@ export default function ProfilePage() {
                                   <h2 className="home-section-title">Latest post</h2>
                                   <div className="blog-post-card" style={{ flex: 1 }}>
                                     <div className="blog-post-card-body">
-                                      {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" style={{ width: '100%', height: '50%', marginBottom: 12 }} />}
                                       <div className="blog-post-card-header">
+                                        {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                           <h3 style={{ margin: 0 }}>
                                             <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
@@ -830,7 +830,7 @@ export default function ProfilePage() {
                             <a href={`/${f.handle}`}>{f.displayName || `@${f.handle}`}</a>
                           </div>
                           {f.displayName && (
-                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               @{f.handle}
                             </div>
                           )}

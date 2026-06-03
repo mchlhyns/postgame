@@ -146,7 +146,7 @@ export default function HomePage() {
               {tab === 'trending' && (
                 <section id="trending" className="browse-section">
                   {trending.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Nothing to show right now.</p>
                   ) : (
                     <div className="browse-grid">
                       {trending.slice(0, 24).map((game) => (
@@ -174,7 +174,7 @@ export default function HomePage() {
               {tab === 'recent' && (
                 <section id="recent" className="browse-section">
                   {recentlyReleased.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Nothing to show right now.</p>
                   ) : (
                     <div className="browse-grid">
                       {recentlyReleased.slice(0, 24).map((game) => (
@@ -188,7 +188,7 @@ export default function HomePage() {
               {tab === 'upcoming' && (
                 <section id="upcoming" className="browse-section">
                   {upcoming.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nothing to show right now.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Nothing to show right now.</p>
                   ) : (
                     <div className="browse-grid">
                       {upcoming.slice(0, 24).map((game) => (

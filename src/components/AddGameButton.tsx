@@ -322,7 +322,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
         finishedAt: isDone ? (draft.finishedAt ?? new Date().toISOString()) : draft.finishedAt,
         owned: draft.owned || undefined,
         reviewBlogUri: draft.reviewBlogUri || undefined,
-        updatedAt: new Date().toISOString(),
+        updatedAt: newStatus !== record.value.status ? new Date().toISOString() : record.value.updatedAt,
       }
       await agent.com.atproto.repo.putRecord({
         repo: did,
@@ -424,9 +424,9 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
             style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}
           />
           <div>
-            <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)' }}>{record.value.game.title}</div>
+            <div style={{ fontWeight: 900, fontSize: 'var(--text-lg)' }}>{record.value.game.title}</div>
             {record.value.game.releaseYear && (
-              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>{record.value.game.releaseYear}</div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 4 }}>{record.value.game.releaseYear}</div>
             )}
           </div>
         </div>

@@ -87,7 +87,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         finishedAt: isDone ? (draft.finishedAt ?? new Date().toISOString()) : draft.finishedAt,
         owned: draft.owned || undefined,
         reviewBlogUri: draft.reviewBlogUri || undefined,
-        updatedAt: new Date().toISOString(),
+        updatedAt: newStatus !== value.status ? new Date().toISOString() : value.updatedAt,
       }
       await agent.com.atproto.repo.putRecord({
         repo: agent.assertDid,
@@ -247,9 +247,9 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}
           />
           <div>
-            <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)' }}>{value.game.title}</div>
+            <div style={{ fontWeight: 900, fontSize: 'var(--text-lg)' }}>{value.game.title}</div>
             {value.game.releaseYear && (
-              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>{value.game.releaseYear}</div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 4 }}>{value.game.releaseYear}</div>
             )}
           </div>
         </div>
@@ -386,7 +386,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
     )
     return (
       <>
-        <a href={gameHref} className="game-card-started" style={{ display: 'block', textDecoration: 'none', position: 'relative' }}>
+        <a href={gameHref} className="game-card-started" style={{ textDecoration: 'none', position: 'relative' }}>
           <div className="game-card-started-banner" style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined} />
           <div className="game-card-started-bottom">
             <div className="game-card-started-cover-wrap">{coverEl}</div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Agent } from '@atproto/api'
-import { restoreSession, FOLLOW_COLLECTION } from '@/lib/atproto'
+import { restoreSession, FOLLOW_COLLECTION, fetchBlockedDids } from '@/lib/atproto'
 import { Stars } from '@/components/Stars'
 import AddGameModal from '@/components/AddGameModal'
 import { relativeTime, feedActionText } from '@/lib/feed'
@@ -46,7 +46,7 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
   if (items.length === 0) return (
     <div className="empty-state">
       <h3>{emptyTitle}</h3>
-      <p style={{ fontSize: '14px' }}>{emptyBody}</p>
+      <p style={{ fontSize: 'var(--text-sm)' }}>{emptyBody}</p>
     </div>
   )
   return (
@@ -132,6 +132,7 @@ export default function SocialPage() {
   const [searchResults, setSearchResults] = useState<SearchActor[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
   const followedDids = useRef<Map<string, string>>(new Map())
+  const blockedDids = useRef<Set<string>>(new Set())
   const [followStates, setFollowStates] = useState<Record<string, { following: boolean; followUri?: string }>>({})
   const [followLoading, setFollowLoading] = useState<Record<string, boolean>>({})
   const searchRef = useRef<HTMLDivElement>(null)
@@ -144,6 +145,7 @@ export default function SocialPage() {
         setSession(s)
         sessionRef.current = s
         loadFollowState(s.agent, s.did)
+        fetchBlockedDids(s.agent).then(dids => { blockedDids.current = dids })
       })
       .catch(() => { window.location.href = '/' })
   }, [])
@@ -155,9 +157,11 @@ export default function SocialPage() {
         const res = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.searchActorsTypeahead?q=${encodeURIComponent(searchQuery)}&limit=10`)
         if (!res.ok) return
         const data = await res.json()
-        const actors: SearchActor[] = (data.actors ?? []).map((a: { did: string; handle: string; displayName?: string; avatar?: string }) => ({
-          did: a.did, handle: a.handle, displayName: a.displayName, avatar: a.avatar,
-        }))
+        const actors: SearchActor[] = (data.actors ?? [])
+          .filter((a: { did: string }) => !blockedDids.current.has(a.did))
+          .map((a: { did: string; handle: string; displayName?: string; avatar?: string }) => ({
+            did: a.did, handle: a.handle, displayName: a.displayName, avatar: a.avatar,
+          }))
         const states: Record<string, { following: boolean; followUri?: string }> = {}
         for (const actor of actors) {
           const uri = followedDids.current.get(actor.did)
@@ -184,7 +188,7 @@ export default function SocialPage() {
     setNetworkLoading(true)
     fetch('/api/appview/network')
       .then(r => r.json())
-      .then(data => setNetworkItems(data.feed ?? []))
+      .then(data => setNetworkItems((data.feed ?? []).filter((item: FeedItem) => !blockedDids.current.has(item.did))))
       .catch(() => {})
       .finally(() => { setNetworkLoading(false); setNetworkLoaded(true) })
   }, [])
@@ -276,8 +280,8 @@ export default function SocialPage() {
                           : <div className="social-search-avatar social-search-avatar-placeholder" />
                         }
                         <div style={{ overflow: 'hidden' }}>
-                          {actor.displayName && <div style={{ fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actor.displayName}</div>}
-                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{actor.handle}</div>
+                          {actor.displayName && <div style={{ fontSize: 'var(--text-sm)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actor.displayName}</div>}
+                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{actor.handle}</div>
                         </div>
                       </a>
                       <button

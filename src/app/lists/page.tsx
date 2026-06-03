@@ -270,7 +270,7 @@ export default function MyListsPage() {
                           ) : (
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--tertiary)' }} />
                           )}
-                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text)', fontWeight: 700 }}>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text)', fontWeight: 900 }}>
                             {list.user.displayName || `@${list.user.handle}`}
                           </span>
                         </div>

@@ -15,7 +15,7 @@ export default function OAuthCallback() {
           return
         }
 
-        window.location.href = '/discover'
+        window.location.href = '/home'
       } catch (err) {
         console.error('OAuth callback error:', err)
         setError('Sign in failed. Please try again.')

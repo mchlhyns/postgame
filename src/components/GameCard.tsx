@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Check, FileText, Pencil, RotateCcw, X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { GameRecordView, GameStatus, GameRecord } from '@/types'
@@ -28,6 +28,31 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [draft, setDraft] = useState<Partial<GameRecord>>({})
+  const [freshCoverUrl, setFreshCoverUrl] = useState<string | null>(null)
+  const [refreshingArt, setRefreshingArt] = useState(false)
+  const [overflowOpen, setOverflowOpen] = useState(false)
+  const overflowRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!overflowOpen) return
+    function handleMouseDown(e: MouseEvent) {
+      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) setOverflowOpen(false)
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [overflowOpen])
+
+  async function refreshArtwork() {
+    setRefreshingArt(true)
+    try {
+      const res = await fetch(`/api/igdb/game-data?ids=${value.game.igdbId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      const fresh = data[value.game.igdbId]
+      if (fresh?.coverUrl) setFreshCoverUrl(fresh.coverUrl)
+    } catch {}
+    finally { setRefreshingArt(false) }
+  }
 
   function startEdit() {
     setDraft({
@@ -56,6 +81,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         ...value,
         ...draft,
         $type: 'com.crashthearcade.game',
+        game: freshCoverUrl ? { ...value.game, coverUrl: freshCoverUrl } : value.game,
         playedStatus: isDone ? (draft.playedStatus ?? inferPlayedStatus(newStatus)) : undefined,
         backloggedStatus: norm === 'backlogged' ? (draft.backloggedStatus ?? inferBackloggedStatus(newStatus)) : undefined,
         finishedAt: isDone ? (draft.finishedAt ?? new Date().toISOString()) : draft.finishedAt,
@@ -193,14 +219,30 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
       <div className="modal modal-fullscreen" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <h2 style={{ margin: 0 }}>Edit playthrough</h2>
-          <button className="modal-close-btn" onClick={() => setEditing(false)} aria-label="Close">
-            <X size={24} style={{ color: 'var(--text-muted)' }} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="list-overflow-wrap" ref={overflowRef}>
+              <button className="btn btn-ghost list-overflow-btn" onClick={() => setOverflowOpen(o => !o)} title="More options">⋯</button>
+              {overflowOpen && (
+                <div className="list-overflow-menu">
+                  <button
+                    className="list-overflow-option"
+                    onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); refreshArtwork() }}
+                    disabled={refreshingArt}
+                  >
+                    {refreshingArt ? 'Refreshing…' : freshCoverUrl ? 'Artwork updated ✓' : 'Refresh artwork'}
+                  </button>
+                </div>
+              )}
+            </div>
+            <button className="modal-close-btn" onClick={() => setEditing(false)} aria-label="Close">
+              <X size={24} style={{ color: 'var(--text-muted)' }} />
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 16, marginBottom: 32, alignItems: 'center' }}>
           <img
-            src={value.game.coverUrl ?? '/no-cover.png'}
+            src={freshCoverUrl ?? value.game.coverUrl ?? '/no-cover.png'}
             alt={value.game.title}
             style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}
           />
@@ -266,30 +308,32 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           </div>
         </div>
 
-        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
-          <div className="form-field" style={{ marginBottom: 16 }}>
-            <label>Started Date</label>
-            <input
-              className="input"
-              type="date"
-              value={isoToDateInput(draft.startedAt)}
-              onChange={(e) => setDraft((d) => ({ ...d, startedAt: dateInputToISO(e.target.value) }))}
-            />
-          </div>
-          {baseStatus === 'played' ? (
-            <div className="form-field" style={{ marginBottom: 16, gridColumn: 'span 2' }}>
-              <label>Finished Date</label>
+        {baseStatus !== 'backlogged' && baseStatus !== 'wishlisted' && (
+          <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+            <div className="form-field" style={{ marginBottom: 16 }}>
+              <label>Started Date</label>
               <input
                 className="input"
                 type="date"
-                value={isoToDateInput(draft.finishedAt)}
-                onChange={(e) => setDraft((d) => ({ ...d, finishedAt: dateInputToISO(e.target.value) }))}
+                value={isoToDateInput(draft.startedAt)}
+                onChange={(e) => setDraft((d) => ({ ...d, startedAt: dateInputToISO(e.target.value) }))}
               />
             </div>
-          ) : (
-            <div style={{ gridColumn: 'span 2' }} />
-          )}
-        </div>
+            {baseStatus === 'played' ? (
+              <div className="form-field" style={{ marginBottom: 16, gridColumn: 'span 2' }}>
+                <label>Finished Date</label>
+                <input
+                  className="input"
+                  type="date"
+                  value={isoToDateInput(draft.finishedAt)}
+                  onChange={(e) => setDraft((d) => ({ ...d, finishedAt: dateInputToISO(e.target.value) }))}
+                />
+              </div>
+            ) : (
+              <div style={{ gridColumn: 'span 2' }} />
+            )}
+          </div>
+        )}
 
         {baseStatus === 'played' && (
           <div className="played-details-group">

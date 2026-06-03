@@ -128,6 +128,24 @@ export default function HomePage() {
 
         setGames(patched)
 
+        // Refresh release dates for any game that has one stored (they can change on IGDB)
+        const releaseDateIds = patched
+          .filter((r) => r.value.game.releaseDate != null)
+          .map((r) => r.value.game.igdbId)
+        if (releaseDateIds.length > 0) {
+          fetch(`/api/igdb/release-dates?ids=${releaseDateIds.join(',')}`)
+            .then(async (res) => {
+              if (!res.ok) return
+              const fresh: Record<number, number> = await res.json()
+              setGames((prev) => prev.map((r) => {
+                const updated = fresh[r.value.game.igdbId]
+                if (updated == null || updated === r.value.game.releaseDate) return r
+                return { ...r, value: { ...r.value, game: { ...r.value.game, releaseDate: updated } } }
+              }))
+            })
+            .catch(() => {})
+        }
+
         const missingIds = patched
           .filter((r) => matchesStatus(r.value.status, 'playing') && !r.value.game.screenshotUrl)
           .map((r) => r.value.game.igdbId)

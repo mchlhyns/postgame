@@ -262,10 +262,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   align-items: center;
 }
 
-.game-card:hover {
-  background: var(--tertiary);
-}
-
 .game-card-edit-btn {
   background: none;
   border: none;
@@ -3742,6 +3738,7 @@ footer .container {
 .mobile-footer-tab.active,
 .mobile-footer-tab:hover {
   color: var(--accent);
+  text-decoration: none;
 }
 
 .mobile-footer-avatar {
@@ -3969,7 +3966,6 @@ footer .container {
 .home-empty-playing,
 .home-empty-feed {
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 36px;
   text-align: center;
@@ -4752,7 +4748,7 @@ footer .container {
 @media (max-width: 767px) {
   /* Page spacing */
   .page-top {
-    padding-top: 12px;
+    padding-top: 24px;
   }
 
   .page-header {
@@ -4854,7 +4850,7 @@ footer .container {
   }
 
   .site-header-top .container {
-    padding: 8px 24px 0 24px;
+    padding: 8px 32px 0 32px;
   }
 
   .site-header-top .header-search-container,

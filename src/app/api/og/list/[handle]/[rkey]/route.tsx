@@ -54,7 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
           width: W,
           height: H,
           background: '#08121D',
-          fontFamily: 'SpaceMono',
+          fontFamily: 'Fustat',
           justifyContent: 'space-between',
         }}
       >

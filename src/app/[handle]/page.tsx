@@ -11,20 +11,10 @@ import GameCard from '@/components/GameCard'
 import ParallaxBannerImg from '@/components/ParallaxBannerImg'
 import { Stars } from '@/components/Stars'
 import { extractCid, blobUrl, resolvePds } from '@/lib/appview-fetch'
+import { relativeTime } from '@/lib/feed'
 
 const ALL_STATUSES = PRIMARY_STATUSES
 
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d`
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
 
 function feedActionText(status: string, playedStatus?: string): string {
   switch (status) {
@@ -604,7 +594,6 @@ export default function ProfilePage() {
                                   <div className="blog-post-card" style={{ flex: 1 }}>
                                     <div className="blog-post-card-body">
                                       <div className="blog-post-card-header">
-                                        {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                           <h3 style={{ margin: 0 }}>
                                             <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
@@ -613,11 +602,12 @@ export default function ProfilePage() {
                                           </h3>
                                           {pubDate && <div className="blog-post-date">{pubDate}</div>}
                                         </div>
+                                        {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
                                       </div>
                                     </div>
                                     <div className="blog-post-card-footer">
                                       <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
-                                        Read post &rarr;
+                                        Read post
                                       </a>
                                     </div>
                                   </div>

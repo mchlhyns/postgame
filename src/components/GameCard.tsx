@@ -5,7 +5,7 @@ import { Check, FileText, Pencil, RotateCcw, X } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { GameRecordView, GameStatus, GameRecord } from '@/types'
 import { COLLECTION } from '@/lib/atproto'
-import { isoToDateInput, dateInputToISO, formatDate, statusClass, statusLabel, COMMON_PLATFORMS, normalizeStatus, inferPlayedStatus, inferBackloggedStatus, PLAYED_STATUS_LABELS } from '@/lib/igdb'
+import { isoToDateInput, dateInputToISO, formatDate, statusClass, statusLabel, COMMON_PLATFORMS, normalizeStatus, inferPlayedStatus, inferBackloggedStatus, PLAYED_STATUS_LABELS, abbreviatePlatform } from '@/lib/igdb'
 import Select from '@/components/Select'
 import { STATUS_OPTIONS, decodeStatusKey, encodeStatusKey } from '@/components/AddGameModal'
 import { Stars, StarRatingInput } from '@/components/Stars'
@@ -24,7 +24,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
   const uriParts = uri.split('/')
   const rkey = uriParts[uriParts.length - 1]
   const recordCollection = uriParts[uriParts.length - 2]
-  const platform = value.platform?.replace(/\s*\(Microsoft Windows\)/gi, '') || undefined
+  const platform = value.platform ? abbreviatePlatform(value.platform) : undefined
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [draft, setDraft] = useState<Partial<GameRecord>>({})

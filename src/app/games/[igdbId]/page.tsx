@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getGame } from '@/lib/igdb-game'
-import { normalizeCoverUrl, normalizeScreenshotUrl, abbreviatePlatform } from '@/lib/igdb'
+import { normalizeCoverUrl, normalizeScreenshotUrl, abbreviatePlatform, HIDDEN_PLATFORMS } from '@/lib/igdb'
 import { IgdbGame } from '@/types'
 import GamePageBanner from '@/components/GamePageBanner'
 import AddGameButton from '@/components/AddGameButton'
@@ -32,7 +32,7 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
   const developers = game.involved_companies?.filter(c => c.developer).map(c => c.company.name) ?? []
   const publishers = game.involved_companies?.filter(c => c.publisher && !c.developer).map(c => c.company.name) ?? []
   const genres = game.genres?.map(g => g.name) ?? []
-  const platforms = game.platforms?.map(p => abbreviatePlatform(p.name)) ?? []
+  const platforms = game.platforms?.map(p => abbreviatePlatform(p.name)).filter(p => !HIDDEN_PLATFORMS.has(p)) ?? []
 
   const releaseDate = game.first_release_date ? new Date(game.first_release_date * 1000) : undefined
 
@@ -59,7 +59,7 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
   }
 
   const subtitle = platforms.length > 0
-    ? platforms.slice(0, 4).join(', ') + (platforms.length > 4 ? '…' : '')
+    ? platforms.join(', ')
     : undefined
 
   return (

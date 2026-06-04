@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Agent } from '@atproto/api'
 import { restoreSession, COLLECTION, SETTINGS_COLLECTION, FOLLOW_COLLECTION, fetchBlockedDids } from '@/lib/atproto'
 import { GameRecordView, GameRecord } from '@/types'
-import { matchesStatus } from '@/lib/igdb'
+import { matchesStatus, abbreviatePlatform } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
 import { Stars } from '@/components/Stars'
 import { Sparkles, Trophy } from 'lucide-react'
@@ -287,13 +287,14 @@ export default function HomePage() {
             <section className="home-section">
               <h2 className="home-section-title">Upcoming</h2>
               <div className="browse-grid">
-                {upcomingUserGames.slice(0, 4).map((record, i) => {
+                {upcomingUserGames.slice(0, 8).map((record, i) => {
                   const game = record.value.game
                   const releaseDateStr = game.releaseDate
                     ? new Date(game.releaseDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                     : null
+                  const hideClass = i >= 6 ? ' upcoming-hide-at-1080' : i >= 4 ? ' upcoming-hide-below-768' : ''
                   return (
-                    <div key={game.igdbId} className={`game-card-grid${i === 3 ? ' upcoming-hide-at-1080' : ''}`}>
+                    <div key={game.igdbId} className={`game-card-grid${hideClass}`}>
                       <div className="game-card-grid-cover-wrap">
                         <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
                           <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
@@ -332,11 +333,11 @@ export default function HomePage() {
                           <div className="social-grid-avatar social-grid-avatar-placeholder" />
                         )}
                       </a>
-                      <div className="social-grid-user-text" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flex: 1 }}>
-                        <a href={`/${item.handle}`} className="social-grid-username" onClick={(e) => e.stopPropagation()} style={{ fontSize: 'var(--text-base)', lineHeight: 1.2 }}>
+                      <div className="social-grid-user-text">
+                        <a href={`/${item.handle}`} className="social-grid-username" onClick={(e) => e.stopPropagation()}>
                           {item.displayName || `@${item.handle}`}
                         </a>
-                        <span className="social-grid-time" style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', flexShrink: 0 }}>
+                        <span className="social-grid-time">
                           {relativeTime(item.createdAt)}
                         </span>
                       </div>
@@ -359,7 +360,7 @@ export default function HomePage() {
                       {(() => {
                         const parts: string[] = []
                         if (item.platform) {
-                          parts.push(item.platform.replace(/\s*\(Microsoft Windows\)/gi, ''))
+                          parts.push(abbreviatePlatform(item.platform))
                         }
                         const action = feedActionText(item.status, item.playedStatus)
                         if (action) {
@@ -384,7 +385,7 @@ export default function HomePage() {
               <div className="home-empty-feed">
                 <p>No recent updates from the people you follow.</p>
                 <a href="/community" className="btn btn-ghost" style={{ display: 'inline-flex', marginTop: 16 }}>
-                  Find people to follow →
+                  Find people to follow
                 </a>
               </div>
             )}

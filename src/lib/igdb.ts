@@ -43,6 +43,8 @@ export const COMMON_PLATFORMS = [
   'iOS', 'Android',
 ]
 
+export const HIDDEN_PLATFORMS = new Set(['Google Stadia'])
+
 const PLATFORM_ABBREVS: Record<string, string> = {
   'PC (Microsoft Windows)': 'PC',
   'PlayStation 5': 'PS5',

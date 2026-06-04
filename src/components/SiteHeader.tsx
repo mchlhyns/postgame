@@ -123,7 +123,7 @@ export default function SiteHeader() {
     <>
       <aside className="site-sidebar">
           {/* Logo container at the top of the sidebar */}
-          <div className="sidebar-logo" style={{ padding: '0 0 24px 0', display: 'flex', alignItems: 'center' }}>
+          <div className="sidebar-logo" style={{ padding: '0 10px 24px 10px', display: 'flex', alignItems: 'center' }}>
             <a href={userHandle ? '/home' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
               <img src="/logo.svg" alt="CRASH THE ARCADE" style={{ height: 28 }} />
             </a>

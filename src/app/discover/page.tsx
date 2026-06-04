@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { restoreSession, COLLECTION } from '@/lib/atproto'
 import { IgdbGame, GameRecordView } from '@/types'
-import { formatIgdbGame, abbreviatePlatform } from '@/lib/igdb'
+import { formatIgdbGame, abbreviatePlatform, HIDDEN_PLATFORMS } from '@/lib/igdb'
 import { CalendarDays, Sparkles, TrendingUp } from 'lucide-react'
 
 type FormattedGame = IgdbGame & { coverUrl?: string }
@@ -38,7 +38,7 @@ function BrowseCard({ game, existingRecord, showReleaseDate, showPlatforms }: {
     : null
 
   const platformsMeta = showPlatforms && game.platforms && game.platforms.length > 0
-    ? game.platforms.map((p) => abbreviatePlatform(p.name)).join(' · ')
+    ? game.platforms.map((p) => abbreviatePlatform(p.name)).filter(p => !HIDDEN_PLATFORMS.has(p)).join(' · ')
     : null
 
   const gameHref = `/games/${game.id}`
@@ -160,7 +160,7 @@ export default function HomePage() {
                             <div className="game-card-grid-title">{game.title}</div>
                             {game.platforms && game.platforms.length > 0 && (
                               <div className="browse-card-meta browse-card-platforms">
-                                {game.platforms.join(' · ')}
+                                {game.platforms.filter(p => !HIDDEN_PLATFORMS.has(p)).join(' · ')}
                               </div>
                             )}
                           </a>

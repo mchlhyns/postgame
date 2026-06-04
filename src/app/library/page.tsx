@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Agent } from '@atproto/api'
 import { restoreSession, COLLECTION } from '@/lib/atproto'
 import { GameRecordView, GameStatus, GameRecord } from '@/types'
-import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
+import { statusLabel, matchesStatus, PRIMARY_STATUSES, normalizeStatus } from '@/lib/igdb'
 import AddGameModal from '@/components/AddGameModal'
 import GameCard from '@/components/GameCard'
 
@@ -100,9 +100,11 @@ export default function MyGamesPage() {
   const activeSortBy = filterStatus === 'wishlisted' && sortBy === 'added' ? 'release' : sortBy
   const filteredGames = [...filtered].sort((a, b) => {
     if (activeSortBy === 'added') {
-      const aDate = a.value.updatedAt ?? a.value.finishedAt ?? a.value.createdAt
-      const bDate = b.value.updatedAt ?? b.value.finishedAt ?? b.value.createdAt
-      return bDate.localeCompare(aDate)
+      const sortDate = (g: GameRecordView) =>
+        normalizeStatus(g.value.status) === 'played'
+          ? (g.value.finishedAt ?? g.value.updatedAt ?? g.value.createdAt)
+          : (g.value.updatedAt ?? g.value.createdAt)
+      return sortDate(b).localeCompare(sortDate(a))
     }
     if (activeSortBy === 'release') {
       const ag = a.value.game, bg = b.value.game
@@ -168,7 +170,6 @@ export default function MyGamesPage() {
                   return [
                     <div key={`divider-${status}`} className="game-list-divider">
                       {statusLabel(status)}
-                      <span className="game-list-divider-count">{group.length}</span>
                     </div>,
                     ...group.map((record) => (
                       <GameCard
@@ -184,7 +185,6 @@ export default function MyGamesPage() {
                 }) : [
                   <div key={`divider-${filterStatus}`} className="game-list-divider">
                     {statusLabel(filterStatus)}
-                    <span className="game-list-divider-count">{filteredGames.length}</span>
                   </div>,
                   ...filteredGames.map((record) => (
                     <GameCard

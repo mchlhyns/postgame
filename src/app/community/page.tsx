@@ -6,6 +6,7 @@ import { restoreSession, FOLLOW_COLLECTION, fetchBlockedDids } from '@/lib/atpro
 import { Stars } from '@/components/Stars'
 import AddGameModal from '@/components/AddGameModal'
 import { relativeTime, feedActionText } from '@/lib/feed'
+import { abbreviatePlatform } from '@/lib/igdb'
 
 interface SearchActor {
   did: string
@@ -62,11 +63,11 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
                   <div className="social-grid-avatar social-grid-avatar-placeholder" />
                 )}
               </a>
-              <div className="social-grid-user-text" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flex: 1 }}>
-                <a href={`/${item.handle}`} className="social-grid-username" onClick={(e) => e.stopPropagation()} style={{ fontSize: 'var(--text-base)', lineHeight: 1.2 }}>
+              <div className="social-grid-user-text">
+                <a href={`/${item.handle}`} className="social-grid-username" onClick={(e) => e.stopPropagation()}>
                   {item.displayName || `@${item.handle}`}
                 </a>
-                <span className="social-grid-time" style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', flexShrink: 0 }}>
+                <span className="social-grid-time">
                   {relativeTime(item.createdAt)}
                 </span>
               </div>
@@ -89,7 +90,7 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
               {(() => {
                 const parts: string[] = []
                 if (item.platform) {
-                  parts.push(item.platform.replace(/\s*\(Microsoft Windows\)/gi, ''))
+                  parts.push(abbreviatePlatform(item.platform))
                 }
                 const action = feedActionText(item.status, item.playedStatus)
                 if (action) {

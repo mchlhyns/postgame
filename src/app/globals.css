@@ -508,7 +508,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   gap: 4px;
   font-weight: 900;
   line-height: 1.4;
-  overflow: visible;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .game-card-started-title-text {
@@ -3488,6 +3489,10 @@ footer .container {
   z-index: 100;
 }
 
+.site-sidebar a:hover {
+  text-decoration: none;
+}
+
 .sidebar-nav {
   flex: 1;
   padding: 0;
@@ -3880,8 +3885,7 @@ footer .container {
 
 .sidebar-footer-link:hover {
   color: var(--text);
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
+  text-decoration: none;
 }
 
 .sidebar-footer-socials {
@@ -4128,6 +4132,26 @@ footer .container {
   align-items: stretch;
 }
 
+.profile-overview-highlight-row > * {
+  min-width: 0;
+}
+
+.profile-overview-playing-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.profile-overview-playing-grid > * {
+  min-width: 0;
+}
+
+.profile-overview-playing-grid > .profile-overview-playing {
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
 .profile-overview-playing {
   display: flex;
   flex-direction: column;
@@ -4214,6 +4238,7 @@ footer .container {
   flex-direction: column;
   justify-content: space-between;
   transition: box-shadow 0.2s ease;
+  min-height: 235px;
 }
 
 .blog-post-card:hover {
@@ -4235,8 +4260,8 @@ footer .container {
 }
 
 .blog-post-thumbnail {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   object-fit: cover;
   border-radius: var(--radius);
   flex-shrink: 0;
@@ -4245,9 +4270,10 @@ footer .container {
 .blog-post-title-link {
   color: var(--text);
   text-decoration: none;
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 900;
-  line-height: 1.3;
+  line-height: 1.2;
+  margin-bottom: 2px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -4628,12 +4654,7 @@ footer .container {
 
 /* >= 1300px */
 @media (min-width: 1300px) {
-  .profile-overview-highlight-row {
-    grid-template-columns: 2fr 1fr 1fr;
-  }
-
   .profile-overview-highlight-row > .profile-overview-playing {
-    grid-row: 1 !important;
     display: grid;
     grid-template-rows: auto 1fr;
   }
@@ -4642,27 +4663,6 @@ footer .container {
     display: grid !important;
     grid-template-rows: 1fr auto;
     height: 100%;
-  }
-
-  .overview-fav-card {
-    flex-direction: column !important;
-    padding: 0;
-    gap: 0;
-    align-items: stretch;
-  }
-
-  .overview-fav-card .game-card-grid-cover-wrap {
-    width: auto;
-  }
-
-  .overview-fav-card .game-card-grid-cover {
-    width: 100%;
-    height: auto;
-  }
-
-  .overview-fav-card .game-card-grid-info {
-    padding: 16px;
-    border-radius: 0 0 var(--radius) var(--radius);
   }
 }
 
@@ -4893,6 +4893,14 @@ footer .container {
   /* Profile overview */
   .profile-overview-highlight-row {
     grid-template-columns: 1fr;
+  }
+
+  .profile-overview-playing-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .profile-overview-playing-grid > .profile-overview-playing {
+    grid-column: 1 / -1;
   }
 
   /* Profile games tab — 2 per row */

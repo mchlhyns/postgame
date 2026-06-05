@@ -535,99 +535,78 @@ export default function ProfilePage() {
 
               {section === 'overview' ? (
                 <div className="profile-overview">
-                  {playingGames.length > 0 && (newestBlogPost || favouriteGame) ? (
+                  {/* Standard site: playing now + latest post side by side */}
+                  {blogPublicationUri && playingGames.length > 0 && (
                     <section className="profile-overview-section">
-                      {(() => {
-                        const favOnly = !!favouriteGame && !newestBlogPost
-                        const rightCount = (favouriteGame ? 1 : 0) + (newestBlogPost ? 1 : 0)
-                        return (
-                          <div className="profile-overview-highlight-row">
-                            <div className="profile-overview-playing" style={{ gridRow: `span ${rightCount}` }}>
-                              <h2 className="home-section-title">Playing now</h2>
-                              <GameCard record={playingGames[0]} view="started" readonly />
-                            </div>
-                            {favouriteGame && (
-                              favOnly ? (
-                                <div className="profile-overview-playing" style={{ gridColumn: 'span 2' }}>
-                                  <h2 className="home-section-title">Favourite game</h2>
-                                  <a href={`/games/${favouriteGame.igdbId}`} className="game-card-started" style={{ display: 'flex', flex: 1, textDecoration: 'none' }}>
-                                    <div className="game-card-started-banner" style={favScreenshotUrl ? { backgroundImage: `url(${favScreenshotUrl})` } : undefined} />
-                                    <div className="game-card-started-bottom">
-                                      <div className="game-card-started-cover-wrap">
-                                        <img className="game-card-started-cover" src={favouriteGame.coverUrl ?? '/no-cover.png'} alt={favouriteGame.title} />
+                      {newestBlogPost ? (
+                        <div className="profile-overview-highlight-row">
+                          <div className="profile-overview-playing">
+                            <h2 className="home-section-title">Playing now</h2>
+                            <GameCard record={playingGames[0]} view="started" readonly />
+                          </div>
+                          {(() => {
+                            const postUrl = getBlogPostUrl(newestBlogPost.value, publicationValue)
+                            const pubDate = newestBlogPost.value.publishedAt
+                              ? new Date(newestBlogPost.value.publishedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                              : null
+                            const coverUrl = newestBlogPost.value.coverImage && profilePdsUrl && profileDid
+                              ? blobUrl(profilePdsUrl, profileDid, newestBlogPost.value.coverImage)
+                              : null
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <h2 className="home-section-title">Latest post</h2>
+                                <div className="blog-post-card" style={{ flex: 1 }}>
+                                  <div className="blog-post-card-body">
+                                    <div className="blog-post-card-header">
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <h3 style={{ margin: 0 }}>
+                                          <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
+                                            {newestBlogPost.value.title}
+                                          </a>
+                                        </h3>
+                                        {pubDate && <div className="blog-post-date">{pubDate}</div>}
                                       </div>
-                                      <div className="game-card-started-info">
-                                        <div className="game-card-started-title">{favouriteGame.title}</div>
-                                        {favouriteGame.releaseYear && <span className="game-card-started-meta">{favouriteGame.releaseYear}</span>}
-                                      </div>
+                                      {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
                                     </div>
-                                  </a>
-                                </div>
-                              ) : (
-                                <div>
-                                  <h2 className="home-section-title">Favourite game</h2>
-                                  <div className="game-card-grid overview-fav-card">
-                                    <div className="game-card-grid-cover-wrap">
-                                      <a href={`/games/${favouriteGame.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                                        <img className="game-card-grid-cover" src={favouriteGame.coverUrl ?? '/no-cover.png'} alt={favouriteGame.title} />
-                                      </a>
-                                    </div>
-                                    <a className="game-card-grid-info" href={`/games/${favouriteGame.igdbId}`}>
-                                      <div className="game-card-grid-title"><span className="game-card-grid-title-text">{favouriteGame.title}</span></div>
-                                      {favouriteGame.releaseYear && <div className="browse-card-meta">{favouriteGame.releaseYear}</div>}
+                                  </div>
+                                  <div className="blog-post-card-footer">
+                                    <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
+                                      Read post
                                     </a>
                                   </div>
                                 </div>
-                              )
-                            )}
-                            {newestBlogPost && (() => {
-                              const postUrl = getBlogPostUrl(newestBlogPost.value, publicationValue)
-                              const pubDate = newestBlogPost.value.publishedAt
-                                ? new Date(newestBlogPost.value.publishedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-                                : null
-                              const coverUrl = newestBlogPost.value.coverImage && profilePdsUrl && profileDid
-                                ? blobUrl(profilePdsUrl, profileDid, newestBlogPost.value.coverImage)
-                                : null
-                              return (
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                  <h2 className="home-section-title">Latest post</h2>
-                                  <div className="blog-post-card" style={{ flex: 1 }}>
-                                    <div className="blog-post-card-body">
-                                      <div className="blog-post-card-header">
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                          <h3 style={{ margin: 0 }}>
-                                            <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
-                                              {newestBlogPost.value.title}
-                                            </a>
-                                          </h3>
-                                          {pubDate && <div className="blog-post-date">{pubDate}</div>}
-                                        </div>
-                                        {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
-                                      </div>
-                                    </div>
-                                    <div className="blog-post-card-footer">
-                                      <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
-                                        Read post
-                                      </a>
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            })()}
-                          </div>
-                        )
-                      })()}
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="profile-overview-playing">
+                          <h2 className="home-section-title">Playing now</h2>
+                          <GameCard record={playingGames[0]} view="started" readonly />
+                        </div>
+                      )}
                     </section>
-                  ) : playingGames.length > 0 ? (
+                  )}
+
+                  {/* No Standard site: up to 3 playing games in 2fr 1fr 1fr grid */}
+                  {!blogPublicationUri && playingGames.length > 0 && (
                     <section className="profile-overview-section">
-                      <h2 className="home-section-title">Playing</h2>
-                      <div className="game-grid profile-game-grid">
-                        {playingGames.map((record) => (
-                          <GameCard key={record.uri} record={record} view="started" readonly />
-                        ))}
-                      </div>
+                      <h2 className="home-section-title">Playing now</h2>
+                      {playingGames.length === 1 ? (
+                        <div className="profile-overview-playing">
+                          <GameCard record={playingGames[0]} view="started" readonly />
+                        </div>
+                      ) : (
+                        <div className="profile-overview-playing-grid">
+                          <div className="profile-overview-playing">
+                            <GameCard record={playingGames[0]} view="started" readonly />
+                          </div>
+                          {playingGames[1] && <GameCard record={playingGames[1]} view="grid" readonly />}
+                          {playingGames[2] && <GameCard record={playingGames[2]} view="grid" readonly />}
+                        </div>
+                      )}
                     </section>
-                  ) : null}
+                  )}
 
                   {activityItems.length > 0 && (
                     <section className="profile-overview-section">
@@ -703,7 +682,7 @@ export default function ProfilePage() {
                           </div>
                           <div className="blog-post-card-footer">
                             <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
-                              Read post &rarr;
+                              Read post
                             </a>
                           </div>
                         </div>

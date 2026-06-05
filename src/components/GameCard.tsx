@@ -392,7 +392,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             <div className="game-card-started-cover-wrap">{coverEl}</div>
             <div className="game-card-started-info">
               <div className="game-card-started-title">
-                <span className="game-card-started-title-text">{value.game.title}</span>
+                <span className="game-card-started-title-text" title={value.game.title}>{value.game.title}</span>
                 {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={15} /></span>}
                 {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={15} /></span>}
               </div>
@@ -438,7 +438,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           </div>
           <a className="game-card-grid-info" href={gameHref}>
             <div className="game-card-grid-title">
-              <span className="game-card-grid-title-text">{value.game.title}</span>
+              <span className="game-card-grid-title-text" title={value.game.title}>{value.game.title}</span>
               {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={13} /></span>}
               {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={13} /></span>}
             </div>
@@ -491,7 +491,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
 
       <a className="game-card-body" href={gameHref}>
         <div className="game-card-title">
-          <span className="game-card-title-text">{value.game.title}</span>
+          <span className="game-card-title-text" title={value.game.title}>{value.game.title}</span>
           {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={12} /></span>}
           {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={12} /></span>}
         </div>

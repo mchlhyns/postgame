@@ -3,6 +3,7 @@ import { getGame } from '@/lib/igdb-game'
 import { normalizeCoverUrl, normalizeScreenshotUrl, abbreviatePlatform, HIDDEN_PLATFORMS } from '@/lib/igdb'
 import { IgdbGame } from '@/types'
 import GamePageBanner from '@/components/GamePageBanner'
+import GameBannerStats from '@/components/GameBannerStats'
 import AddGameButton from '@/components/AddGameButton'
 import ScreenshotGallery from '@/components/ScreenshotGallery'
 import RelatedGamesSection from '@/components/RelatedGamesSection'
@@ -65,17 +66,12 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
   return (
     <>
       <main>
-        <GamePageBanner
-          igdbId={id}
-          bannerUrl={bannerUrl}
-          coverUrl={coverUrl}
-          title={game.name}
-          subtitle={subtitle || undefined}
-        />
+        <GamePageBanner bannerUrl={bannerUrl} />
 
         <div className="container">
           <div className="game-detail-layout">
             <div className="game-detail-sidebar">
+              <img src={coverUrl ?? '/no-cover.png'} alt={game.name} className="game-detail-cover" />
               <AddGameButton game={gameForClient} />
 
               {developers.length > 0 && (
@@ -125,6 +121,13 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
             </div>
 
             <div className="game-detail-content">
+              <div className="game-detail-banner-info">
+                <div style={{ minWidth: 0 }}>
+                  <h1 className="game-detail-title">{game.name}</h1>
+                  {subtitle && <p className="game-detail-banner-sub">{subtitle}</p>}
+                </div>
+                <GameBannerStats igdbId={id} />
+              </div>
               {game.summary && <GameSummary summary={game.summary} />}
               {allScreenshots.length > 0 && (
                 <ScreenshotGallery screenshots={allScreenshots} />

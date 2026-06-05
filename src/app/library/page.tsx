@@ -97,7 +97,7 @@ export default function MyGamesPage() {
 
   const filtered = filterStatus === 'all' ? deduped : deduped.filter((g) => matchesStatus(g.value.status, filterStatus))
 
-  const activeSortBy = filterStatus === 'wishlisted' && sortBy === 'added' ? 'release' : sortBy
+  const activeSortBy = sortBy
   const filteredGames = [...filtered].sort((a, b) => {
     if (activeSortBy === 'added') {
       const sortDate = (g: GameRecordView) =>

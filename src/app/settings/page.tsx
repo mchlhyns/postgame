@@ -335,7 +335,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="form-field" style={{ marginTop: 16 }}>
-                  <label>Filter Tag (Optional)</label>
+                  <label>Filter tag</label>
                   <span className="settings-subtext">Only display posts tagged with this keyword (e.g. "video games")</span>
                   <input
                     className="input"

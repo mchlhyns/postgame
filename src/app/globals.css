@@ -476,6 +476,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   padding: 16px;
   background: var(--surface);
   transition: background 0.15s;
+  min-width: 0;
 }
 
 .game-card-started-cover-wrap {
@@ -517,7 +518,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  flex-shrink: 1;
+  flex: 1 1 0%;
 }
 
 .game-card-started-title a {
@@ -3147,23 +3148,18 @@ p.faq-answer a:hover {
   background-color: var(--tertiary);
 }
 
-.game-detail-banner-content {
-  position: relative;
-  padding-left: 232px;
-  padding-top: 32px;
-}
-
 .game-detail-cover {
-  position: absolute;
-  left: 0;
-  top: -89px;
+  display: block;
+  position: relative;
   width: 200px;
   height: 266px;
+  margin-top: -89px;
+  margin-bottom: 16px;
   border-radius: var(--radius);
   object-fit: cover;
   box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  display: block;
   background: var(--tertiary);
+  flex-shrink: 0;
 }
 
 .game-detail-banner-info {
@@ -3172,6 +3168,7 @@ p.faq-answer a:hover {
   align-items: flex-start;
   gap: 24px;
   width: 100%;
+  margin-bottom: 24px;
 }
 
 .game-detail-title {
@@ -3184,19 +3181,20 @@ p.faq-answer a:hover {
 .game-detail-banner-sub {
   color: var(--text-muted);
   overflow-wrap: break-word;
+  margin: 4px 0 0;
 }
 
 .game-detail-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 32px;
-  padding-top: 20px;
+  padding-top: 0;
   padding-bottom: 24px;
 }
 
 .game-detail-sidebar {
   min-width: 0;
-  padding-top: 76px;
+  padding-top: 0;
 }
 
 .game-detail-meta-section {
@@ -3266,6 +3264,7 @@ p.faq-answer a:hover {
 
 .game-detail-content {
   min-width: 0;
+  padding-top: 32px;
 }
 
 .game-detail-related {
@@ -4923,14 +4922,10 @@ footer .container {
     margin-top: -60px;
   }
 
-  .game-detail-banner-content {
-    padding-left: 106px;
-  }
-
   .game-detail-cover {
     width: 90px;
     height: 120px;
-    top: -40px;
+    margin-top: -40px;
   }
 
   .game-detail-title {
@@ -4940,7 +4935,12 @@ footer .container {
   .game-detail-layout {
     grid-template-columns: 1fr;
     gap: 0;
+    padding-top: 0;
+  }
+
+  .game-detail-content {
     padding-top: 24px;
+    order: -1;
   }
 
   .game-detail-sidebar {

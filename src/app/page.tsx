@@ -89,7 +89,8 @@ export default function Home() {
     setLoginError('')
     try {
       await signIn(handle.trim().replace(/^@/, ''))
-    } catch {
+    } catch (e) {
+      console.error('[sign-in error]', e)
       setLoginError('There was a problem signing in. Check your handle and try again.')
       setSigningIn(false)
     }

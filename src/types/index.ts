@@ -19,7 +19,6 @@ export interface GameRef {
   coverUrl?: string
   screenshotUrl?: string
   igdbUrl?: string
-  ctaUrl?: string
   releaseYear?: number
   releaseDate?: number
 }

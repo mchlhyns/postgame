@@ -20,7 +20,7 @@ export async function getOAuthClient(): Promise<BrowserOAuthClient> {
       client_name: 'postgame',
       client_uri: origin,
       redirect_uris: [`${origin}/oauth/callback`],
-      scope: 'atproto blob:image/*',
+      scope: 'atproto blob:image/* repo:at.postgame.game?action=create repo:at.postgame.game?action=update repo:at.postgame.game?action=delete repo:at.postgame.list?action=create repo:at.postgame.list?action=update repo:at.postgame.list?action=delete repo:at.postgame.follow?action=create repo:at.postgame.follow?action=update repo:at.postgame.follow?action=delete repo:at.postgame.settings?action=create repo:at.postgame.settings?action=update repo:at.postgame.settings?action=delete',
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],
       token_endpoint_auth_method: 'none',
@@ -121,38 +121,51 @@ async function migrateUserData(agent: Agent, did: string): Promise<void> {
     settings: 'com.crashthearcade.settings',
   } as const
 
-  try {
-    // Migrate paginated collections (game, list, follow)
-    for (const [key, oldColl] of [
-      ['game', OLD_COLLECTIONS.game],
-      ['list', OLD_COLLECTIONS.list],
-      ['follow', OLD_COLLECTIONS.follow],
-    ] as const) {
-      const newColl = key === 'game' ? COLLECTION : key === 'list' ? LIST_COLLECTION : FOLLOW_COLLECTION
-      let cursor: string | undefined
-      do {
-        const res = await agent.com.atproto.repo.listRecords({ repo: did, collection: oldColl, limit: 100, cursor })
-        if (!res.success || res.data.records.length === 0) break
-        for (const rec of res.data.records) {
-          const rkey = rec.uri.split('/').pop()!
+  let migrationOk = true
+
+  // Migrate paginated collections (game, list, follow)
+  for (const [collKey, oldColl] of [
+    ['game', OLD_COLLECTIONS.game],
+    ['list', OLD_COLLECTIONS.list],
+    ['follow', OLD_COLLECTIONS.follow],
+  ] as const) {
+    const newColl = collKey === 'game' ? COLLECTION : collKey === 'list' ? LIST_COLLECTION : FOLLOW_COLLECTION
+    let cursor: string | undefined
+    do {
+      let res
+      try {
+        res = await agent.com.atproto.repo.listRecords({ repo: did, collection: oldColl, limit: 100, cursor })
+      } catch { break }
+      if (!res.success || res.data.records.length === 0) break
+      for (const rec of res.data.records) {
+        const rkey = rec.uri.split('/').pop()!
+        try {
           await agent.com.atproto.repo.putRecord({ repo: did, collection: newColl, rkey, record: { ...(rec.value as object), $type: newColl } })
           await agent.com.atproto.repo.deleteRecord({ repo: did, collection: oldColl, rkey })
+        } catch (e) {
+          console.error('[postgame] migration record failed:', e)
+          migrationOk = false
         }
-        cursor = res.data.records.length === 100 ? res.data.cursor : undefined
-      } while (cursor)
-    }
-
-    // Migrate settings (single record keyed by literal:self)
-    try {
-      const res = await agent.com.atproto.repo.getRecord({ repo: did, collection: OLD_COLLECTIONS.settings, rkey: 'self' })
-      if (res.success) {
-        await agent.com.atproto.repo.putRecord({ repo: did, collection: SETTINGS_COLLECTION, rkey: 'self', record: { ...(res.data.value as object), $type: SETTINGS_COLLECTION } })
-        await agent.com.atproto.repo.deleteRecord({ repo: did, collection: OLD_COLLECTIONS.settings, rkey: 'self' })
       }
-    } catch { /* no settings record, skip */ }
-
-    if (typeof localStorage !== 'undefined') localStorage.setItem(key, '1')
-  } catch (e) {
-    console.error('[postgame] migration failed:', e)
+      cursor = res.data.records.length === 100 ? res.data.cursor : undefined
+    } while (cursor)
   }
+
+  // Migrate settings (single record keyed by literal:self)
+  try {
+    const res = await agent.com.atproto.repo.getRecord({ repo: did, collection: OLD_COLLECTIONS.settings, rkey: 'self' })
+    if (res.success) {
+      await agent.com.atproto.repo.putRecord({ repo: did, collection: SETTINGS_COLLECTION, rkey: 'self', record: { ...(res.data.value as object), $type: SETTINGS_COLLECTION } })
+      await agent.com.atproto.repo.deleteRecord({ repo: did, collection: OLD_COLLECTIONS.settings, rkey: 'self' })
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    // Missing settings record is normal; anything else is a real failure
+    if (!msg.includes('RecordNotFound') && !msg.includes('not found')) {
+      console.error('[postgame] settings migration failed:', e)
+      migrationOk = false
+    }
+  }
+
+  if (migrationOk && typeof localStorage !== 'undefined') localStorage.setItem(key, '1')
 }

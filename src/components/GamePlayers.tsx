@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { bskyAvatar } from '@/lib/appview-fetch'
 
 type Player = {
   did: string
@@ -36,7 +37,7 @@ export default function GamePlayers({ igdbId }: { igdbId: number }) {
             title={p.displayName || `@${p.handle}`}
           >
             {p.avatar
-              ? <img src={p.avatar} alt={p.handle} className="game-player-avatar" />
+              ? <img src={bskyAvatar(p.avatar)} alt={p.handle} className="game-player-avatar" />
               : <div className="game-player-avatar game-player-avatar--placeholder" />
             }
           </a>

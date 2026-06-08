@@ -10,7 +10,7 @@ import { statusLabel, matchesStatus, PRIMARY_STATUSES } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
 import ParallaxBannerImg from '@/components/ParallaxBannerImg'
 import { Stars } from '@/components/Stars'
-import { extractCid, blobUrl, resolvePds } from '@/lib/appview-fetch'
+import { extractCid, blobUrl, resolvePds, bskyAvatar } from '@/lib/appview-fetch'
 import { relativeTime } from '@/lib/feed'
 
 const ALL_STATUSES = PRIMARY_STATUSES
@@ -307,9 +307,10 @@ export default function ProfilePage() {
           }
         }
 
-        // 2. Fetch documents
+        // 2. Fetch documents (cap at 20 pages / ~2000 posts)
         let posts: any[] = []
         let cursor: string | undefined
+        let page = 0
         do {
           const url = `${profilePdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(profileDid!)}&collection=site.standard.document&limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`
           const res = await fetch(url)
@@ -317,7 +318,8 @@ export default function ProfilePage() {
           const data = await res.json()
           posts = [...posts, ...(data.records ?? [])]
           cursor = data.cursor
-        } while (cursor)
+          page++
+        } while (cursor && page < 20)
 
         if (cancelled) return
 
@@ -791,7 +793,7 @@ export default function ProfilePage() {
                       <div key={f.did} className="game-card-grid" style={{ padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
                         <a href={`/${f.handle}`} style={{ display: 'block', flexShrink: 0 }}>
                           {f.avatar
-                            ? <img src={f.avatar} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block', border: '2px solid var(--border)' }} />
+                            ? <img src={bskyAvatar(f.avatar)} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block', border: '2px solid var(--border)' }} />
                             : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)', border: '2px solid var(--border)' }} />
                           }
                         </a>

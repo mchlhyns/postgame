@@ -8,7 +8,7 @@ import { matchesStatus, abbreviatePlatform } from '@/lib/igdb'
 import GameCard from '@/components/GameCard'
 import { Stars } from '@/components/Stars'
 import { Sparkles, Trophy } from 'lucide-react'
-import { extractCid } from '@/lib/appview-fetch'
+import { extractCid, bskyAvatar } from '@/lib/appview-fetch'
 import { relativeTime, feedActionText } from '@/lib/feed'
 
 interface FeedItem {
@@ -328,7 +328,7 @@ export default function HomePage() {
                     >
                       <a href={`/${item.handle}`} className="social-grid-avatar-link" onClick={(e) => e.stopPropagation()}>
                         {item.avatar ? (
-                          <img src={item.avatar} alt="" className="social-grid-avatar" />
+                          <img src={bskyAvatar(item.avatar)} alt="" className="social-grid-avatar" />
                         ) : (
                           <div className="social-grid-avatar social-grid-avatar-placeholder" />
                         )}

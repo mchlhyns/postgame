@@ -72,7 +72,9 @@ export async function GET(req: NextRequest) {
       }
     }).filter(r => r.handle && r.handle !== 'handle.invalid' && !r.handle.endsWith('.invalid'))
 
-    return NextResponse.json({ feed })
+    return NextResponse.json({ feed }, {
+      headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' },
+    })
   } catch (err) {
     console.error('Network feed error:', err)
     return NextResponse.json({ error: 'Failed to fetch network feed' }, { status: 500 })

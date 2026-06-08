@@ -23,6 +23,12 @@ export async function resolvePds(did: string): Promise<string> {
   }
 }
 
+export function bskyAvatar(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  if (url.startsWith('https://cdn.bsky.app/') && !url.includes('@')) return `${url}@jpeg`
+  return url
+}
+
 export function extractCid(ref: unknown): string | null {
   if (!ref) return null
   if (typeof (ref as Record<string, unknown>)['$link'] === 'string') return (ref as Record<string, unknown>)['$link'] as string

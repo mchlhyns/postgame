@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { restoreSession, signIn } from '@/lib/atproto'
+import { bskyAvatar } from '@/lib/appview-fetch'
 import Tooltip from '@/components/Tooltip'
 
 export default function Home() {
@@ -45,7 +46,7 @@ export default function Home() {
       } catch {
         setSuggestions([])
       }
-    }, 300)
+    }, 400)
     return () => clearTimeout(timer)
   }, [handle])
 
@@ -131,7 +132,7 @@ export default function Home() {
                       onMouseDown={(e) => { e.preventDefault(); selectSuggestion(actor.handle) }}
                     >
                       {actor.avatar
-                        ? <img src={actor.avatar} alt="" className="handle-suggestion-avatar" />
+                        ? <img src={bskyAvatar(actor.avatar)} alt="" className="handle-suggestion-avatar" />
                         : <div className="handle-suggestion-avatar handle-suggestion-avatar-placeholder" />
                       }
                       <div>
@@ -154,7 +155,7 @@ export default function Home() {
         <span>•</span>
         <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer">Bluesky</a>
         <span>•</span>
-        <a href="https://github.com/mchlhyns/postgame" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/assemblezero/postgame" target="_blank" rel="noopener noreferrer">GitHub</a>
       </p>
     </div>
   )

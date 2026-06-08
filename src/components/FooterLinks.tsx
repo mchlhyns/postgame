@@ -10,7 +10,7 @@ const links = [
 
 const iconLinks = [
   { label: 'Bluesky', icon: '/bluesky.svg', href: 'https://bsky.app/profile/postgame.at' },
-  { label: 'GitHub',  icon: '/github.svg',  href: 'https://github.com/mchlhyns/postgame' },
+  { label: 'GitHub',  icon: '/github.svg',  href: 'https://github.com/assemblezero/postgame' },
 ]
 
 export default function SiteFooter() {

@@ -1225,15 +1225,17 @@ main {
 
 /* Overflow menu */
 .list-overflow-wrap {
-  position: relative;
+  position: initial;
+  line-height: 0;
 }
 
 .list-overflow-btn {
   color: var(--text-muted);
-  font-size: var(--text-lg);
-  padding: 9px;
+  font-size: var(--text-sm);
+  padding: 3px;
   line-height: 1;
   letter-spacing: 0em;
+  border: none;
 }
 
 .list-overflow-menu {

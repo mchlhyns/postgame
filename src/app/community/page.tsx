@@ -7,6 +7,7 @@ import { Stars } from '@/components/Stars'
 import AddGameModal from '@/components/AddGameModal'
 import { relativeTime, feedActionText } from '@/lib/feed'
 import { abbreviatePlatform } from '@/lib/igdb'
+import { bskyAvatar } from '@/lib/appview-fetch'
 
 interface SearchActor {
   did: string
@@ -58,7 +59,7 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
             <div className="social-grid-user-top" onClick={() => window.location.href = `/${item.handle}`}>
               <a href={`/${item.handle}`} className="social-grid-avatar-link" onClick={(e) => e.stopPropagation()}>
                 {item.avatar ? (
-                  <img src={item.avatar} alt="" className="social-grid-avatar" />
+                  <img src={bskyAvatar(item.avatar)} alt="" className="social-grid-avatar" />
                 ) : (
                   <div className="social-grid-avatar social-grid-avatar-placeholder" />
                 )}
@@ -172,7 +173,7 @@ export default function SocialPage() {
         setSearchResults(actors)
         setSearchOpen(actors.length > 0)
       } catch {}
-    }, 300)
+    }, 400)
     return () => clearTimeout(timer)
   }, [searchQuery])
 
@@ -277,7 +278,7 @@ export default function SocialPage() {
                     <div key={actor.did} className="search-result-item social-search-result">
                       <a href={`/${actor.handle}`} className="social-search-actor" onClick={() => { setSearchOpen(false); setSearchQuery('') }}>
                         {actor.avatar
-                          ? <img src={actor.avatar} alt="" className="social-search-avatar" />
+                          ? <img src={bskyAvatar(actor.avatar)} alt="" className="social-search-avatar" />
                           : <div className="social-search-avatar social-search-avatar-placeholder" />
                         }
                         <div style={{ overflow: 'hidden' }}>

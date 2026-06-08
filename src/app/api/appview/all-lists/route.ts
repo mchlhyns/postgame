@@ -69,7 +69,9 @@ export async function GET(req: NextRequest) {
       return bTime.localeCompare(aTime)
     })
 
-    return NextResponse.json({ lists })
+    return NextResponse.json({ lists }, {
+      headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' },
+    })
   } catch (err) {
     console.error('All lists feed error:', err)
     return NextResponse.json({ error: 'Failed to fetch community lists' }, { status: 500 })

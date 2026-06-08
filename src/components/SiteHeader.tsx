@@ -147,7 +147,7 @@ export default function SiteHeader() {
           {/* Logo container at the top of the sidebar */}
           <div className="sidebar-logo" style={{ padding: '0 10px 24px 10px', display: 'flex', alignItems: 'center' }}>
             <a href={userHandle ? '/home' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <img src="/logo.svg" alt="postgame" style={{ height: 20 }} />
+              <img src="/logo.svg" alt="postgame" style={{ height: 22 }} />
             </a>
           </div>
 
@@ -197,7 +197,7 @@ export default function SiteHeader() {
               <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer" aria-label="Bluesky">
                 <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/bluesky.svg)', WebkitMaskImage: 'url(/bluesky.svg)' }} />
               </a>
-              <a href="https://github.com/mchlhyns/postgame" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+              <a href="https://github.com/assemblezero/postgame" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                 <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/github.svg)', WebkitMaskImage: 'url(/github.svg)' }} />
               </a>
 

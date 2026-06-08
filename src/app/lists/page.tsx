@@ -5,6 +5,7 @@ import { Agent } from '@atproto/api'
 import { TID } from '@atproto/common-web'
 import { restoreSession, LIST_COLLECTION } from '@/lib/atproto'
 import { ListRecord, ListRecordView } from '@/types'
+import { bskyAvatar } from '@/lib/appview-fetch'
 import ListShareModal from '@/components/ListShareModal'
 
 export interface CommunityList {
@@ -38,6 +39,7 @@ export default function MyListsPage() {
   const [openMenuRkey, setOpenMenuRkey] = useState<string | null>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const menuDropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     restoreSession()
@@ -84,8 +86,11 @@ export default function MyListsPage() {
   useEffect(() => {
     if (!openMenuRkey) return
     function handleOutside(e: MouseEvent) {
-      const el = menuRefs.current[openMenuRkey!]
-      if (el && !el.contains(e.target as Node)) { setOpenMenuRkey(null); setMenuPos(null) }
+      const triggerEl = menuRefs.current[openMenuRkey!]
+      const dropdownEl = menuDropdownRef.current
+      if (triggerEl?.contains(e.target as Node) || dropdownEl?.contains(e.target as Node)) return
+      setOpenMenuRkey(null)
+      setMenuPos(null)
     }
     document.addEventListener('mousedown', handleOutside)
     return () => document.removeEventListener('mousedown', handleOutside)
@@ -217,7 +222,7 @@ export default function MyListsPage() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
-                              className="list-overflow-btn"
+                              className="btn btn-ghost list-overflow-btn"
                               onClick={(e) => {
                                 if (openMenuRkey === rkey) { setOpenMenuRkey(null); setMenuPos(null); return }
                                 const rect = e.currentTarget.getBoundingClientRect()
@@ -304,7 +309,7 @@ export default function MyListsPage() {
                           onClick={(e) => { e.stopPropagation(); window.location.href = `/${list.user.handle}` }}
                         >
                           {list.user.avatar ? (
-                            <img src={list.user.avatar} alt="" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />
+                            <img src={bskyAvatar(list.user.avatar)} alt="" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />
                           ) : (
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--tertiary)' }} />
                           )}
@@ -325,6 +330,7 @@ export default function MyListsPage() {
       {/* Card overflow menu — rendered outside the card to escape overflow:hidden */}
       {openMenuRkey && menuPos && (
         <div
+          ref={menuDropdownRef}
           className="list-overflow-menu"
           style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, zIndex: 1000 }}
         >

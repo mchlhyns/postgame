@@ -237,8 +237,7 @@ export default function ListEditPage() {
       const url = userHandle ? `${window.location.origin}/${userHandle}/lists/${rkey}` : list.value.url
       const record: ListRecord = { ...list.value, name: name.trim(), items: itemsWithPositions, numbered: effectiveNumbered, url, updatedAt: now }
       await session.agent.com.atproto.repo.putRecord({ repo: session.did, collection: LIST_COLLECTION, rkey, record: record as any })
-      setList({ ...list, value: record })
-      setSaved(true)
+      window.location.href = '/lists'
     } catch (err: any) {
       setError(err?.message ?? 'Failed to save.')
     } finally {

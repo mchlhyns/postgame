@@ -43,10 +43,6 @@ const sections: Section[] = [
         a: 'AT Protocol repositories are public by default, the same way Bluesky posts are. Anyone who knows your DID or handle can look up your collection records directly via the AT Protocol. Like many other apps on the AT Protocol, we show user activity in the Network section of the /community page.',
       },
       {
-        q: 'Can I block other users?',
-        a: 'postgame inherits your blocks directly from Bluesky. If you block someone on Bluesky, they\'ll automatically be hidden from your feeds and search results here too. There\'s no separate block action, just manage blocks on Bluesky and they\'ll be reflected here on your next login.',
-      },
-      {
         q: 'What analytics or tracking does the site use?',
         a: <>We use <a href="https://plausible.io/">Plausible</a> to track basic information like page visits and referrers. No cookies, no personal data.</>,
       },

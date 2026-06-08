@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     client_name: 'postgame',
     client_uri: origin,
     redirect_uris: [`${origin}/oauth/callback`],
-    scope: 'atproto transition:generic blob:image/*',
+    scope: 'atproto blob:image/*',
     grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code'],
     token_endpoint_auth_method: 'none',

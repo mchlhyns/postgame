@@ -2,9 +2,16 @@ const SETTINGS_COLLECTION = 'at.postgame.settings'
 
 export async function resolvePds(did: string): Promise<string> {
   try {
-    const docUrl = did.startsWith('did:web:')
-      ? `https://${did.slice('did:web:'.length).split(':')[0]}/.well-known/did.json`
-      : `https://plc.directory/${did}`
+    let docUrl: string
+    if (did.startsWith('did:web:')) {
+      const host = did.slice('did:web:'.length).split(':')[0]
+      if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$|\[::1\]|fe80:|fc00:|fd)/.test(host)) {
+        throw new Error('Blocked did:web host')
+      }
+      docUrl = `https://${host}/.well-known/did.json`
+    } else {
+      docUrl = `https://plc.directory/${did}`
+    }
     const res = await fetch(docUrl, { next: { revalidate: 3600 } })
     if (!res.ok) return 'https://bsky.social'
     const doc = await res.json()

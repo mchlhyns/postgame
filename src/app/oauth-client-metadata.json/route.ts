@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 export async function GET(req: NextRequest) {
-  const forwardedHost = req.headers.get('x-forwarded-host')
-  const forwardedProto = req.headers.get('x-forwarded-proto') ?? 'https'
-  const origin = forwardedHost
-    ? `${forwardedProto}://${forwardedHost}`
-    : new URL(req.url).origin
+  const origin = new URL(req.url).origin
 
   return NextResponse.json({
     client_id: `${origin}/oauth-client-metadata.json`,

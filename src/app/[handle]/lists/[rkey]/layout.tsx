@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { resolveHandleToPds, LIST_COLLECTION } from '@/lib/atproto-server'
 import { ListRecord } from '@/types'
 
-const APP_URL = 'https://crashthearcade.com'
+const APP_URL = 'https://postgame.at'
 
 interface Props {
   params: Promise<{ handle: string; rkey: string }>
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   let listName = 'A list'
   let resolvedHandle = clean
-  let description = `A game list on CRASH THE ARCADE`
+  let description = `A game list on postgame`
 
   try {
     const { did, pdsUrl } = await resolveHandleToPds(clean)
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       listName = value.name
       if (descRes.ok) resolvedHandle = ((await descRes.json()).handle ?? clean)
       const count = value.items.length
-      description = `${count} game${count !== 1 ? 's' : ''} · by @${resolvedHandle} on CRASH THE ARCADE`
+      description = `${count} game${count !== 1 ? 's' : ''} · by @${resolvedHandle} on postgame`
     }
   } catch { /* use defaults */ }
 

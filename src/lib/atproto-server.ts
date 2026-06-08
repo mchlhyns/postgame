@@ -1,6 +1,6 @@
-export const LIST_COLLECTION = 'com.crashthearcade.list'
-export const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
-export const COLLECTION = 'com.crashthearcade.game'
+export const LIST_COLLECTION = 'at.postgame.list'
+export const SETTINGS_COLLECTION = 'at.postgame.settings'
+export const COLLECTION = 'at.postgame.game'
 
 export async function resolveHandleToPds(handle: string): Promise<{ did: string; pdsUrl: string }> {
   const cleanHandle = handle.replace(/^@/, '')

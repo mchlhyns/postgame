@@ -1,9 +1,9 @@
 {
-  "callbackUrl": "https://crashthearcade.com/api/airglow",
+  "callbackUrl": "https://postgame.at/api/airglow",
   "lexicons": [
-    "https://crashthearcade.com/lexicons/com/crashthearcade/game.json",
-    "https://crashthearcade.com/lexicons/com/crashthearcade/list.json",
-    "https://crashthearcade.com/lexicons/com/crashthearcade/follow.json",
-    "https://crashthearcade.com/lexicons/com/crashthearcade/settings.json"
+    "https://postgame.at/lexicons/at/postgame/game.json",
+    "https://postgame.at/lexicons/at/postgame/list.json",
+    "https://postgame.at/lexicons/at/postgame/follow.json",
+    "https://postgame.at/lexicons/at/postgame/settings.json"
   ]
 }

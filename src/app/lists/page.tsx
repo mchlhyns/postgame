@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Agent } from '@atproto/api'
 import { TID } from '@atproto/common-web'
 import { restoreSession, LIST_COLLECTION } from '@/lib/atproto'
@@ -34,6 +34,10 @@ export default function MyListsPage() {
   const [tab, setTab] = useState<'my' | 'community'>('my')
   const [communityLists, setCommunityLists] = useState<CommunityList[]>([])
   const [communityLoading, setCommunityLoading] = useState(false)
+
+  const [openMenuRkey, setOpenMenuRkey] = useState<string | null>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
+  const menuRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   useEffect(() => {
     restoreSession()
@@ -77,6 +81,31 @@ export default function MyListsPage() {
       })
   }, [tab])
 
+  useEffect(() => {
+    if (!openMenuRkey) return
+    function handleOutside(e: MouseEvent) {
+      const el = menuRefs.current[openMenuRkey!]
+      if (el && !el.contains(e.target as Node)) { setOpenMenuRkey(null); setMenuPos(null) }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [openMenuRkey])
+
+  async function handleDeleteList(rkey: string) {
+    if (!session) return
+    if (!confirm('Delete this list? This cannot be undone.')) return
+    try {
+      await session.agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: LIST_COLLECTION,
+        rkey,
+      })
+      setLists((prev) => prev.filter((l) => l.uri.split('/').pop() !== rkey))
+    } catch (err: any) {
+      alert(err?.message ?? 'Failed to delete list.')
+    }
+  }
+
   async function handleCreateList(e: React.FormEvent) {
     e.preventDefault()
     if (!session || !newName.trim()) { setCreateError('Please enter a name.'); return }
@@ -87,7 +116,7 @@ export default function MyListsPage() {
       const now = new Date().toISOString()
       const url = userHandle ? `${window.location.origin}/${userHandle}/lists/${rkey}` : undefined
       const record: ListRecord = {
-        $type: 'com.crashthearcade.list',
+        $type: 'at.postgame.list',
         name: newName.trim(),
         items: [],
         ...(url ? { url } : {}),
@@ -151,7 +180,7 @@ export default function MyListsPage() {
                     <div
                       key={list.uri}
                       className="game-card-grid"
-                      onClick={() => window.location.href = `/lists/${rkey}`}
+                      onClick={() => { if (userHandle) window.location.href = `/${userHandle}/lists/${rkey}` }}
                       style={{ cursor: 'pointer' }}
                     >
                       {/* Covers Wrap (Middle with background color divider) */}
@@ -178,20 +207,29 @@ export default function MyListsPage() {
 
                       {/* Info Footer (Bottom, identical spacing/style to community cards) */}
                       <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
-                          {list.value.name}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
+                            {list.value.name}
+                          </div>
+                          <div
+                            ref={(el) => { menuRefs.current[rkey] = el }}
+                            className="list-overflow-wrap"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="list-overflow-btn"
+                              onClick={(e) => {
+                                if (openMenuRkey === rkey) { setOpenMenuRkey(null); setMenuPos(null); return }
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+                                setOpenMenuRkey(rkey)
+                              }}
+                              aria-label="List options"
+                            >⋯</button>
+                          </div>
                         </div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif', flexGrow: 1 }}>
                           {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
-                        </div>
-                        <div style={{ marginTop: '12px' }} onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className="btn btn-basic"
-                            style={{ width: '100%' }}
-                            onClick={() => window.location.href = `/lists/${rkey}`}
-                          >
-                            Edit
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -283,6 +321,25 @@ export default function MyListsPage() {
           )}
         </div>
       </main>
+
+      {/* Card overflow menu — rendered outside the card to escape overflow:hidden */}
+      {openMenuRkey && menuPos && (
+        <div
+          className="list-overflow-menu"
+          style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, zIndex: 1000 }}
+        >
+          <button className="list-overflow-option" onClick={() => { setOpenMenuRkey(null); if (userHandle) window.location.href = `/${userHandle}/lists/${openMenuRkey}` }}>
+            View
+          </button>
+          <button className="list-overflow-option" onClick={() => { setOpenMenuRkey(null); window.location.href = `/lists/${openMenuRkey}` }}>
+            Edit
+          </button>
+          <div className="list-overflow-divider" />
+          <button className="list-overflow-option list-overflow-option-danger" onClick={() => { const rkey = openMenuRkey; setOpenMenuRkey(null); handleDeleteList(rkey) }}>
+            Delete
+          </button>
+        </div>
+      )}
 
       {/* New list modal */}
       {showNewModal && (

@@ -1,4 +1,4 @@
-const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
+const SETTINGS_COLLECTION = 'at.postgame.settings'
 
 export async function resolvePds(did: string): Promise<string> {
   try {

@@ -42,7 +42,7 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
       try {
         const settingsRes = await agent.com.atproto.repo.getRecord({
           repo: did,
-          collection: 'com.crashthearcade.settings',
+          collection: 'at.postgame.settings',
           rkey: 'self'
         }).catch(() => null)
 
@@ -112,14 +112,14 @@ export default function AddGameModal({ agent, did, onClose, onAdded, initialGame
     try {
       const ratingNum = rating
       const record = {
-        $type: 'com.crashthearcade.game',
+        $type: 'at.postgame.game',
         game: {
           igdbId: selected.id,
           title: selected.name,
           coverUrl: (selected as IgdbGame & { coverUrl?: string }).coverUrl,
           screenshotUrl: (selected as IgdbGame & { screenshotUrl?: string }).screenshotUrl,
           igdbUrl: selected.url,
-          ctaUrl: `https://crashthearcade.com/games/${selected.id}`,
+          ctaUrl: `https://postgame.at/games/${selected.id}`,
           releaseYear: selected.first_release_date
             ? new Date(selected.first_release_date * 1000).getFullYear()
             : undefined,

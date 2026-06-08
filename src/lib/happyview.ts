@@ -44,7 +44,7 @@ export async function fetchAllGameRecords(): Promise<HVGameRecord[]> {
     let cursor: string | undefined
     let pages = 0
     do {
-      const url = new URL(`${HAPPYVIEW_URL}/xrpc/com.crashthearcade.getGames`)
+      const url = new URL(`${HAPPYVIEW_URL}/xrpc/at.postgame.getGames`)
       url.searchParams.set('limit', '100')
       if (cursor) url.searchParams.set('cursor', cursor)
       const res = await fetch(url.toString(), {
@@ -76,7 +76,7 @@ export async function fetchAllListRecords(): Promise<HVListRecord[]> {
     let cursor: string | undefined
     let pages = 0
     do {
-      const url = new URL(`${HAPPYVIEW_URL}/xrpc/com.crashthearcade.getLists`)
+      const url = new URL(`${HAPPYVIEW_URL}/xrpc/at.postgame.getLists`)
       url.searchParams.set('limit', '100')
       if (cursor) url.searchParams.set('cursor', cursor)
       const res = await fetch(url.toString(), {

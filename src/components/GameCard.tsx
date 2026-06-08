@@ -80,7 +80,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
       const updated: GameRecord = {
         ...value,
         ...draft,
-        $type: 'com.crashthearcade.game',
+        $type: 'at.postgame.game',
         game: freshCoverUrl ? { ...value.game, coverUrl: freshCoverUrl } : value.game,
         playedStatus: isDone ? (draft.playedStatus ?? inferPlayedStatus(newStatus)) : undefined,
         backloggedStatus: norm === 'backlogged' ? (draft.backloggedStatus ?? inferBackloggedStatus(newStatus)) : undefined,
@@ -143,7 +143,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
       try {
         const settingsRes = await agent!.com.atproto.repo.getRecord({
           repo: agent!.assertDid,
-          collection: 'com.crashthearcade.settings',
+          collection: 'at.postgame.settings',
           rkey: 'self'
         }).catch(() => null)
 

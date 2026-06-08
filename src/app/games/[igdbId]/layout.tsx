@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getGame } from '@/lib/igdb-game'
 
-const APP_URL = 'https://crashthearcade.com'
+const APP_URL = 'https://postgame.at'
 
 interface Props {
   params: Promise<{ igdbId: string }>
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!game) return {}
 
   const title = game.name
-  const description = game.summary?.slice(0, 160) ?? `${game.name} on CRASH THE ARCADE`
+  const description = game.summary?.slice(0, 160) ?? `${game.name} on postgame`
   const ogImage = `${APP_URL}/api/og/game/${igdbId}`
 
   return {

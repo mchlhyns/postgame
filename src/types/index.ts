@@ -25,7 +25,7 @@ export interface GameRef {
 }
 
 export interface GameRecord {
-  $type: 'com.crashthearcade.game'
+  $type: 'at.postgame.game'
   game: GameRef
   status: GameStatus
   playedStatus?: PlayedStatus
@@ -57,7 +57,7 @@ export interface ListItem {
 }
 
 export interface ListRecord {
-  $type: 'com.crashthearcade.list'
+  $type: 'at.postgame.list'
   name: string
   items: ListItem[]
   numbered?: boolean

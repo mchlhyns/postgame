@@ -131,7 +131,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
         onSaved({ uri: list!.uri, cid: list!.cid, value: record })
       } else {
         const record: ListRecord = {
-          $type: 'com.crashthearcade.list',
+          $type: 'at.postgame.list',
           name: name.trim(),
           items: itemsWithPositions,
           createdAt: now,

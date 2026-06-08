@@ -261,7 +261,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
       try {
         const settingsRes = await agent.com.atproto.repo.getRecord({
           repo: did,
-          collection: 'com.crashthearcade.settings',
+          collection: 'at.postgame.settings',
           rkey: 'self'
         }).catch(() => null)
 
@@ -313,7 +313,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
       const updated: GameRecord = {
         ...record.value,
         ...draft,
-        $type: 'com.crashthearcade.game',
+        $type: 'at.postgame.game',
         game: freshCoverUrl
           ? { ...record.value.game, coverUrl: freshCoverUrl }
           : record.value.game,

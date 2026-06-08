@@ -1,0 +1,51 @@
+{
+  "lexicon": 1,
+  "id": "at.postgame.game",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A game in a user's collection",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["game", "status", "createdAt"],
+        "properties": {
+          "game": { "type": "ref", "ref": "#gameRef" },
+          "status": {
+            "type": "string",
+            "maxLength": 64,
+            "knownValues": ["playing", "wishlisted", "backlogged", "played", "started", "wishlist", "finished", "shelved", "abandoned"]
+          },
+          "playedStatus": {
+            "type": "string",
+            "maxLength": 64,
+            "knownValues": ["completed", "retired", "shelved", "abandoned"]
+          },
+          "platform": { "type": "string", "maxLength": 128 },
+          "rating": { "type": "integer", "minimum": 1, "maximum": 10, "description": "Rating stored as stars×2 (e.g. 7 = 3.5 stars)" },
+          "notes": { "type": "string", "maxLength": 1000 },
+          "startedAt": { "type": "string", "format": "datetime" },
+          "finishedAt": { "type": "string", "format": "datetime" },
+          "replay": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef",
+            "description": "Points to the original playthrough record if this is a replay"
+          },
+          "isReplay": { "type": "boolean", "description": "True if this entry represents a replay of a previously played game" },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    },
+    "gameRef": {
+      "type": "object",
+      "required": ["igdbId", "title"],
+      "properties": {
+        "igdbId": { "type": "integer" },
+        "title": { "type": "string", "maxLength": 256 },
+        "coverUrl": { "type": "string", "format": "uri" },
+        "igdbUrl": { "type": "string", "format": "uri" },
+        "ctaUrl": { "type": "string", "format": "uri" }
+      }
+    }
+  }
+}

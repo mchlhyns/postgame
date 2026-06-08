@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
   }
 
   const supported = [
-    'com.crashthearcade.game',
-    'com.crashthearcade.list',
-    'com.crashthearcade.follow',
-    'com.crashthearcade.settings',
+    'at.postgame.game',
+    'at.postgame.list',
+    'at.postgame.follow',
+    'at.postgame.settings',
   ]
 
   if (!supported.includes(collection)) {
@@ -40,14 +40,14 @@ export async function POST(req: NextRequest) {
 
   // Handle each lexicon type
   switch (collection) {
-    case 'com.crashthearcade.game':
+    case 'at.postgame.game':
       // e.g. trigger notifications, update leaderboards, sync external services
       break
-    case 'com.crashthearcade.list':
+    case 'at.postgame.list':
       break
-    case 'com.crashthearcade.follow':
+    case 'at.postgame.follow':
       break
-    case 'com.crashthearcade.settings':
+    case 'at.postgame.settings':
       break
   }
 

@@ -63,6 +63,49 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
     ? platforms.join(', ')
     : undefined
 
+  const metaSections = (
+    <>
+      {developers.length > 0 && (
+        <div className="game-detail-meta-section">
+          <div className="game-detail-meta-label">{developers.length === 1 ? 'Developer' : 'Developers'}</div>
+          <div className="game-detail-meta-value">{developers.join(', ')}</div>
+        </div>
+      )}
+      {publishers.length > 0 && (
+        <div className="game-detail-meta-section">
+          <div className="game-detail-meta-label">{publishers.length === 1 ? 'Publisher' : 'Publishers'}</div>
+          <div className="game-detail-meta-value">{publishers.join(', ')}</div>
+        </div>
+      )}
+      {genres.length > 0 && (
+        <div className="game-detail-meta-section">
+          <div className="game-detail-meta-label">{genres.length === 1 ? 'Genre' : 'Genres'}</div>
+          <div className="game-detail-meta-value">{genres.join(', ')}</div>
+        </div>
+      )}
+      {releaseDate && (
+        <div className="game-detail-meta-section">
+          <div className="game-detail-meta-label">Released</div>
+          <div className="game-detail-meta-value">
+            {releaseDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
+        </div>
+      )}
+      {links.length > 0 && (
+        <div className="game-detail-meta-section">
+          <div className="game-detail-meta-label">Links</div>
+          <div className="game-detail-meta-value game-detail-links">
+            {links.map(link => (
+              <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" className="game-detail-link">
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )
+
   return (
     <>
       <main>
@@ -72,55 +115,21 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
           <div className="game-detail-layout">
             <div className="game-detail-sidebar">
               <img src={coverUrl ?? '/no-cover.png'} alt={game.name} className="game-detail-cover" />
-              <AddGameButton game={gameForClient} />
-
-              {developers.length > 0 && (
-                <div className="game-detail-meta-section">
-                  <div className="game-detail-meta-label">{developers.length === 1 ? 'Developer' : 'Developers'}</div>
-                  <div className="game-detail-meta-value">{developers.join(', ')}</div>
-                </div>
-              )}
-              {publishers.length > 0 && (
-                <div className="game-detail-meta-section">
-                  <div className="game-detail-meta-label">{publishers.length === 1 ? 'Publisher' : 'Publishers'}</div>
-                  <div className="game-detail-meta-value">{publishers.join(', ')}</div>
-                </div>
-              )}
-              {genres.length > 0 && (
-                <div className="game-detail-meta-section">
-                  <div className="game-detail-meta-label">{genres.length === 1 ? 'Genre' : 'Genres'}</div>
-                  <div className="game-detail-meta-value">{genres.join(', ')}</div>
-                </div>
-              )}
-              {releaseDate && (
-                <div className="game-detail-meta-section">
-                  <div className="game-detail-meta-label">Released</div>
-                  <div className="game-detail-meta-value">
-                    {releaseDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </div>
-                </div>
-              )}
-              {links.length > 0 && (
-                <div className="game-detail-meta-section">
-                  <div className="game-detail-meta-label">Links</div>
-                  <div className="game-detail-meta-value game-detail-links">
-                    {links.map(link => (
-                      <a
-                        key={link.url}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="game-detail-link"
-                      >
-                        {link.label}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="game-detail-add-desktop">
+                <AddGameButton game={gameForClient} />
+              </div>
+              <div className="game-detail-meta-desktop">
+                {metaSections}
+              </div>
             </div>
 
             <div className="game-detail-content">
+              <div className="game-detail-mobile-top">
+                <img src={coverUrl ?? '/no-cover.png'} alt={game.name} className="game-detail-cover game-detail-cover-mobile" />
+              </div>
+              <div className="game-detail-add-mobile">
+                <AddGameButton game={gameForClient} />
+              </div>
               <div className="game-detail-banner-info">
                 <div style={{ minWidth: 0 }}>
                   <h1 className="game-detail-title">{game.name}</h1>
@@ -132,6 +141,9 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
               {allScreenshots.length > 0 && (
                 <ScreenshotGallery screenshots={allScreenshots} />
               )}
+              <div className="game-detail-meta-mobile">
+                {metaSections}
+              </div>
               {(game.similar_games?.length ?? 0) > 0 && (
                 <div className="game-detail-related">
                   <div className="game-list-divider" style={{ marginBottom: 12 }}>Similar games</div>

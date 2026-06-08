@@ -365,7 +365,7 @@ export default function SettingsPage() {
           <div style={{ maxWidth: 480, marginTop: 42, paddingTop: 32, borderTop: '2px solid var(--tertiary)' }}>
             <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 900, marginBottom: 8 }}>Danger zone</h2>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
-              Permanently delete all your CRASH THE ARCADE data, including games, lists, follows, and settings. Your Atmosphere Account and other connected apps will not be affected.
+              Permanently delete all your postgame data, including games, lists, follows, and settings. Your Atmosphere Account and other connected apps will not be affected.
             </p>
             {!confirmDelete ? (
               <button

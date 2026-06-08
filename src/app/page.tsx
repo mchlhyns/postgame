@@ -100,9 +100,9 @@ export default function Home() {
   return (
     <div className="login-page">
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-          <img src="/logo.svg" alt="CRASH THE ARCADE" style={{ height: 32, marginBottom: 5 }} />
-          <h1>CRASH THE ARCADE</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <img src="/logo.svg" alt="postgame" style={{ height: 24, marginBottom: 1 }} />
+          <h1>postgame</h1>
         </div>
         <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>Track and manage your gaming backlog</p>
       </div>
@@ -151,9 +151,9 @@ export default function Home() {
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <a href="/faq">FAQ</a>
         <span>•</span>
-        <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer">Bluesky</a>
+        <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer">Bluesky</a>
         <span>•</span>
-        <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/mchlhyns/postgame" target="_blank" rel="noopener noreferrer">GitHub</a>
       </p>
     </div>
   )

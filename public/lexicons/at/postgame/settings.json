@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "at.postgame.settings",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "User settings for postgame",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "properties": {
+          "displayName": { "type": "string", "maxLength": 64 },
+          "profileView": { "type": "string", "maxLength": 32, "knownValues": ["list", "grid"] }
+        }
+      }
+    }
+  }
+}

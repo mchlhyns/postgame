@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-const APP_URL = 'https://crashthearcade.com'
+const APP_URL = 'https://postgame.at'
 
 interface Props {
   params: Promise<{ handle: string }>
@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params
   const clean = handle.replace(/^@/, '')
   const title = `@${clean}`
-  const description = `Check out @${clean}'s game collection on CRASH THE ARCADE. Track your games, in the Atmosphere.`
+  const description = `Check out @${clean}'s game collection on postgame. Track your games, in the Atmosphere.`
   const ogImage = `${APP_URL}/api/og/profile/${encodeURIComponent(clean)}`
 
   return {

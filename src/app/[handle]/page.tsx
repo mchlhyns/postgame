@@ -448,8 +448,9 @@ export default function ProfilePage() {
     <>
       <main>
         {!loading && !error && (
-          <div className="profile-banner-block">
+          <div className="profile-banner-block" style={{ position: 'relative' }}>
             <ParallaxBannerImg className="profile-banner-img" url={bannerUrl} />
+            <img src="/logo.svg" alt="postgame" className="mobile-banner-logo" />
             <div className="container profile-banner-content">
               <div style={{ position: 'relative', height: 72, flexShrink: 0 }}>
                 {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}

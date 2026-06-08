@@ -9,8 +9,8 @@ const links = [
 ]
 
 const iconLinks = [
-  { label: 'Bluesky', icon: '/bluesky.svg', href: 'https://bsky.app/profile/crashthearcade.com' },
-  { label: 'GitHub',  icon: '/github.svg',  href: 'https://github.com/mchlhyns/crashthearcade' },
+  { label: 'Bluesky', icon: '/bluesky.svg', href: 'https://bsky.app/profile/postgame.at' },
+  { label: 'GitHub',  icon: '/github.svg',  href: 'https://github.com/mchlhyns/postgame' },
 ]
 
 export default function SiteFooter() {
@@ -22,7 +22,7 @@ export default function SiteFooter() {
     <footer>
       <div className="container">
         <div className="footer-wordmark">
-          CRASH THE ARCADE ©2026
+          postgame ©2026
         </div>
         <nav className="footer-links">
           {links.map(({ label, href, external }) => (

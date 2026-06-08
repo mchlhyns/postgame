@@ -2,10 +2,10 @@ import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
 import { Agent } from '@atproto/api'
 
 export const HANDLE_RESOLVER = 'https://api.bsky.app'
-export const COLLECTION = 'com.crashthearcade.game'
-export const SETTINGS_COLLECTION = 'com.crashthearcade.settings'
-export const LIST_COLLECTION = 'com.crashthearcade.list'
-export const FOLLOW_COLLECTION = 'com.crashthearcade.follow'
+export const COLLECTION = 'at.postgame.game'
+export const SETTINGS_COLLECTION = 'at.postgame.settings'
+export const LIST_COLLECTION = 'at.postgame.list'
+export const FOLLOW_COLLECTION = 'at.postgame.follow'
 
 let _client: BrowserOAuthClient | null = null
 let _sessionPromise: Promise<{ agent: Agent; did: string } | null> | null = null
@@ -17,10 +17,10 @@ export async function getOAuthClient(): Promise<BrowserOAuthClient> {
     handleResolver: HANDLE_RESOLVER,
     clientMetadata: {
       client_id: `${origin}/oauth-client-metadata.json`,
-      client_name: 'CRASH THE ARCADE',
+      client_name: 'postgame',
       client_uri: origin,
       redirect_uris: [`${origin}/oauth/callback`],
-      scope: 'atproto repo:com.crashthearcade.game repo:com.crashthearcade.settings repo:com.crashthearcade.list repo:com.crashthearcade.follow blob:image/*',
+      scope: 'atproto repo:at.postgame.game repo:at.postgame.settings repo:at.postgame.list repo:at.postgame.follow repo:com.crashthearcade.game repo:com.crashthearcade.settings repo:com.crashthearcade.list repo:com.crashthearcade.follow blob:image/*',
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],
       token_endpoint_auth_method: 'none',
@@ -35,9 +35,12 @@ export async function restoreSession(): Promise<{ agent: Agent; did: string } | 
   if (!_sessionPromise) {
     _sessionPromise = getOAuthClient()
       .then((client) => client.init())
-      .then((result) => {
+      .then(async (result) => {
         if (!result) return null
-        return { agent: new Agent(result.session), did: result.session.did }
+        const agent = new Agent(result.session)
+        const did = result.session.did
+        await migrateUserData(agent, did)
+        return { agent, did }
       })
       .catch(() => null)
   }
@@ -105,4 +108,51 @@ export async function resolveHandleToPds(handle: string): Promise<{ did: string;
   } catch { /* fall back to bsky.social */ }
 
   return { did, pdsUrl }
+}
+
+async function migrateUserData(agent: Agent, did: string): Promise<void> {
+  const key = `pg_migrated_v1_${did}`
+  if (typeof localStorage !== 'undefined' && localStorage.getItem(key)) return
+
+  const OLD_COLLECTIONS = {
+    game: 'com.crashthearcade.game',
+    list: 'com.crashthearcade.list',
+    follow: 'com.crashthearcade.follow',
+    settings: 'com.crashthearcade.settings',
+  } as const
+
+  try {
+    // Migrate paginated collections (game, list, follow)
+    for (const [key, oldColl] of [
+      ['game', OLD_COLLECTIONS.game],
+      ['list', OLD_COLLECTIONS.list],
+      ['follow', OLD_COLLECTIONS.follow],
+    ] as const) {
+      const newColl = key === 'game' ? COLLECTION : key === 'list' ? LIST_COLLECTION : FOLLOW_COLLECTION
+      let cursor: string | undefined
+      do {
+        const res = await agent.com.atproto.repo.listRecords({ repo: did, collection: oldColl, limit: 100, cursor })
+        if (!res.success || res.data.records.length === 0) break
+        for (const rec of res.data.records) {
+          const rkey = rec.uri.split('/').pop()!
+          await agent.com.atproto.repo.putRecord({ repo: did, collection: newColl, rkey, record: { ...(rec.value as object), $type: newColl } })
+          await agent.com.atproto.repo.deleteRecord({ repo: did, collection: oldColl, rkey })
+        }
+        cursor = res.data.records.length === 100 ? res.data.cursor : undefined
+      } while (cursor)
+    }
+
+    // Migrate settings (single record keyed by literal:self)
+    try {
+      const res = await agent.com.atproto.repo.getRecord({ repo: did, collection: OLD_COLLECTIONS.settings, rkey: 'self' })
+      if (res.success) {
+        await agent.com.atproto.repo.putRecord({ repo: did, collection: SETTINGS_COLLECTION, rkey: 'self', record: { ...(res.data.value as object), $type: SETTINGS_COLLECTION } })
+        await agent.com.atproto.repo.deleteRecord({ repo: did, collection: OLD_COLLECTIONS.settings, rkey: 'self' })
+      }
+    } catch { /* no settings record, skip */ }
+
+    if (typeof localStorage !== 'undefined') localStorage.setItem(key, '1')
+  } catch (e) {
+    console.error('[postgame] migration failed:', e)
+  }
 }

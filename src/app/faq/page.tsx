@@ -26,11 +26,11 @@ const sections: Section[] = [
         a: 'Yep. Your collection is stored in your PDS. If you ever delete your account or move PDS hosts, your records go with you.',
       },
       {
-        q: 'Does CRASH THE ARCADE store anything on its own servers?',
+        q: 'Does postgame store anything on its own servers?',
         a: 'Game metadata (covers, titles, release dates) is fetched from IGDB and cached on our server. No personal data or collection records are stored though, only your PDS holds those.',
       },
       {
-        q: 'Can I delete my CRASH THE ARCADE account?',
+        q: 'Can I delete my postgame account?',
         a: <>You bet. Just head over to <a href="/settings">Settings</a> and you'll find the option at the bottom of the page. This will permanently delete all your games, lists, follows, and settings. Your Atmosphere Account won't be affected.</>,
       },
     ],
@@ -44,7 +44,7 @@ const sections: Section[] = [
       },
       {
         q: 'Can I block other users?',
-        a: 'CRASH THE ARCADE inherits your blocks directly from Bluesky. If you block someone on Bluesky, they\'ll automatically be hidden from your feeds and search results here too. There\'s no separate block action, just manage blocks on Bluesky and they\'ll be reflected here on your next login.',
+        a: 'postgame inherits your blocks directly from Bluesky. If you block someone on Bluesky, they\'ll automatically be hidden from your feeds and search results here too. There\'s no separate block action, just manage blocks on Bluesky and they\'ll be reflected here on your next login.',
       },
       {
         q: 'What analytics or tracking does the site use?',
@@ -57,7 +57,7 @@ const sections: Section[] = [
     items: [
       {
         q: 'How do I show my blog posts on my profile?',
-        a: <>CRASH THE ARCADE integrates with <a href="https://standard.site" target="_blank">Standard Site</a>, a shared publishing standard for the AT Protocol. If you publish on a supported service, go to <a href="/settings">Settings</a> and select your publication under the Posts section. Your latest post will then appear on your profile's overview screen, and you can link individual reviews to specific games in your library.</>,
+        a: <>postgame integrates with <a href="https://standard.site" target="_blank">Standard Site</a>, a shared publishing standard for the AT Protocol. If you publish on a supported service, go to <a href="/settings">Settings</a> and select your publication under the Posts section. Your latest post will then appear on your profile's overview screen, and you can link individual reviews to specific games in your library.</>,
       },
       {
         q: 'What is Standard Site?',

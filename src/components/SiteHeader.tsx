@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Agent } from '@atproto/api'
 import { restoreSession, signOut, SETTINGS_COLLECTION } from '@/lib/atproto'
@@ -20,6 +20,13 @@ export default function SiteHeader() {
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState<string | null>(null)
+
+  useLayoutEffect(() => {
+    const cachedAvatar = sessionStorage.getItem('cta_avatar_url')
+    const cachedDisplayName = sessionStorage.getItem('cta_display_name')
+    if (cachedAvatar) setAvatarUrl(cachedAvatar)
+    if (cachedDisplayName) setDisplayName(cachedDisplayName)
+  }, [])
 
   useEffect(() => {
     restoreSession()
@@ -59,8 +66,14 @@ export default function SiteHeader() {
             try {
               if (profileRes?.ok) {
                 const profile = await profileRes.json()
-                if (profile.avatar) setAvatarUrl(profile.avatar)
-                if (profile.displayName) setDisplayName(profile.displayName)
+                if (profile.avatar) {
+                  setAvatarUrl(profile.avatar)
+                  try { sessionStorage.setItem('cta_avatar_url', profile.avatar) } catch {}
+                }
+                if (profile.displayName) {
+                  setDisplayName(profile.displayName)
+                  try { sessionStorage.setItem('cta_display_name', profile.displayName) } catch {}
+                }
               }
             } catch {}
 
@@ -72,10 +85,17 @@ export default function SiteHeader() {
                 rkey: 'self',
               })
               const value = settingsRes.data.value as any
-              if (value?.displayName) setDisplayName(value.displayName)
+              if (value?.displayName) {
+                setDisplayName(value.displayName)
+                try { sessionStorage.setItem('cta_display_name', value.displayName) } catch {}
+              }
               if (value?.avatarBlob) {
                 const cid = extractCid(value.avatarBlob.ref) ?? extractCid(value.avatarBlob)
-                if (cid) setAvatarUrl(`${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(s.did)}&cid=${encodeURIComponent(cid)}`)
+                if (cid) {
+                  const url = `${pdsUrl}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(s.did)}&cid=${encodeURIComponent(cid)}`
+                  setAvatarUrl(url)
+                  try { sessionStorage.setItem('cta_avatar_url', url) } catch {}
+                }
               }
             } catch {}
           } catch {}
@@ -106,6 +126,8 @@ export default function SiteHeader() {
     const s = await restoreSession()
     if (!s) return
     localStorage.removeItem('cta_authed')
+    sessionStorage.removeItem('cta_avatar_url')
+    sessionStorage.removeItem('cta_display_name')
     await signOut(s.did)
     window.location.href = '/'
   }
@@ -125,7 +147,7 @@ export default function SiteHeader() {
           {/* Logo container at the top of the sidebar */}
           <div className="sidebar-logo" style={{ padding: '0 10px 24px 10px', display: 'flex', alignItems: 'center' }}>
             <a href={userHandle ? '/home' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <img src="/logo.svg" alt="CRASH THE ARCADE" style={{ height: 28 }} />
+              <img src="/logo.svg" alt="postgame" style={{ height: 20 }} />
             </a>
           </div>
 
@@ -172,10 +194,10 @@ export default function SiteHeader() {
               <a href="https://skyboard.dev/board/did:plc:crwol3wvv2w2lvvognhvd5cm/3mkdcspo57s2u" target="_blank" rel="noopener noreferrer" className="sidebar-footer-link">Roadmap</a>
             </div>
             <div className="sidebar-footer-socials">
-              <a href="https://bsky.app/profile/crashthearcade.com" target="_blank" rel="noopener noreferrer" aria-label="Bluesky">
+              <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer" aria-label="Bluesky">
                 <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/bluesky.svg)', WebkitMaskImage: 'url(/bluesky.svg)' }} />
               </a>
-              <a href="https://github.com/mchlhyns/crashthearcade" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+              <a href="https://github.com/mchlhyns/postgame" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                 <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/github.svg)', WebkitMaskImage: 'url(/github.svg)' }} />
               </a>
 

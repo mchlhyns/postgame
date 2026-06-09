@@ -1225,7 +1225,7 @@ main {
 
 /* Overflow menu */
 .list-overflow-wrap {
-  position: initial;
+  position: relative;
   line-height: 0;
 }
 

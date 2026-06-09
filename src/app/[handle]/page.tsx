@@ -452,7 +452,9 @@ export default function ProfilePage() {
         {!loading && !error && (
           <div className="profile-banner-block" style={{ position: 'relative' }}>
             <ParallaxBannerImg className="profile-banner-img" url={bannerUrl} />
-            <img src="/logo.svg" alt="postgame" className="mobile-banner-logo" />
+            <a href="/home" style={{ display: 'contents' }}>
+              <img src="/logo.svg" alt="postgame" className="mobile-banner-logo" />
+            </a>
             <div className="container profile-banner-content">
               <div style={{ position: 'relative', height: 72, flexShrink: 0 }}>
                 {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}
@@ -466,8 +468,8 @@ export default function ProfilePage() {
                     onMouseLeave={() => setFollowBtnHover(false)}
                   >
                     {isFollowing
-                      ? (followBtnHover ? <UserMinus size={14} /> : <UserCheck size={14} />)
-                      : <UserPlus size={14} />
+                      ? (followBtnHover ? <UserMinus size={16} /> : <UserCheck size={16} />)
+                      : <UserPlus size={16} />
                     }
                   </button>
                 )}
@@ -510,7 +512,7 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-        <div className="container" style={{ paddingTop: 32 }}>
+        <div className="container">
           {loading ? (
             <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
           ) : error ? (

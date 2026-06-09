@@ -211,30 +211,30 @@ export default function MyListsPage() {
                       </div>
 
                       {/* Info Footer (Bottom, identical spacing/style to community cards) */}
-                      <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
+                      <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 800 }}>
                             {list.value.name}
                           </div>
-                          <div
-                            ref={(el) => { menuRefs.current[rkey] = el }}
-                            className="list-overflow-wrap"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              className="btn btn-ghost list-overflow-btn"
-                              onClick={(e) => {
-                                if (openMenuRkey === rkey) { setOpenMenuRkey(null); setMenuPos(null); return }
-                                const rect = e.currentTarget.getBoundingClientRect()
-                                setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
-                                setOpenMenuRkey(rkey)
-                              }}
-                              aria-label="List options"
-                            >⋯</button>
+                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif' }}>
+                            {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
                           </div>
                         </div>
-                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif', flexGrow: 1 }}>
-                          {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+                        <div
+                          ref={(el) => { menuRefs.current[rkey] = el }}
+                          className="list-overflow-wrap"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            className="btn btn-ghost list-overflow-btn"
+                            onClick={(e) => {
+                              if (openMenuRkey === rkey) { setOpenMenuRkey(null); setMenuPos(null); return }
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+                              setOpenMenuRkey(rkey)
+                            }}
+                            aria-label="List options"
+                          >⋯</button>
                         </div>
                       </div>
                     </div>
@@ -286,7 +286,7 @@ export default function MyListsPage() {
 
                       {/* Info Footer (Bottom, identical spacing/style to My Lists cards) */}
                       <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
+                        <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 800 }}>
                           {list.value.name}
                         </div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif', flexGrow: 1 }}>
@@ -313,7 +313,7 @@ export default function MyListsPage() {
                           ) : (
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--tertiary)' }} />
                           )}
-                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text)', fontWeight: 900 }}>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text)', fontWeight: 800 }}>
                             {list.user.displayName || `@${list.user.handle}`}
                           </span>
                         </div>

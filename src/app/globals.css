@@ -93,12 +93,13 @@ input, textarea, select {
 }
 
 main .container {
+  padding-bottom: 24px;
   padding-left: 32px;
   padding-right: 32px;
 }
 
 .page-top {
-  padding-top: 42px;
+  padding-top: 32px;
 }
 
 /* Header */
@@ -138,7 +139,7 @@ header.home-dashboard-header {
   padding: 8px 16px;
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: 800;
   text-decoration: none;
   transition: background 0.15s;
 }
@@ -425,9 +426,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-grid-title {
   display: flex;
   align-items: center;
-  gap: 4px;
   font-size: var(--text-base);
-  line-height: 1.4;
   font-weight: 800;
   overflow: visible;
 }
@@ -436,8 +435,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
-  flex-shrink: 1;
 }
 
 .game-card-grid-title a {
@@ -664,7 +661,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  gap: 32px;
+  gap: 24px;
   text-align: center;
   padding: 32px 16px;
 }
@@ -725,7 +722,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 /* Page */
 main {
   flex: 1;
-  padding: 0 0 32px 0;
 }
 
 .page-header {
@@ -1220,7 +1216,7 @@ main {
 .lists-community-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 16px;
 }
 
 /* Overflow menu */
@@ -1838,12 +1834,12 @@ main {
 
 .input.header-search-input {
   width: 100%;
-  height: 37px;
+  height: 45px;
   border-radius: var(--radius-full);
   background: var(--tertiary);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   color: var(--text);
-  padding: 0 16px 0 38px;
+  padding: 0 16px 0 44px;
   font-size: var(--text-sm);
   transition: all 0.2s ease;
 }
@@ -1851,13 +1847,12 @@ main {
 .input.header-search-input:focus {
   background: var(--surface);
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(41, 173, 255, 0.25);
   outline: none;
 }
 
 .header-search-icon {
   position: absolute;
-  left: 14px;
+  left: 18px;
   color: var(--text-muted);
   pointer-events: none;
   transition: color 0.2s ease;
@@ -2045,13 +2040,13 @@ p.error-msg {
   gap: 8px;
   flex-wrap: nowrap;
   align-items: center;
-  margin: 0 0 32px 0;
+  margin: 0 0 24px 0;
   overflow-x: auto;
   background: none;
 }
 
 .filter-tab {
-  padding: 8px 16px;
+  padding: 12px 18px;
   font-size: var(--text-sm);
   background: var(--surface);
   color: var(--text-muted);
@@ -2201,7 +2196,7 @@ p.error-msg {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 32px 0 0 0;
+  padding: 24px 0 0 0;
 }
 
 .profile-banner-avatar {
@@ -2512,7 +2507,7 @@ p.faq-answer a:hover {
 .browse-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  gap: 16px;
 }
 
 .community-page-header {
@@ -3226,7 +3221,7 @@ p.faq-answer a:hover {
 }
 
 .game-detail-meta-section {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .game-detail-meta-label {
@@ -3292,22 +3287,22 @@ p.faq-answer a:hover {
 
 .game-detail-content {
   min-width: 0;
-  padding-top: 32px;
+  padding-top: 24px;
 }
 
 .game-detail-related {
-  margin-top: 32px;
+  margin-top: 24px;
 }
 
 .game-detail-related-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 16px;
 }
 
 .game-detail-summary {
   color: var(--text);
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   line-height: 1.6;
 }
 
@@ -3571,8 +3566,8 @@ footer .container {
 }
 
 .sidebar-profile-trigger {
-  width: calc(100% - 20px);
-  margin: 0 10px;
+  width: 100%;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -3896,7 +3891,7 @@ footer .container {
 
 /* Sidebar Footer Utilities */
 .sidebar-footer {
-  padding: 0 10px 24px 10px;
+  padding: 0 0 16px 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -3951,7 +3946,7 @@ footer .container {
 
 /* Home Dashboard Layout */
 .home-dashboard-header {
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 
 .home-dashboard-subtitle {
@@ -3960,7 +3955,11 @@ footer .container {
 }
 
 .home-section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+}
+
+.home-dashboard .home-section:last-of-type {
+  margin-bottom: 0;
 }
 
 .home-section-title {
@@ -4048,7 +4047,7 @@ footer .container {
   padding: 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   background: var(--surface);
   border-radius: var(--radius) var(--radius) 0 0;
   transition: background 0.15s;
@@ -4121,8 +4120,6 @@ footer .container {
 .social-grid-time {
   font-size: var(--text-sm);
   color: var(--text-muted) !important;
-  flex-shrink: 0;
-  height: 18px;
 }
 
 .social-grid-action {
@@ -4130,7 +4127,6 @@ footer .container {
   color: var(--text-muted) !important;
   line-height: 1.2;
   font-weight: 500;
-  max-height: 16px;
 }
 
 /* Blog Posts Section */
@@ -4144,7 +4140,7 @@ footer .container {
 .profile-overview {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 .profile-overview-section {
@@ -4749,11 +4745,9 @@ footer .container {
   .upcoming-hide-below-768 {
     display: block;
   }
-}
-
-/* <= 1024px */
-@media (max-width: 1024px) {
-  .lists-community-grid {
+  
+  .lists-community-grid,
+  .game-detail-related-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -4761,6 +4755,11 @@ footer .container {
 /* <= 767px — Mobile */
 @media (max-width: 767px) {
   /* Page spacing */
+  main .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
   .page-top {
     padding-top: 24px;
   }
@@ -4782,7 +4781,8 @@ footer .container {
   }
 
   /* Grids */
-  .browse-grid {
+  .browse-grid,
+  .status-pill-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
@@ -4867,10 +4867,9 @@ footer .container {
     display: block;
     position: fixed;
     top: 16px;
-    left: 20px;
+    left: 16px;
     height: 32px;
     z-index: 100;
-    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
   }
 
   /* Mobile footer nav */
@@ -4945,6 +4944,10 @@ footer .container {
     grid-column: 1 / -1;
   }
 
+  .blog-post-title-link {
+    -webkit-line-clamp: none;
+  }
+
   /* Profile games tab — 2 per row */
   .profile-game-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -4968,7 +4971,7 @@ footer .container {
   .game-detail-cover {
     width: 90px;
     height: 120px;
-    margin-top: -40px;
+    margin-top: -132px;
   }
 
   .game-detail-title {

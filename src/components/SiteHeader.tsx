@@ -143,9 +143,13 @@ export default function SiteHeader() {
 
   return (
     <>
+      <a href={userHandle ? '/home' : '/'} style={{ display: 'contents' }}>
+        <img src="/logo.svg" alt="postgame" className="mobile-banner-logo" />
+      </a>
+
       <aside className="site-sidebar">
           {/* Logo container at the top of the sidebar */}
-          <div className="sidebar-logo" style={{ padding: '0 10px 24px 10px', display: 'flex', alignItems: 'center' }}>
+          <div className="sidebar-logo" style={{ padding: '0 0 24px 0', display: 'flex', alignItems: 'center' }}>
             <a href={userHandle ? '/home' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
               <img src="/logo.svg" alt="postgame" style={{ height: 32 }} />
             </a>

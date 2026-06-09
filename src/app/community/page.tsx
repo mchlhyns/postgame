@@ -85,26 +85,19 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
             </div>
             
             <a className="game-card-grid-info" href={`/games/${item.igdbId}`}>
-              <div className="game-card-grid-title">
-                {item.gameTitle}
-              </div>
               {(() => {
-                const parts: string[] = []
-                if (item.platform) {
-                  parts.push(abbreviatePlatform(item.platform))
-                }
                 const action = feedActionText(item.status, item.playedStatus)
-                if (action) {
-                  parts.push(action.charAt(0).toUpperCase() + action.slice(1))
-                }
-                return parts.length > 0 ? (
+                return action ? (
                   <div className="game-card-meta" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {parts.join(' • ')}
+                    {action.charAt(0).toUpperCase() + action.slice(1)}
                   </div>
                 ) : null
               })()}
+              <div className="game-card-grid-title">
+                {item.gameTitle}
+              </div>
               {item.rating && (
-                <div style={{ marginTop: 0 }}>
+                <div style={{ marginTop: -3 }}>
                   <Stars rating={item.rating / 2} />
                 </div>
               )}

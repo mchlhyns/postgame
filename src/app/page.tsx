@@ -106,7 +106,7 @@ export default function Home() {
           <img src="/logo.svg" alt="postgame" style={{ height: 24, marginBottom: 1 }} />
           <h1>postgame</h1>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>Track and manage your gaming backlog</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Track and manage your gaming backlog</p>
       </div>
       <div className="login-box">
         <h2>Sign in</h2>

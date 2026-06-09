@@ -26,9 +26,10 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json({}, { status: 500 })
     const games: { id: number; first_release_date?: number }[] = await res.json()
 
-    const result: Record<number, number> = {}
-    for (const g of games) {
-      if (g.first_release_date != null) result[g.id] = g.first_release_date
+    const byId = Object.fromEntries(games.map((g) => [g.id, g.first_release_date ?? null]))
+    const result: Record<number, number | null> = {}
+    for (const id of ids) {
+      result[id] = byId[id] ?? null
     }
 
     return NextResponse.json(result, {

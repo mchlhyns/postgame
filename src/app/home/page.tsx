@@ -129,22 +129,20 @@ export default function HomePage() {
 
         setGames(patched)
 
-        // Refresh release dates: all games with a stored date (can change) + all wishlisted/backlogged (may have gained a date)
         const releaseDateIds = patched
-          .filter((r) => r.value.game.releaseDate != null ||
-            matchesStatus(r.value.status, 'wishlisted') ||
-            matchesStatus(r.value.status, 'backlogged')
-          )
+          .filter((r) => matchesStatus(r.value.status, 'wishlisted'))
           .map((r) => r.value.game.igdbId)
         if (releaseDateIds.length > 0) {
           fetch(`/api/igdb/release-dates?ids=${releaseDateIds.join(',')}`)
             .then(async (res) => {
               if (!res.ok) return
-              const fresh: Record<number, number> = await res.json()
+              const fresh: Record<number, number | null> = await res.json()
               setGames((prev) => prev.map((r) => {
-                const updated = fresh[r.value.game.igdbId]
-                if (updated == null || updated === r.value.game.releaseDate) return r
-                return { ...r, value: { ...r.value, game: { ...r.value.game, releaseDate: updated } } }
+                const id = r.value.game.igdbId
+                if (!(id in fresh)) return r
+                const updated = fresh[id]
+                if (updated === r.value.game.releaseDate) return r
+                return { ...r, value: { ...r.value, game: { ...r.value.game, releaseDate: updated ?? undefined } } }
               }))
             })
             .catch(() => {})
@@ -231,8 +229,7 @@ export default function HomePage() {
   const currentYear = new Date().getFullYear()
   const upcomingUserGames = [...dedupedGames]
     .filter((g) => {
-      const isBackloggedOrWishlisted = matchesStatus(g.value.status, 'backlogged') || matchesStatus(g.value.status, 'wishlisted')
-      if (!isBackloggedOrWishlisted) return false
+      if (!matchesStatus(g.value.status, 'wishlisted')) return false
       const { releaseDate, releaseYear } = g.value.game
       if (releaseDate != null) return releaseDate > nowTs
       if (releaseYear != null) return releaseYear >= currentYear

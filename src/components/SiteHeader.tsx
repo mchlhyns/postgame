@@ -194,8 +194,7 @@ export default function SiteHeader() {
           <div className="sidebar-footer">
             <div className="sidebar-footer-links">
               <a href="/faq" className="sidebar-footer-link">FAQ</a>
-              <a href="/feedback" className="sidebar-footer-link">Feedback</a>
-              <a href="https://skyboard.dev/board/did:plc:crwol3wvv2w2lvvognhvd5cm/3mkdcspo57s2u" target="_blank" rel="noopener noreferrer" className="sidebar-footer-link">Roadmap</a>
+              <a href="https://userinput.app/s/did:plc:crwol3wvv2w2lvvognhvd5cm/3mnv7zsyjys2a" className="sidebar-footer-link">Feedback</a>
             </div>
             <div className="sidebar-footer-socials">
               <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer" aria-label="Bluesky">

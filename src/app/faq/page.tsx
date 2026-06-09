@@ -44,7 +44,7 @@ const sections: Section[] = [
       },
       {
         q: 'What analytics or tracking does the site use?',
-        a: <>We use <a href="https://plausible.io/">Plausible</a> to track basic information like page visits and referrers. No cookies, no personal data.</>,
+        a: <>We use <a href="https://plausible.io/">Plausible</a> (self-hosted) to track basic information like page visits and referrers. No cookies, no personal data.</>,
       },
     ],
   },

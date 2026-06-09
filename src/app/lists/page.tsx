@@ -334,9 +334,6 @@ export default function MyListsPage() {
           className="list-overflow-menu"
           style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, zIndex: 1000 }}
         >
-          <button className="list-overflow-option" onClick={() => { setOpenMenuRkey(null); if (userHandle) window.location.href = `/${userHandle}/lists/${openMenuRkey}` }}>
-            View
-          </button>
           <button className="list-overflow-option" onClick={() => { setOpenMenuRkey(null); window.location.href = `/lists/${openMenuRkey}` }}>
             Edit
           </button>

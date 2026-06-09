@@ -147,7 +147,7 @@ export default function SiteHeader() {
           {/* Logo container at the top of the sidebar */}
           <div className="sidebar-logo" style={{ padding: '0 10px 24px 10px', display: 'flex', alignItems: 'center' }}>
             <a href={userHandle ? '/home' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <img src="/logo.svg" alt="postgame" style={{ height: 22 }} />
+              <img src="/logo.svg" alt="postgame" style={{ height: 32 }} />
             </a>
           </div>
 

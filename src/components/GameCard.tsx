@@ -31,12 +31,16 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
   const [freshCoverUrl, setFreshCoverUrl] = useState<string | null>(null)
   const [refreshingArt, setRefreshingArt] = useState(false)
   const [overflowOpen, setOverflowOpen] = useState(false)
+  const [overflowPos, setOverflowPos] = useState<{ top: number; right: number } | null>(null)
   const overflowRef = useRef<HTMLDivElement>(null)
+  const overflowMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!overflowOpen) return
     function handleMouseDown(e: MouseEvent) {
-      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) setOverflowOpen(false)
+      if (overflowRef.current?.contains(e.target as Node) || overflowMenuRef.current?.contains(e.target as Node)) return
+      setOverflowOpen(false)
+      setOverflowPos(null)
     }
     document.addEventListener('mousedown', handleMouseDown)
     return () => document.removeEventListener('mousedown', handleMouseDown)
@@ -221,19 +225,32 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <h2 style={{ margin: 0 }}>Edit playthrough</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div className="list-overflow-wrap" ref={overflowRef}>
-              <button className="btn btn-ghost list-overflow-btn" onClick={() => setOverflowOpen(o => !o)} title="More options">⋯</button>
-              {overflowOpen && (
-                <div className="list-overflow-menu">
-                  <button
-                    className="list-overflow-option"
-                    onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); refreshArtwork() }}
-                    disabled={refreshingArt}
-                  >
-                    {refreshingArt ? 'Refreshing…' : freshCoverUrl ? 'Artwork updated ✓' : 'Refresh artwork'}
-                  </button>
-                </div>
-              )}
+              <button
+                className="btn btn-ghost list-overflow-btn"
+                onClick={(e) => {
+                  if (overflowOpen) { setOverflowOpen(false); setOverflowPos(null); return }
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  setOverflowPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+                  setOverflowOpen(true)
+                }}
+                title="More options"
+              >⋯</button>
             </div>
+            {overflowOpen && overflowPos && (
+              <div
+                ref={overflowMenuRef}
+                className="list-overflow-menu"
+                style={{ position: 'fixed', top: overflowPos.top, right: overflowPos.right, zIndex: 1000 }}
+              >
+                <button
+                  className="list-overflow-option"
+                  onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); refreshArtwork() }}
+                  disabled={refreshingArt}
+                >
+                  {refreshingArt ? 'Refreshing…' : freshCoverUrl ? 'Artwork updated ✓' : 'Refresh artwork'}
+                </button>
+              </div>
+            )}
             <button className="modal-close-btn" onClick={() => setEditing(false)} aria-label="Close">
               <X size={24} style={{ color: 'var(--text-muted)' }} />
             </button>

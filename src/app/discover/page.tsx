@@ -34,7 +34,7 @@ function BrowseCard({ game, existingRecord, showReleaseDate, showPlatforms }: {
   showPlatforms?: boolean
 }) {
   const releaseDateMeta = showReleaseDate && game.first_release_date
-    ? new Date(game.first_release_date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(game.first_release_date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
     : null
 
   const platformsMeta = showPlatforms && game.platforms && game.platforms.length > 0
@@ -46,7 +46,7 @@ function BrowseCard({ game, existingRecord, showReleaseDate, showPlatforms }: {
     <div className="game-card-grid">
       <div className="game-card-grid-cover-wrap">
         <a href={gameHref} style={{ display: 'block', lineHeight: 0 }}>
-          <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
+          <img loading="lazy" decoding="async" className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.name} />
         </a>
       </div>
       <a className="game-card-grid-info" href={gameHref}>
@@ -153,7 +153,7 @@ export default function HomePage() {
                         <div key={game.igdbId} className="game-card-grid">
                           <div className="game-card-grid-cover-wrap">
                             <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                              <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+                              <img loading="lazy" decoding="async" className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
                             </a>
                           </div>
                           <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>

@@ -60,6 +60,7 @@ export default function ListEditPage() {
   const [customAward, setCustomAward] = useState('')
   const [showNumbers, setShowNumbers] = useState(true) // initialized from record after load
   const [overflowOpen, setOverflowOpen] = useState(false)
+  const [overflowPos, setOverflowPos] = useState<{ top: number; right: number } | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -74,6 +75,7 @@ export default function ListEditPage() {
     function handleMouseDown(e: MouseEvent) {
       if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
         setOverflowOpen(false)
+        setOverflowPos(null)
       }
     }
     document.addEventListener('mousedown', handleMouseDown)
@@ -369,63 +371,14 @@ export default function ListEditPage() {
               <div className="list-overflow-wrap" ref={overflowRef}>
                 <button
                   className="btn btn-ghost list-overflow-btn"
-                  onClick={() => setOverflowOpen((o) => !o)}
+                  onClick={(e) => {
+                    if (overflowOpen) { setOverflowOpen(false); setOverflowPos(null); return }
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    setOverflowPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+                    setOverflowOpen(true)
+                  }}
                   title="More options"
                 >⋯</button>
-                {overflowOpen && (
-                  <div className="list-overflow-menu">
-                    <button
-                      className="list-overflow-option"
-                      onMouseDown={(e) => { e.preventDefault(); const next = !showNumbers; setShowNumbers(next); setOverflowOpen(false); handleSave(next) }}
-                    >
-                      Numbered list
-                      <span>{showNumbers ? '✓' : ''}</span>
-                    </button>
-                    {userHandle && (
-                      <button
-                        className="list-overflow-option"
-                        onMouseDown={(e) => {
-                          e.preventDefault()
-                          const url = `${window.location.origin}/${userHandle}/lists/${rkey}`
-                          navigator.clipboard.writeText(url).then(() => {
-                            setLinkCopied(true)
-                            setTimeout(() => setLinkCopied(false), 2000)
-                          })
-                          setOverflowOpen(false)
-                        }}
-                      >
-                        {linkCopied ? 'Copied!' : 'Copy link'}
-                      </button>
-                    )}
-                    <button
-                      className="list-overflow-option"
-                      onMouseDown={(e) => { e.preventDefault(); handleDuplicate() }}
-                      disabled={duplicating}
-                    >
-                      {duplicating ? 'Duplicating…' : 'Duplicate list'}
-                    </button>
-                    <button
-                      className="list-overflow-option"
-                      onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setTimeout(() => nameInputRef.current?.focus(), 0) }}
-                    >
-                      Rename
-                    </button>
-                    <button
-                      className="list-overflow-option"
-                      onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); if (items.length > 0) setSharingList(currentList) }}
-                      disabled={items.length === 0}
-                    >
-                      Share
-                    </button>
-                    <div className="list-overflow-divider" />
-                    <button
-                      className="list-overflow-option list-overflow-option-danger"
-                      onMouseDown={(e) => { e.preventDefault(); setConfirmDelete(true); setOverflowOpen(false) }}
-                    >
-                      Delete list
-                    </button>
-                  </div>
-                )}
               </div>
               <button className="btn btn-primary" onClick={() => handleSave()} disabled={saving}>
                 {saving ? 'Saving…' : 'Save'}
@@ -450,7 +403,7 @@ export default function ListEditPage() {
                     >
                       <span className="list-edit-drag-handle" title="Drag to reorder"><GripIcon /></span>
                       {showNumbers && <span className="list-modal-item-rank">{i + 1}</span>}
-                      <img src={item.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-item-cover" />
+                      <img loading="lazy" decoding="async" src={item.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-item-cover" />
                       <span className="list-modal-item-title">{item.title}</span>
                       <div className="list-award-wrap" ref={awardPickerFor === i ? awardPickerRef : null}>
                         <button
@@ -530,6 +483,66 @@ export default function ListEditPage() {
 
         </div>
       </main>
+
+      {overflowOpen && overflowPos && (
+        <div
+          ref={overflowRef}
+          className="list-overflow-menu"
+          style={{ position: 'fixed', top: overflowPos.top, right: overflowPos.right, zIndex: 1000 }}
+        >
+          <button
+            className="list-overflow-option"
+            onMouseDown={(e) => { e.preventDefault(); const next = !showNumbers; setShowNumbers(next); setOverflowOpen(false); setOverflowPos(null); handleSave(next) }}
+          >
+            Numbered list
+            <span>{showNumbers ? '✓' : ''}</span>
+          </button>
+          {userHandle && (
+            <button
+              className="list-overflow-option"
+              onMouseDown={(e) => {
+                e.preventDefault()
+                const url = `${window.location.origin}/${userHandle}/lists/${rkey}`
+                navigator.clipboard.writeText(url).then(() => {
+                  setLinkCopied(true)
+                  setTimeout(() => setLinkCopied(false), 2000)
+                })
+                setOverflowOpen(false)
+                setOverflowPos(null)
+              }}
+            >
+              {linkCopied ? 'Copied!' : 'Copy link'}
+            </button>
+          )}
+          <button
+            className="list-overflow-option"
+            onMouseDown={(e) => { e.preventDefault(); handleDuplicate() }}
+            disabled={duplicating}
+          >
+            {duplicating ? 'Duplicating…' : 'Duplicate list'}
+          </button>
+          <button
+            className="list-overflow-option"
+            onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); setTimeout(() => nameInputRef.current?.focus(), 0) }}
+          >
+            Rename
+          </button>
+          <button
+            className="list-overflow-option"
+            onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); if (items.length > 0) setSharingList(currentList) }}
+            disabled={items.length === 0}
+          >
+            Share
+          </button>
+          <div className="list-overflow-divider" />
+          <button
+            className="list-overflow-option list-overflow-option-danger"
+            onMouseDown={(e) => { e.preventDefault(); setConfirmDelete(true); setOverflowOpen(false); setOverflowPos(null) }}
+          >
+            Delete list
+          </button>
+        </div>
+      )}
 
       {sharingList && (
         <ListShareModal

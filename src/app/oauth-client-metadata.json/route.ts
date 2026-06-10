@@ -2,11 +2,18 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function GET(req: NextRequest) {
-  const forwardedHost = req.headers.get('x-forwarded-host')
-  const forwardedProto = req.headers.get('x-forwarded-proto')
-  const host = forwardedHost || req.headers.get('host') || new URL(req.url).host
-  const proto = forwardedProto || new URL(req.url).protocol.replace(':', '')
-  const origin = `${proto}://${host}`
+  let origin: string
+  if (process.env.VERCEL_ENV === 'production') {
+    // Pin the canonical origin in production so spoofed Host headers can't
+    // produce client metadata with attacker-controlled redirect_uris
+    origin = 'https://postgame.at'
+  } else {
+    const forwardedHost = req.headers.get('x-forwarded-host')
+    const forwardedProto = req.headers.get('x-forwarded-proto')
+    const host = forwardedHost || req.headers.get('host') || new URL(req.url).host
+    const proto = forwardedProto || new URL(req.url).protocol.replace(':', '')
+    origin = `${proto}://${host}`
+  }
 
   return NextResponse.json({
     client_id: `${origin}/oauth-client-metadata.json`,

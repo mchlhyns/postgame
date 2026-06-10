@@ -64,7 +64,7 @@ export default function PublicListPage() {
                   {list.value.items.map((item, i) => (
                     <div key={item.igdbId} className="game-card-grid">
                       <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                        <img src={item.coverUrl || '/no-cover.png'} alt={item.title} className="game-card-grid-cover" />
+                        <img loading="lazy" decoding="async" src={item.coverUrl || '/no-cover.png'} alt={item.title} className="game-card-grid-cover" />
                       </a>
                       <div className="game-card-grid-info">
                         {list.value.numbered !== false && <span className="public-list-rank">#{i + 1}</span>}

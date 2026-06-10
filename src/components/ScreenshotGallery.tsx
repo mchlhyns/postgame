@@ -46,7 +46,7 @@ export default function ScreenshotGallery({ screenshots }: Props) {
             onClick={() => setActive(i)}
             aria-label={`View screenshot ${i + 1}`}
           >
-            <img src={url} alt="" className="game-detail-screenshot" />
+            <img loading="lazy" decoding="async" src={url} alt="" className="game-detail-screenshot" />
           </button>
         ))}
       </div>

@@ -144,6 +144,35 @@ export default function HomePage() {
                 if (updated === r.value.game.releaseDate) return r
                 return { ...r, value: { ...r.value, game: { ...r.value.game, releaseDate: updated ?? undefined } } }
               }))
+
+              // Persist changed dates back to the stored records so other
+              // surfaces (profile, lists, feeds) stay accurate too. Skip null
+              // (a temporarily missing IGDB date shouldn't erase a stored one).
+              const changed = patched.filter((r) => {
+                if (!matchesStatus(r.value.status, 'wishlisted')) return false
+                const freshDate = fresh[r.value.game.igdbId]
+                return freshDate != null && freshDate !== r.value.game.releaseDate
+              })
+              for (const r of changed) {
+                const freshDate = fresh[r.value.game.igdbId]!
+                const rkey = r.uri.split('/').pop()
+                if (!rkey) continue
+                try {
+                  await s.agent.com.atproto.repo.putRecord({
+                    repo: s.did,
+                    collection: COLLECTION,
+                    rkey,
+                    record: {
+                      ...r.value,
+                      game: {
+                        ...r.value.game,
+                        releaseDate: freshDate,
+                        releaseYear: new Date(freshDate * 1000).getUTCFullYear(),
+                      },
+                    },
+                  })
+                } catch {}
+              }
             })
             .catch(() => {})
         }
@@ -287,14 +316,14 @@ export default function HomePage() {
                 {upcomingUserGames.slice(0, 8).map((record, i) => {
                   const game = record.value.game
                   const releaseDateStr = game.releaseDate
-                    ? new Date(game.releaseDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    ? new Date(game.releaseDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
                     : null
                   const hideClass = i >= 6 ? ' upcoming-hide-at-1080' : i >= 4 ? ' upcoming-hide-below-768' : ''
                   return (
                     <div key={game.igdbId} className={`game-card-grid${hideClass}`}>
                       <div className="game-card-grid-cover-wrap">
                         <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                          <img className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
+                          <img loading="lazy" decoding="async" className="game-card-grid-cover" src={game.coverUrl ?? '/no-cover.png'} alt={game.title} />
                         </a>
                       </div>
                       <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
@@ -325,7 +354,7 @@ export default function HomePage() {
                     >
                       <a href={`/${item.handle}`} className="social-grid-avatar-link" onClick={(e) => e.stopPropagation()}>
                         {item.avatar ? (
-                          <img src={bskyAvatar(item.avatar)} alt="" className="social-grid-avatar" />
+                          <img loading="lazy" decoding="async" src={bskyAvatar(item.avatar)} alt="" className="social-grid-avatar" />
                         ) : (
                           <div className="social-grid-avatar social-grid-avatar-placeholder" />
                         )}
@@ -346,6 +375,8 @@ export default function HomePage() {
                           className="game-card-grid-cover"
                           src={item.gameCoverUrl || '/no-cover.png'}
                           alt={item.gameTitle}
+                          loading="lazy"
+                          decoding="async"
                         />
                       </a>
                     </div>

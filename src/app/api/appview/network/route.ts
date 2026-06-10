@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { fetchAllGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
+import { fetchRecentGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
 import { fetchBskyProfiles, fetchCtaProfile } from '@/lib/appview-fetch'
 
 async function fetchCtaAvatars(dids: string[]): Promise<Map<string, string | null>> {
@@ -17,7 +17,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const allRecords = await fetchAllGameRecords()
+    // Happyview returns newest-first, so the newest 1000 records are plenty
+    // for a 50-item recency feed — no need to scan the whole network
+    const allRecords = await fetchRecentGameRecords(1000)
 
     // Group by DID, deduplicate by igdbId (most recent per user per game), cap at 5 per user
     const byDid = new Map<string, HVGameRecord[]>()

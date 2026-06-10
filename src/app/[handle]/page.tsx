@@ -571,7 +571,7 @@ export default function ProfilePage() {
                                         </h3>
                                         {pubDate && <div className="blog-post-date">{pubDate}</div>}
                                       </div>
-                                      {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
+                                      {coverUrl && <img loading="lazy" decoding="async" src={coverUrl} alt="" className="blog-post-thumbnail" />}
                                     </div>
                                   </div>
                                   <div className="blog-post-card-footer">
@@ -682,7 +682,7 @@ export default function ProfilePage() {
                                 </h3>
                                 {pubDate && <div className="blog-post-date">{pubDate}</div>}
                               </div>
-                              {coverUrl && <img src={coverUrl} alt="" className="blog-post-thumbnail" />}
+                              {coverUrl && <img loading="lazy" decoding="async" src={coverUrl} alt="" className="blog-post-thumbnail" />}
                             </div>
                           </div>
                           <div className="blog-post-card-footer">
@@ -719,7 +719,7 @@ export default function ProfilePage() {
                           <div key={item.igdbId} className="game-card-grid">
                             <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
                               {item.coverUrl
-                                ? <img src={item.coverUrl} alt={item.title} className="game-card-grid-cover" />
+                                ? <img loading="lazy" decoding="async" src={item.coverUrl} alt={item.title} className="game-card-grid-cover" />
                                 : <div className="game-card-grid-cover" />
                               }
                             </a>
@@ -762,7 +762,7 @@ export default function ProfilePage() {
                         >
                           <div className="list-card-covers">
                             {list.value.items.slice(0, 5).map((item) => (
-                              <img key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                              <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
                             ))}
                             {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
                               <div key={`empty-${i}`} className="list-card-cover" />
@@ -795,7 +795,7 @@ export default function ProfilePage() {
                       <div key={f.did} className="game-card-grid" style={{ padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
                         <a href={`/${f.handle}`} style={{ display: 'block', flexShrink: 0 }}>
                           {f.avatar
-                            ? <img src={bskyAvatar(f.avatar)} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block', border: '2px solid var(--border)' }} />
+                            ? <img loading="lazy" decoding="async" src={bskyAvatar(f.avatar)} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block', border: '2px solid var(--border)' }} />
                             : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)', border: '2px solid var(--border)' }} />
                           }
                         </a>

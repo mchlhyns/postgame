@@ -12,17 +12,20 @@
     "@atproto/api": "^0.19.6",
     "@atproto/oauth-client-browser": "^0.3.41",
     "lucide-react": "^1.7.0",
-    "next": "16.2.2",
+    "next": "^16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "resend": "^6.12.2"
+    "resend": "^6.12.4"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.2",
+    "eslint-config-next": "^16.2.9",
     "typescript": "^5"
   }
 }

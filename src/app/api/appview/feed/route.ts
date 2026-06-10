@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { fetchAllGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
+import { fetchGameRecordsForDids, HVGameRecord } from '@/lib/happyview'
 import { fetchBskyProfiles, fetchCtaProfile } from '@/lib/appview-fetch'
 
 export async function GET(req: NextRequest) {
@@ -13,25 +13,13 @@ export async function GET(req: NextRequest) {
   if (dids.length > 100) return NextResponse.json({ error: 'Too many DIDs' }, { status: 400 })
 
   try {
-    const didSet = new Set(dids)
-
-    const [allRecords, bskyProfiles, ctaResults] = await Promise.all([
-      fetchAllGameRecords(),
+    const [byDid, bskyProfiles, ctaResults] = await Promise.all([
+      fetchGameRecordsForDids(dids),
       fetchBskyProfiles(dids),
       Promise.all(dids.map(did => fetchCtaProfile(did).then(p => ({ did, ...p })))),
     ])
 
     const ctaMap = new Map(ctaResults.map(p => [p.did, p]))
-
-    // Group records by DID, filter to requested DIDs
-    const byDid = new Map<string, HVGameRecord[]>()
-    for (const r of allRecords) {
-      const did = didFromUri(r.uri)
-      if (!did || !didSet.has(did)) continue
-      const existing = byDid.get(did) ?? []
-      existing.push(r)
-      byDid.set(did, existing)
-    }
 
     // Deduplicate by igdbId per user: keep newest record data but sort by the
     // oldest createdAt seen for that game so edits never re-surface it in the feed.

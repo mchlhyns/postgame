@@ -91,7 +91,7 @@ export async function resolveHandleToPds(handle: string): Promise<{ did: string;
       }
       didDocUrl = `https://${host}/.well-known/did.json`
     } else {
-      didDocUrl = `https://plc.directory/${did}`
+      didDocUrl = `https://plc.directory/${encodeURIComponent(did)}`
     }
     const didRes = await fetch(didDocUrl)
     if (didRes.ok) {

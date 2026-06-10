@@ -33,7 +33,7 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
   // Focus input when modal opens, and toggle body scroll lock
   useEffect(() => {
     if (open) {
-      setTimeout(() => inputRef.current?.focus(), 50)
+      if (isControlled) setTimeout(() => inputRef.current?.focus(), 50)
       document.body.style.overflow = 'hidden'
     } else {
       setQuery('')
@@ -89,7 +89,7 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
   return (
     <>
       {/* Trigger Button — hidden when open state is controlled externally */}
-      {!isControlled && <div className="sidebar-search-trigger" onClick={() => setOpen(true)}>
+      {!isControlled && <div className="sidebar-search-trigger" onClick={() => { setOpen(true); inputRef.current?.focus() }}>
         <svg
           width="16"
           height="16"

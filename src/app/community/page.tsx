@@ -59,7 +59,7 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
             <div className="social-grid-user-top" onClick={() => window.location.href = `/${item.handle}`}>
               <a href={`/${item.handle}`} className="social-grid-avatar-link" onClick={(e) => e.stopPropagation()}>
                 {item.avatar ? (
-                  <img src={bskyAvatar(item.avatar)} alt="" className="social-grid-avatar" />
+                  <img loading="lazy" decoding="async" src={bskyAvatar(item.avatar)} alt="" className="social-grid-avatar" />
                 ) : (
                   <div className="social-grid-avatar social-grid-avatar-placeholder" />
                 )}
@@ -80,6 +80,8 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
                   className="game-card-grid-cover"
                   src={item.gameCoverUrl || '/no-cover.png'}
                   alt={item.gameTitle}
+                  loading="lazy"
+                  decoding="async"
                 />
               </a>
             </div>
@@ -97,7 +99,7 @@ function FeedList({ items, loading, emptyTitle, emptyBody }: {
                 {item.gameTitle}
               </div>
               {item.rating && (
-                <div style={{ marginTop: -3 }}>
+                <div className="game-card-star-rating">
                   <Stars rating={item.rating / 2} />
                 </div>
               )}

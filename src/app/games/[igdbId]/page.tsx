@@ -87,7 +87,7 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
         <div className="game-detail-meta-section">
           <div className="game-detail-meta-label">Release date</div>
           <div className="game-detail-meta-value">
-            {releaseDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            {releaseDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
           </div>
         </div>
       )}

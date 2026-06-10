@@ -100,7 +100,7 @@ export default function SectionPage() {
                 <div key={igdbId} className="game-card-grid">
                   <div className="game-card-grid-cover-wrap">
                     <a href={`/games/${igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
-                      <img className="game-card-grid-cover" src={coverUrl} alt={title} />
+                      <img loading="lazy" decoding="async" className="game-card-grid-cover" src={coverUrl} alt={title} />
                     </a>
                   </div>
                   <a className="game-card-grid-info" href={`/games/${igdbId}`}>
@@ -117,7 +117,7 @@ export default function SectionPage() {
                     )}
                     {(section === 'new-releases' || section === 'coming-soon') && igdbGame?.first_release_date && (
                       <div className="browse-card-meta">
-                        {new Date(igdbGame.first_release_date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date(igdbGame.first_release_date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
                       </div>
                     )}
                   </a>

@@ -4,10 +4,16 @@ export async function getIgdbToken(): Promise<string> {
   if (_cachedToken && Date.now() < _cachedToken.expires_at) {
     return _cachedToken.access_token
   }
-  const res = await fetch(
-    `https://id.twitch.tv/oauth2/token?client_id=${process.env.IGDB_CLIENT_ID}&client_secret=${process.env.IGDB_CLIENT_SECRET}&grant_type=client_credentials`,
-    { method: 'POST' }
-  )
+  // Send credentials in the body, not the query string, so they never appear in URL logs
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: process.env.IGDB_CLIENT_ID!,
+      client_secret: process.env.IGDB_CLIENT_SECRET!,
+      grant_type: 'client_credentials',
+    }),
+  })
   if (!res.ok) throw new Error('Failed to get IGDB token')
   const data = await res.json()
   _cachedToken = {

@@ -264,7 +264,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}
           />
           <div>
-            <div style={{ fontWeight: 900, fontSize: 'var(--text-lg)' }}>{value.game.title}</div>
+            <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)' }}>{value.game.title}</div>
             {value.game.releaseYear && (
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 4 }}>{value.game.releaseYear}</div>
             )}
@@ -399,7 +399,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
     const bannerSrc = value.game.screenshotUrl
     const gameHref = `/games/${value.game.igdbId}`
     const coverEl = (
-      <img className="game-card-started-cover" src={value.game.coverUrl ?? '/no-cover.png'} alt={value.game.title} />
+      <img loading="lazy" decoding="async" className="game-card-started-cover" src={value.game.coverUrl ?? '/no-cover.png'} alt={value.game.title} />
     )
     return (
       <>
@@ -410,8 +410,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             <div className="game-card-started-info">
               <div className="game-card-started-title">
                 <span className="game-card-started-title-text" title={value.game.title}>{value.game.title}</span>
-                {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={15} /></span>}
-                {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={15} /></span>}
+                {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={15} /></span>}
+                {value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={15} /></span>}
               </div>
               {(() => {
                 const parts: string[] = []
@@ -441,11 +441,12 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div className="game-card-grid-cover-wrap">
             {value.game.coverUrl ? (
               <a href={gameHref} onClick={(e) => e.stopPropagation()} style={{ display: 'block', lineHeight: 0 }}>
-                <img className="game-card-grid-cover" src={value.game.coverUrl} alt={value.game.title} />
+                <img loading="lazy" decoding="async" className="game-card-grid-cover" src={value.game.coverUrl} alt={value.game.title} />
               </a>
             ) : (
-              <img className="game-card-grid-cover" src="/no-cover.png" alt={value.game.title} />
+              <img loading="lazy" decoding="async" className="game-card-grid-cover" src="/no-cover.png" alt={value.game.title} />
             )}
+            {platform && <span className="game-card-platform-badge">{platform}</span>}
             {!readonly && (
               <button className="browse-card-action" onClick={(e) => { e.stopPropagation(); startEdit() }}>
                 <Pencil size={16} strokeWidth={2} />
@@ -456,27 +457,40 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <a className="game-card-grid-info" href={gameHref}>
             <div className="game-card-grid-title">
               <span className="game-card-grid-title-text" title={value.game.title}>{value.game.title}</span>
-              {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={13} /></span>}
-              {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={13} /></span>}
+              {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={13} /></span>}
+              {value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={13} /></span>}
             </div>
             {(() => {
               const parts: string[] = []
-              if (platform) parts.push(platform)
-              
               const norm = normalizeStatus(value.status)
-              let subLabel: string | undefined
               if (norm === 'backlogged') {
                 const bs = inferBackloggedStatus(value.status, value.backloggedStatus)
-                if (bs === 'shelved') subLabel = 'Shelved'
+                if (bs === 'shelved') {
+                  const shelfDate = value.updatedAt ?? value.createdAt
+                  parts.push(shelfDate ? `Shelved ${formatDate(shelfDate)}` : 'Shelved')
+                } else {
+                  parts.push(value.createdAt ? `Backlogged ${formatDate(value.createdAt)}` : 'Backlogged')
+                }
+              } else if (norm === 'wishlisted') {
+                if (value.game.releaseDate) {
+                  parts.push(`Releasing ${new Date(value.game.releaseDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`)
+                } else if (value.game.releaseYear) {
+                  parts.push(`Releasing ${value.game.releaseYear}`)
+                } else {
+                  parts.push('No release date')
+                }
+              } else if (norm === 'playing') {
+                if (value.startedAt) parts.push(`Started ${formatDate(value.startedAt)}`)
               } else if (norm === 'played') {
                 const ps = inferPlayedStatus(value.status, value.playedStatus)
-                if (ps) {
-                  subLabel = PLAYED_STATUS_LABELS[ps] || ps.charAt(0).toUpperCase() + ps.slice(1)
-                }
+                const doneLabel = ps ? (PLAYED_STATUS_LABELS[ps] ?? 'Finished') : 'Finished'
+                if (value.finishedAt) parts.push(`${doneLabel} ${formatDate(value.finishedAt)}`)
+                else if (value.game.releaseYear) parts.push(`${doneLabel} ${value.game.releaseYear}`)
+                else parts.push(doneLabel)
+              } else if (value.game.releaseYear) {
+                parts.push(String(value.game.releaseYear))
               }
-              
-              if (subLabel) parts.push(subLabel)
-              
+
               return parts.length > 0 ? (
                 <div className="game-card-meta" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {parts.join(' • ')}
@@ -501,21 +515,21 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
   return (
     <div className={`game-card game-card--${normalizeStatus(value.status)} game-card--${statusClass(value.status, value.playedStatus, value.backloggedStatus)}${inferBackloggedStatus(value.status, value.backloggedStatus) === 'shelved' ? ' game-card--shelved' : ''}`}>
       {value.game.coverUrl ? (
-        <img className="game-card-cover" src={value.game.coverUrl} alt={value.game.title} />
+        <img loading="lazy" decoding="async" className="game-card-cover" src={value.game.coverUrl} alt={value.game.title} />
       ) : (
-        <img className="game-card-cover" src="/no-cover.png" alt={value.game.title} />
+        <img loading="lazy" decoding="async" className="game-card-cover" src="/no-cover.png" alt={value.game.title} />
       )}
 
       <a className="game-card-body" href={gameHref}>
+        {platform && <div className="game-card-platform">{platform}</div>}
         <div className="game-card-title">
           <span className="game-card-title-text" title={value.game.title}>{value.game.title}</span>
-          {value.isReplay && <span data-tooltip="Replay" className="card-badge"><RotateCcw size={12} /></span>}
-          {value.owned && <span data-tooltip="Owned" className="card-badge"><Check size={12} /></span>}
+          {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={12} /></span>}
+          {value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={12} /></span>}
         </div>
 
         {(() => {
           const parts: string[] = []
-          if (platform) parts.push(platform)
           const norm = normalizeStatus(value.status)
           const bs = inferBackloggedStatus(value.status, value.backloggedStatus)
           if (norm === 'backlogged' && bs === 'shelved') {
@@ -535,7 +549,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         })()}
 
         {value.rating || value.reviewBlogUri ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
             {value.rating && <Stars rating={value.rating / 2} />}
             {value.reviewBlogUri && <a href={value.reviewBlogUri.startsWith('http') ? value.reviewBlogUri : undefined} target="_blank" rel="noopener noreferrer" data-tooltip="Read review" className="card-badge note-icon"><FileText size={12} /></a>}
           </div>

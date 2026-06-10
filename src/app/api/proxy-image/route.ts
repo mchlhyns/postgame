@@ -26,13 +26,29 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Host not allowed' }, { status: 403 })
   }
 
-  const res = await fetch(url)
-  if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: res.status })
+  // Don't follow redirects — an allowed host redirecting elsewhere would bypass the allowlist
+  const res = await fetch(url, { redirect: 'error' }).catch(() => null)
+  if (!res || !res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: res?.status ?? 502 })
+
+  const contentType = res.headers.get('Content-Type') ?? 'image/jpeg'
+  if (!contentType.startsWith('image/')) {
+    return NextResponse.json({ error: 'Not an image' }, { status: 415 })
+  }
+
+  const MAX_BYTES = 10 * 1024 * 1024
+  const declaredLength = Number(res.headers.get('Content-Length'))
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BYTES) {
+    return NextResponse.json({ error: 'Image too large' }, { status: 413 })
+  }
 
   const buffer = await res.arrayBuffer()
+  if (buffer.byteLength > MAX_BYTES) {
+    return NextResponse.json({ error: 'Image too large' }, { status: 413 })
+  }
+
   return new NextResponse(buffer, {
     headers: {
-      'Content-Type': res.headers.get('Content-Type') ?? 'image/jpeg',
+      'Content-Type': contentType,
       'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
     },
   })

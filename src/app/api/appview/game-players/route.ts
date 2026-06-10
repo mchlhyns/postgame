@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { fetchAllGameRecords, didFromUri, HVGameRecord } from '@/lib/happyview'
+import { fetchGameRecordsByIgdbId, didFromUri, HVGameRecord } from '@/lib/happyview'
 import { fetchBskyProfiles, fetchCtaProfile } from '@/lib/appview-fetch'
 
 export async function GET(req: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   if (!igdbId) return NextResponse.json({ error: 'igdbId required' }, { status: 400 })
 
   try {
-    const all = await fetchAllGameRecords()
+    const all = await fetchGameRecordsByIgdbId(igdbId)
 
     const byDid = new Map<string, HVGameRecord>()
     for (const r of all) {

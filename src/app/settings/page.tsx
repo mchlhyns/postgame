@@ -231,8 +231,8 @@ export default function SettingsPage() {
           <div style={{ maxWidth: 480 }}>
             <form onSubmit={handleSave}>
 
-            <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 900, marginBottom: 8 }}>Profile</h2>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.4 }}>
+            <h2 className="faq-section-heading">Profile</h2>
+            <p className="faq-answer" style={{ marginBottom: 16 }}>
               Adjust the look and feel of your public profile. By default, we'll use the avatar and display name from your Atmosphere Account.
             </p>
 
@@ -312,8 +312,8 @@ export default function SettingsPage() {
 
               {/* Blog Settings Section */}
               <div>
-                <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 900, marginBottom: 8 }}>Posts</h2>
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.4 }}>
+                <h2 className="faq-section-heading">Posts</h2>
+                <p className="faq-answer" style={{ marginBottom: 16 }}>
                   Link a publication from your Atmosphere account to display your latest posts on your profile or link to published reviews.
                 </p>
 
@@ -363,8 +363,8 @@ export default function SettingsPage() {
           </div>
 
           <div style={{ maxWidth: 480, marginTop: 42, paddingTop: 32, borderTop: '2px solid var(--tertiary)' }}>
-            <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 900, marginBottom: 8 }}>Danger zone</h2>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+            <h2 className="faq-section-heading">Danger zone</h2>
+            <p className="faq-answer" style={{ marginBottom: 16 }}>
               Permanently delete all your postgame data, including games, lists, follows, and settings. Your Atmosphere Account and other connected apps will not be affected.
             </p>
             {!confirmDelete ? (

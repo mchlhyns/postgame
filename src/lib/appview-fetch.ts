@@ -1,7 +1,11 @@
 const SETTINGS_COLLECTION = 'at.postgame.settings'
 
+// did:plc is exactly 24 base32 chars; did:web is a host (plus optional port/path segments)
+const DID_RE = /^did:(plc:[a-z2-7]{24}|web:[a-zA-Z0-9._%:-]+)$/
+
 export async function resolvePds(did: string): Promise<string> {
   try {
+    if (!DID_RE.test(did)) throw new Error('Invalid DID')
     let docUrl: string
     if (did.startsWith('did:web:')) {
       const host = did.slice('did:web:'.length).split(':')[0]

@@ -202,7 +202,7 @@ export default function MyListsPage() {
                       >
                         <div className="list-card-covers">
                           {list.value.items.slice(0, 5).map((item) => (
-                            <img key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                            <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
                           ))}
                           {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
                             <div key={`empty-${i}`} className="list-card-cover" />
@@ -211,12 +211,10 @@ export default function MyListsPage() {
                       </div>
 
                       {/* Info Footer (Bottom, identical spacing/style to community cards) */}
-                      <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                      <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
-                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 800 }}>
-                            {list.value.name}
-                          </div>
-                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif' }}>
+                          <div className="game-card-grid-title">{list.value.name}</div>
+                          <div className="browse-card-meta">
                             {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
                           </div>
                         </div>
@@ -276,7 +274,7 @@ export default function MyListsPage() {
                       >
                         <div className="list-card-covers">
                           {list.value.items.slice(0, 5).map((item) => (
-                            <img key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                            <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
                           ))}
                           {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
                             <div key={`empty-${i}`} className="list-card-cover" />
@@ -286,10 +284,8 @@ export default function MyListsPage() {
 
                       {/* Info Footer (Bottom, identical spacing/style to My Lists cards) */}
                       <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 800 }}>
-                          {list.value.name}
-                        </div>
-                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif', flexGrow: 1 }}>
+                        <div className="game-card-grid-title">{list.value.name}</div>
+                        <div className="browse-card-meta" style={{ flexGrow: 1 }}>
                           {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
                         </div>
 
@@ -309,7 +305,7 @@ export default function MyListsPage() {
                           onClick={(e) => { e.stopPropagation(); window.location.href = `/${list.user.handle}` }}
                         >
                           {list.user.avatar ? (
-                            <img src={bskyAvatar(list.user.avatar)} alt="" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />
+                            <img loading="lazy" decoding="async" src={bskyAvatar(list.user.avatar)} alt="" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />
                           ) : (
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--tertiary)' }} />
                           )}

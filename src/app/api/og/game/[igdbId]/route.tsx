@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { NextRequest, NextResponse } from 'next/server'
 import { getGame } from '@/lib/igdb-game'
-import { normalizeCoverUrl } from '@/lib/igdb'
+import { normalizeCoverUrl, summarizePlatforms } from '@/lib/igdb'
 import { getOgFonts, fetchImageAsDataUrl, getLogoDataUrl } from '@/lib/og-fonts'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
   let name = 'Unknown Game'
   let coverUrl: string | undefined
   let year: string | undefined
+  let platforms: string | null = null
 
   if (Number.isFinite(id) && id > 0) {
     try {
@@ -30,6 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
         name = game.name
         if (game.cover?.url) coverUrl = await fetchImageAsDataUrl(normalizeCoverUrl(game.cover.url))
         if (game.first_release_date) year = new Date(game.first_release_date * 1000).getFullYear().toString()
+        platforms = summarizePlatforms(game.platforms?.map((p: { name: string }) => p.name))
       }
     } catch { /* use defaults */ }
   }
@@ -41,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
           display: 'flex',
           width: W,
           height: H,
-          background: '#08121D',
+          background: '#0f1319',
           fontFamily: 'SpaceMono',
           overflow: 'hidden',
           position: 'relative',
@@ -59,19 +61,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
           <div style={{ width: COVER_W, height: H, background: '#151C27', flexShrink: 0, display: 'flex' }} />
         )}
 
-        {/* Gradient fade from cover to bg */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: COVER_W - 160,
-            width: 200,
-            height: H,
-            background: 'linear-gradient(to right, transparent, #08121D)',
-            display: 'flex',
-          }}
-        />
-
         {/* Right content */}
         <div
           style={{
@@ -82,16 +71,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
           }}
         >
           {/* Logo at top */}
-          <img src={getLogoDataUrl()} width={56} height={28} style={{ objectFit: 'contain', objectPosition: 'left' }} />
+          <img src={getLogoDataUrl()} width={40} height={40} style={{ objectFit: 'contain', objectPosition: 'left' }} />
 
-          {/* Title centered in remaining space */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 16 }}>
+          {/* Platform, title, year anchored to the bottom */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 4 }}>
+            {platforms && (
+              <div style={{ color: '#aaacae', fontSize: 32, display: 'flex' }}>{platforms}</div>
+            )}
             <div
               style={{
                 color: '#ffffff',
                 fontFamily: 'Fustat',
-                fontSize: name.length > 40 ? 38 : name.length > 24 ? 46 : 54,
-                fontWeight: 900,
+                fontSize: name.length > 40 ? 56 : name.length > 24 ? 64 : 76,
+                fontWeight: 800,
                 lineHeight: 1.15,
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -100,7 +92,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ igdb
               {name}
             </div>
             {year && (
-              <div style={{ color: '#8D9197', fontSize: '1.25rem', display: 'flex' }}>{year}</div>
+              <div style={{ color: '#aaacae', fontSize: 32, display: 'flex' }}>{year}</div>
             )}
           </div>
         </div>

@@ -194,17 +194,9 @@ export default function SiteHeader() {
 
           <div className="sidebar-footer">
             <div className="sidebar-footer-links">
+              <a href="https://bsky.app/profile/postgame.at" target="_blank" className="sidebar-footer-link">Bluesky</a>
               <a href="/faq" className="sidebar-footer-link">FAQ</a>
-              <a href="https://userinput.app/s/did:plc:crwol3wvv2w2lvvognhvd5cm/3mnv7zsyjys2a" className="sidebar-footer-link">Feedback</a>
-            </div>
-            <div className="sidebar-footer-socials">
-              <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer" aria-label="Bluesky">
-                <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/bluesky.svg)', WebkitMaskImage: 'url(/bluesky.svg)' }} />
-              </a>
-              <a href="https://github.com/assemblezero/postgame" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                <span className="sidebar-footer-social-icon" style={{ maskImage: 'url(/github.svg)', WebkitMaskImage: 'url(/github.svg)' }} />
-              </a>
-
+              <a href="https://userinput.app/s/did:plc:crwol3wvv2w2lvvognhvd5cm/3mnv7zsyjys2a" target="_blank" className="sidebar-footer-link">Feedback</a>
             </div>
           </div>
 
@@ -226,13 +218,8 @@ export default function SiteHeader() {
                 </div>
                 <div className="sidebar-profile-info">
                   {displayName && (
-                    <span className="sidebar-profile-name" style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 900, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px', lineHeight: 1.25 }}>
+                    <span className="sidebar-profile-name" style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px', lineHeight: 1.25 }}>
                       {displayName}
-                    </span>
-                  )}
-                  {userHandle && (
-                    <span className="sidebar-profile-handle" style={displayName ? { color: 'var(--text-muted)', fontWeight: 500, fontSize: 'var(--text-xs)' } : undefined}>
-                      @{userHandle}
                     </span>
                   )}
                 </div>

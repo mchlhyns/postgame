@@ -408,17 +408,13 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div className="game-card-started-bottom">
             <div className="game-card-started-cover-wrap">{coverEl}</div>
             <div className="game-card-started-info">
+              {platform && <div className="game-card-platform">{platform}</div>}
               <div className="game-card-started-title">
                 <span className="game-card-started-title-text" title={value.game.title}>{value.game.title}</span>
                 {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={15} /></span>}
                 {value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={15} /></span>}
               </div>
-              {(() => {
-                const parts: string[] = []
-                if (platform) parts.push(platform)
-                if (value.startedAt) parts.push(`Started ${formatDate(value.startedAt)}`)
-                return parts.length > 0 ? <span className="game-card-started-meta">{parts.join(' • ')}</span> : null
-              })()}
+              {value.startedAt && <span className="game-card-started-meta">{`Started ${formatDate(value.startedAt)}`}</span>}
               {(value.rating && normalizeStatus(value.status) !== 'playing') || value.reviewBlogUri ? (
                 <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                   {value.rating && normalizeStatus(value.status) !== 'playing' && <Stars rating={value.rating / 2} />}
@@ -446,7 +442,6 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             ) : (
               <img loading="lazy" decoding="async" className="game-card-grid-cover" src="/no-cover.png" alt={value.game.title} />
             )}
-            {platform && <span className="game-card-platform-badge">{platform}</span>}
             {!readonly && (
               <button className="browse-card-action" onClick={(e) => { e.stopPropagation(); startEdit() }}>
                 <Pencil size={16} strokeWidth={2} />
@@ -455,6 +450,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             )}
           </div>
           <a className="game-card-grid-info" href={gameHref}>
+            {platform && <div className="game-card-platform">{platform}</div>}
             <div className="game-card-grid-title">
               <span className="game-card-grid-title-text" title={value.game.title}>{value.game.title}</span>
               {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={13} /></span>}

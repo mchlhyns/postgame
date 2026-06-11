@@ -475,7 +475,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.2, fontWeight: 900, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
+                <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.2, fontWeight: 800, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
                 {(displayName || pronouns) && (
                   <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>
                     {displayName && `@${resolvedHandle ?? handle}`}
@@ -770,7 +770,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 900 }}>
+                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 800 }}>
                             {list.value.name}
                           </div>
                           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif' }}>

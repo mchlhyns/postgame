@@ -38,7 +38,7 @@ export function normalizeScreenshotUrl(url: string): string {
 
 export const COMMON_PLATFORMS = [
   'PC', 'Mac', 'PS5', 'PS4', 'PS3',
-  'Xbox Series X/S', 'Xbox One', 'Xbox 360',
+  'Xbox Series', 'Xbox One', 'Xbox 360',
   'Nintendo Switch', 'Nintendo Switch 2', 'Wii U', '3DS',
   'iOS', 'Android',
 ]
@@ -52,7 +52,8 @@ const PLATFORM_ABBREVS: Record<string, string> = {
   'PlayStation 3': 'PS3',
   'PlayStation 2': 'PS2',
   'PlayStation': 'PS1',
-  'Xbox Series X|S': 'Xbox Series X/S',
+  'Xbox Series X|S': 'Xbox Series',
+  'Xbox Series X/S': 'Xbox Series', // legacy value stored on older records
   'Nintendo Switch 2': 'Switch 2',
   'Nintendo Switch': 'Switch',
   'Nintendo 3DS': '3DS',
@@ -61,6 +62,32 @@ const PLATFORM_ABBREVS: Record<string, string> = {
 
 export function abbreviatePlatform(name: string): string {
   return PLATFORM_ABBREVS[name] ?? name
+}
+
+/** Display priority for the lead platform in summaries — most popular systems first.
+    Uses abbreviated names (post-abbreviatePlatform). Unlisted platforms rank last. */
+const PLATFORM_PRIORITY = new Map<string, number>([
+  'PC', 'PS5', 'Xbox Series', 'Switch 2', 'Switch',
+  'PS4', 'Xbox One', 'PS3', 'Xbox 360', 'Wii U', '3DS',
+  'PS2', 'PS1', 'Mac', 'Linux', 'iOS', 'Android',
+].map((p, i) => [p, i]))
+
+/** Abbreviate, hide, and dedupe platform names, grouping overflow as "PS5 + 2 more" */
+export function summarizePlatforms(names: string[] | undefined): string | null {
+  if (!names || names.length === 0) return null
+  const seen = new Set<string>()
+  const visible: string[] = []
+  for (const name of names) {
+    const p = abbreviatePlatform(name)
+    if (HIDDEN_PLATFORMS.has(p) || seen.has(p)) continue
+    seen.add(p)
+    visible.push(p)
+  }
+  if (visible.length === 0) return null
+  visible.sort((a, b) =>
+    (PLATFORM_PRIORITY.get(a) ?? PLATFORM_PRIORITY.size) - (PLATFORM_PRIORITY.get(b) ?? PLATFORM_PRIORITY.size)
+  )
+  return visible.length === 1 ? visible[0] : `${visible[0]} + ${visible.length - 1} more`
 }
 
 export const PRIMARY_STATUSES = ['playing', 'backlogged', 'wishlisted', 'played'] as const

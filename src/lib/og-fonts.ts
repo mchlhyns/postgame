@@ -2,21 +2,23 @@ import fs from 'fs'
 import path from 'path'
 
 let _fustatRegular: Buffer | undefined
-let _fustatVariable: Buffer | undefined
+let _fustatBold: Buffer | undefined
 
 export function getOgFonts() {
+  // Static instances only — Satori's font parser crashes on the Fustat variable TTF
   if (!_fustatRegular) _fustatRegular = fs.readFileSync(path.join(process.cwd(), 'public/fonts/Fustat/Fustat-Regular.ttf'))
-  if (!_fustatVariable) _fustatVariable = fs.readFileSync(path.join(process.cwd(), 'public/fonts/Fustat/Fustat-VariableFont_wght.ttf'))
+  if (!_fustatBold) _fustatBold = fs.readFileSync(path.join(process.cwd(), 'public/fonts/Fustat/Fustat-Bold.ttf'))
   return [
     { name: 'Fustat', data: _fustatRegular as Buffer, weight: 400 as const, style: 'normal' as const },
-    { name: 'Fustat', data: _fustatVariable as Buffer, weight: 900 as const, style: 'normal' as const },
+    { name: 'Fustat', data: _fustatBold as Buffer, weight: 800 as const, style: 'normal' as const },
   ]
 }
 
 let _logo: string | undefined
 
 export function getLogoDataUrl(): string {
-  if (!_logo) {
+  // Skip the cache in dev so logo swaps show up without a server restart
+  if (!_logo || process.env.NODE_ENV === 'development') {
     const buf = fs.readFileSync(path.join(process.cwd(), 'public/logo.png'))
     _logo = `data:image/png;base64,${buf.toString('base64')}`
   }

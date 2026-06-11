@@ -236,7 +236,7 @@ releaseYear: selected.first_release_date
                 style={{ width: 64, height: 86, borderRadius: 6, objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
               />
               <div>
-                <div style={{ fontWeight: 900, fontSize: 'var(--text-lg)' }}>{selected.name}</div>
+                <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)' }}>{selected.name}</div>
                 {selected.first_release_date && (
                   <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 4 }}>
                     {new Date(selected.first_release_date * 1000).getFullYear()}

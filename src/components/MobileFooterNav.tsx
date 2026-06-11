@@ -126,7 +126,7 @@ export default function MobileFooterNav({ userHandle, avatarUrl, displayName, on
           <div className={`mobile-footer-avatar${moreOpen || isProfileSection ? ' active' : ''}`}>
             {avatarUrl
               ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
-              : <span style={{ fontSize: '0.625rem', fontWeight: 900 }}>{userHandle.slice(0, 2).toUpperCase()}</span>
+              : <span style={{ fontSize: '0.625rem', fontWeight: 800 }}>{userHandle.slice(0, 2).toUpperCase()}</span>
             }
           </div>
           <span>Me</span>

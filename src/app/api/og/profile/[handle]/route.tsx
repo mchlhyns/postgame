@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveHandleToPds, SETTINGS_COLLECTION } from '@/lib/atproto-server'
-import { getOgFonts } from '@/lib/og-fonts'
+import { getOgFonts, getLogoDataUrl } from '@/lib/og-fonts'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
@@ -75,14 +75,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
           flexDirection: 'column',
           width: W,
           height: H,
-          background: '#08121D',
-          fontFamily: 'SpaceMono',
-          padding: '52px 72px',
-          justifyContent: 'center',
+          background: '#0f1319',
+          fontFamily: 'Fustat',
         }}
       >
-        {/* Center: avatar + identity */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
+        {/* Logo top left */}
+        <div style={{ display: 'flex', padding: '52px 60px 0' }}>
+          <img src={getLogoDataUrl()} width={40} height={40} style={{ objectFit: 'contain', objectPosition: 'left' }} />
+        </div>
+
+        {/* Bottom left: avatar stacked over display name and handle */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 28, padding: '0 60px 56px', marginTop: 'auto' }}>
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -104,17 +107,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
                 justifyContent: 'center',
               }}
             >
-              <div style={{ color: '#363c46', fontSize: '4rem', fontWeight: 900, display: 'flex' }}>?</div>
+              <div style={{ color: '#363c46', fontSize: '4rem', fontWeight: 800, display: 'flex' }}>?</div>
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div
               style={{
                 color: '#ffffff',
                 fontFamily: 'Fustat',
-                fontSize: nameLabel.length > 24 ? 44 : nameLabel.length > 16 ? 52 : 60,
-                fontWeight: 900,
+                fontSize: nameLabel.length > 24 ? 56 : nameLabel.length > 16 ? 64 : 76,
+                fontWeight: 800,
                 lineHeight: 1.1,
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -123,7 +126,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
               {nameLabel}
             </div>
             {showHandle && (
-              <div style={{ color: '#8D9197', fontSize: '1.375rem', display: 'flex' }}>@{resolvedHandle}</div>
+              <div style={{ color: '#aaacae', fontSize: 32, display: 'flex' }}>@{resolvedHandle}</div>
             )}
           </div>
         </div>

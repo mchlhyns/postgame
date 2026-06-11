@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { restoreSession, COLLECTION } from '@/lib/atproto'
 import { IgdbGame, GameRecordView } from '@/types'
-import { formatIgdbGame, abbreviatePlatform, HIDDEN_PLATFORMS } from '@/lib/igdb'
+import { formatIgdbGame, summarizePlatforms } from '@/lib/igdb'
 import { CalendarDays, Sparkles, TrendingUp } from 'lucide-react'
 
 type FormattedGame = IgdbGame & { coverUrl?: string }
@@ -37,9 +37,7 @@ function BrowseCard({ game, existingRecord, showReleaseDate, showPlatforms }: {
     ? new Date(game.first_release_date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
     : null
 
-  const platformsMeta = showPlatforms && game.platforms && game.platforms.length > 0
-    ? game.platforms.map((p) => abbreviatePlatform(p.name)).filter(p => !HIDDEN_PLATFORMS.has(p)).join(' · ')
-    : null
+  const platformsMeta = showPlatforms ? summarizePlatforms(game.platforms?.map((p) => p.name)) : null
 
   const gameHref = `/games/${game.id}`
   return (
@@ -50,10 +48,10 @@ function BrowseCard({ game, existingRecord, showReleaseDate, showPlatforms }: {
         </a>
       </div>
       <a className="game-card-grid-info" href={gameHref}>
+        {platformsMeta && <div className="game-card-platform">{platformsMeta}</div>}
         <div className="game-card-grid-title">
           {game.name}
         </div>
-        {platformsMeta && <div className="browse-card-meta browse-card-platforms">{platformsMeta}</div>}
         {releaseDateMeta && <div className="browse-card-meta">{releaseDateMeta}</div>}
       </a>
     </div>
@@ -157,12 +155,11 @@ export default function HomePage() {
                             </a>
                           </div>
                           <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
+                            {(() => {
+                              const platforms = summarizePlatforms(game.platforms)
+                              return platforms ? <div className="game-card-platform">{platforms}</div> : null
+                            })()}
                             <div className="game-card-grid-title">{game.title}</div>
-                            {game.platforms && game.platforms.length > 0 && (
-                              <div className="browse-card-meta browse-card-platforms">
-                                {game.platforms.filter(p => !HIDDEN_PLATFORMS.has(p)).join(' · ')}
-                              </div>
-                            )}
                           </a>
                         </div>
                       ))}
@@ -192,7 +189,7 @@ export default function HomePage() {
                   ) : (
                     <div className="browse-grid">
                       {upcoming.slice(0, 24).map((game) => (
-                        <BrowseCard key={game.id} game={game} showReleaseDate existingRecord={myGamesMap.get(game.id)} />
+                        <BrowseCard key={game.id} game={game} showPlatforms showReleaseDate existingRecord={myGamesMap.get(game.id)} />
                       ))}
                     </div>
                   )}

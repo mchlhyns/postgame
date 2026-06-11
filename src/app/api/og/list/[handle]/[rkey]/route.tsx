@@ -53,14 +53,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
           flexDirection: 'column',
           width: W,
           height: H,
-          background: '#08121D',
+          background: '#0f1319',
           fontFamily: 'Fustat',
           justifyContent: 'space-between',
         }}
       >
         {/* Logo top left */}
         <div style={{ display: 'flex', padding: '52px 60px 0' }}>
-          <img src={getLogoDataUrl()} width={64} height={32} style={{ objectFit: 'contain', objectPosition: 'left' }} />
+          <img src={getLogoDataUrl()} width={40} height={40} style={{ objectFit: 'contain', objectPosition: 'left' }} />
         </div>
 
         {/* Bottom: title + covers + attribution */}
@@ -69,12 +69,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
             style={{
               color: '#ffffff',
               fontFamily: 'Fustat',
-              fontSize: listName.length > 36 ? 40 : listName.length > 24 ? 48 : 56,
-              fontWeight: 900,
+              fontSize: listName.length > 36 ? 56 : listName.length > 24 ? 64 : 76,
+              fontWeight: 800,
               lineHeight: 1.2,
               display: 'flex',
               flexWrap: 'wrap',
-              maxHeight: 145,
+              maxHeight: 190,
               overflow: 'hidden',
             }}
           >
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
             ))}
           </div>
 
-          <div style={{ color: '#8D9197', fontSize: '1.125rem', display: 'flex' }}>{attribution}</div>
+          <div style={{ color: '#aaacae', fontSize: 32, display: 'flex' }}>{attribution}</div>
         </div>
       </div>
     ),

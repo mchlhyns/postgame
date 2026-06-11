@@ -315,13 +315,27 @@ export default function ListEditPage() {
             />
             <div ref={searchRef} className="list-edit-search-wrap">
               <input
-                className="input list-edit-search-input"
+                className="input header-search-input list-edit-search-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => (showCollectionSection || showIgdbSection || showNoResults) && setSearchOpen(true)}
                 placeholder="Add games to list"
                 autoComplete="off"
               />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="header-search-icon"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
               {searchOpen && (showCollectionSection || showIgdbSection || showNoResults) && (
                 <div className="search-results list-edit-search-results">
                   {showCollectionSection && (

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { restoreSession } from '@/lib/atproto'
 import { IgdbGame } from '@/types'
-import { formatIgdbGame } from '@/lib/igdb'
+import { formatIgdbGame, summarizePlatforms } from '@/lib/igdb'
 import { Stars } from '@/components/Stars'
 
 type AppviewGame = {
@@ -13,6 +13,7 @@ type AppviewGame = {
   coverUrl?: string
   count: number
   avgRating?: number
+  platforms?: string[]
 }
 
 type FormattedGame = IgdbGame & { coverUrl?: string }
@@ -78,7 +79,7 @@ export default function SectionPage() {
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 900 }}>
+          <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>
             {meta.title}
           </h1>
         </div>
@@ -95,6 +96,9 @@ export default function SectionPage() {
               const coverUrl = game.coverUrl ?? '/no-cover.png'
               const appviewGame = isAppview ? (game as AppviewGame) : null
               const igdbGame = !isAppview ? (game as FormattedGame) : null
+              const platformSummary = summarizePlatforms(
+                appviewGame ? appviewGame.platforms : igdbGame?.platforms?.map((p) => p.name)
+              )
 
               return (
                 <div key={igdbId} className="game-card-grid">
@@ -104,6 +108,7 @@ export default function SectionPage() {
                     </a>
                   </div>
                   <a className="game-card-grid-info" href={`/games/${igdbId}`}>
+                    {platformSummary && <div className="game-card-platform">{platformSummary}</div>}
                     <div className="game-card-grid-title">{title}</div>
                     {section === 'trending' && appviewGame && (
                       <div className="browse-card-meta" style={{ color: 'var(--accent)' }}>

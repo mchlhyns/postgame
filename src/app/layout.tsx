@@ -1,9 +1,15 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import SiteHeader from '@/components/SiteHeader'
 import BackToTop from '@/components/BackToTop'
 
 const APP_URL = 'https://postgame.at'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

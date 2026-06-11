@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { Agent } from '@atproto/api'
 import { restoreSession, signOut, SETTINGS_COLLECTION } from '@/lib/atproto'
@@ -266,7 +267,9 @@ export default function SiteHeader() {
           )}
       </aside>
 
-      {userHandle && (
+      {/* Portaled to the end of <body> so the nav sits last in document flow,
+          which position: sticky needs to pin it to the viewport bottom. */}
+      {userHandle && createPortal(
         <div className="mobile-footer-nav-wrap">
           <MobileFooterNav
             userHandle={userHandle}
@@ -274,7 +277,8 @@ export default function SiteHeader() {
             displayName={displayName}
             onSignOut={handleSignOut}
           />
-        </div>
+        </div>,
+        document.body
       )}
 
     </>

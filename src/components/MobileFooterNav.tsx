@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { LayoutPanelTop, Library, Search, Users, X } from 'lucide-react'
 import HeaderSearch from '@/components/HeaderSearch'
@@ -12,10 +12,46 @@ interface Props {
   onSignOut: () => void
 }
 
+// Temporary diagnostic overlay for the iOS Safari footer positioning bug.
+// Activate with ?vvdebug=1 in the URL. Remove once the bug is resolved.
+function VVDebug() {
+  const [info, setInfo] = useState('')
+  useEffect(() => {
+    let raf = 0
+    function tick() {
+      const vv = window.visualViewport
+      const nav = document.querySelector('.mobile-footer-nav')
+      const navBottom = nav ? Math.round(nav.getBoundingClientRect().bottom) : -1
+      setInfo([
+        `innerH ${window.innerHeight}`,
+        `vvH ${vv ? Math.round(vv.height) : '?'} vvTop ${vv ? Math.round(vv.offsetTop) : '?'}`,
+        `clientH ${document.documentElement.clientHeight}`,
+        `scrollY ${Math.round(window.scrollY)}`,
+        `docH ${document.documentElement.scrollHeight}`,
+        `navBottom ${navBottom}`,
+      ].join('\n'))
+      raf = requestAnimationFrame(tick)
+    }
+    tick()
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  return (
+    <div style={{
+      position: 'fixed', top: 70, left: 8, zIndex: 9999,
+      background: 'rgba(0,0,0,0.85)', color: '#0f0',
+      font: '12px/1.5 monospace', padding: '6px 10px',
+      borderRadius: 6, pointerEvents: 'none', whiteSpace: 'pre',
+    }}>
+      {info}
+    </div>
+  )
+}
+
 export default function MobileFooterNav({ userHandle, avatarUrl, displayName, onSignOut }: Props) {
   const pathname = usePathname()
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const debug = typeof window !== 'undefined' && window.location.search.includes('vvdebug')
 
   const isHome = pathname === '/home'
   const isLibrary = pathname === '/library'
@@ -24,6 +60,7 @@ export default function MobileFooterNav({ userHandle, avatarUrl, displayName, on
 
   return (
     <>
+      {debug && <VVDebug />}
       <HeaderSearch open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)} />
 
       {moreOpen && (

@@ -161,7 +161,7 @@ async function migrateUserData(agent: Agent, did: string): Promise<void> {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     // Missing settings record is normal; anything else is a real failure
-    if (!msg.includes('RecordNotFound') && !msg.includes('not found')) {
+    if (!msg.includes('RecordNotFound') && !msg.includes('not found') && !msg.includes('Could not locate')) {
       console.error('[postgame] settings migration failed:', e)
       migrationOk = false
     }

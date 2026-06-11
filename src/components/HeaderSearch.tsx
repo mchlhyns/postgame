@@ -33,7 +33,7 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
   // Focus input when modal opens, and toggle body scroll lock
   useEffect(() => {
     if (open) {
-      if (isControlled) setTimeout(() => inputRef.current?.focus(), 50)
+      setTimeout(() => inputRef.current?.focus(), 50)
       document.body.style.overflow = 'hidden'
     } else {
       setQuery('')
@@ -135,6 +135,7 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 autoComplete="off"
+                autoFocus
               />
             </div>
             

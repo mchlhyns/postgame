@@ -136,6 +136,7 @@ header.home-dashboard-header {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  height: 36px;
   padding: 8px 16px;
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
@@ -1263,7 +1264,7 @@ main {
 .list-overflow-btn {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  padding: 8px;
+  padding: 9px;
   line-height: 1;
   letter-spacing: 0em;
   border: 2px solid var(--border);
@@ -3756,16 +3757,20 @@ footer .container {
   padding-top: 60px;
 }
 
-/* Mobile footer nav */
-.mobile-footer-nav {
-  display: flex;
-  position: fixed;
+/* Mobile footer nav — sticky (not fixed) so iOS Safari's compositor keeps it
+   pinned to the visible bottom while the browser chrome collapses/expands.
+   Requires the wrap to be the last in-flow element of <body> (portaled there). */
+.mobile-footer-nav-wrap {
+  position: sticky;
   bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: var(--surface);
   z-index: 100;
+}
+
+.mobile-footer-nav {
+  position: relative;
+  display: flex;
+  height: calc(60px + env(safe-area-inset-bottom));
+  background: var(--surface);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -4927,8 +4932,10 @@ footer .container {
     display: block;
   }
 
+  /* Nav reserves its own flow space now (sticky, last in body) — this is
+     just breathing room between the last content and the nav. */
   .has-header main {
-    padding-bottom: 64px;
+    padding-bottom: 24px;
   }
 
   /* Profile */

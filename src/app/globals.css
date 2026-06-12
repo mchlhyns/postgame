@@ -316,7 +316,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .game-card-platform {
   font-size: var(--text-xs);
-  font-weight: 500;
+  font-weight: 800;
   color: var(--accent);
   line-height: 1.2;
   white-space: nowrap;
@@ -3733,20 +3733,15 @@ footer .container {
 }
 
 .mobile-banner-logo-text {
-  font-size: var(--text-base);
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--text);
-  letter-spacing: -0.01em;
 }
 
-/* Layout spacing when header and sidebar are present */
 .has-header main {
   padding-top: 60px;
 }
 
-/* Mobile footer nav — sticky (not fixed) so iOS Safari's compositor keeps it
-   pinned to the visible bottom while the browser chrome collapses/expands.
-   Requires the wrap to be the last in-flow element of <body> (portaled there). */
 .mobile-footer-nav-wrap {
   position: sticky;
   bottom: 0;
@@ -4923,7 +4918,7 @@ footer .container {
 
   .mobile-banner-logo-link .mobile-banner-logo {
     display: block;
-    height: 32px;
+    height: 26px;
   }
 
   /* Mobile footer nav */

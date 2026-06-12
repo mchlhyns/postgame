@@ -3,7 +3,7 @@
   src: url('/fonts/Fustat/Fustat-VariableFont_wght.woff2') format('woff2-variations');
   font-weight: 200 800;
   font-style: normal;
-  font-display: block;
+  font-display: optional;
 }
 
 *, *::before, *::after {
@@ -317,7 +317,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-platform {
   font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--accent);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -371,6 +371,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   margin-top: 24px;
 }
 
+.game-list .game-card .game-card-title {
+  margin-bottom: -2px;
+}
+
 .game-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -420,7 +424,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   transition: background 0.15s;
   border-radius: 0 0 var(--radius) var(--radius);
   color: inherit;
@@ -442,6 +446,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   line-height: 1.2;
   overflow: visible;
   gap: 5px;
+  margin-top: 1px;
 }
 
 .game-card-grid-title-text {
@@ -2400,6 +2405,7 @@ a.social-link:hover {
 .faq-answer {
   color: var(--text);
   line-height: 1.4;
+  text-wrap: pretty;
 }
 
 p.faq-answer a {
@@ -2693,7 +2699,6 @@ p.faq-answer a:hover {
 }
 
 .game-card-star-rating {
-  margin: 3px 0 0 0;
   padding: 0;
   height: auto;
   line-height: 1;
@@ -3718,8 +3723,20 @@ footer .container {
   display: none;
 }
 
+.mobile-banner-logo-link {
+  display: none;
+  text-decoration: none;
+}
+
 .mobile-banner-logo {
   display: none;
+}
+
+.mobile-banner-logo-text {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 /* Layout spacing when header and sidebar are present */
@@ -3923,18 +3940,24 @@ footer .container {
 .sidebar-footer-links {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .sidebar-footer-link {
-  font-size: var(--text-xs);
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: var(--radius);
   color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .sidebar-footer-link:hover {
   color: var(--text);
+  background: var(--tertiary);
   text-decoration: none;
 }
 
@@ -4098,8 +4121,8 @@ footer .container {
 }
 
 .social-grid-avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
   background: var(--tertiary);
@@ -4888,13 +4911,19 @@ footer .container {
     display: block;
   }
 
-  .mobile-banner-logo {
-    display: block;
+  .mobile-banner-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     position: fixed;
     top: 16px;
     left: 16px;
-    height: 32px;
     z-index: 100;
+  }
+
+  .mobile-banner-logo-link .mobile-banner-logo {
+    display: block;
+    height: 32px;
   }
 
   /* Mobile footer nav */

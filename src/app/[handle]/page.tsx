@@ -452,8 +452,9 @@ export default function ProfilePage() {
         {!loading && !error && (
           <div className="profile-banner-block" style={{ position: 'relative' }}>
             <ParallaxBannerImg className="profile-banner-img" url={bannerUrl} />
-            <a href="/home" style={{ display: 'contents' }}>
-              <img src="/logo.svg" alt="postgame" className="mobile-banner-logo" />
+            <a href="/home" className="mobile-banner-logo-link">
+              <img src="/logo.svg" alt="" className="mobile-banner-logo" />
+              <span className="mobile-banner-logo-text">postgame</span>
             </a>
             <div className="container profile-banner-content">
               <div style={{ position: 'relative', height: 72, flexShrink: 0 }}>
@@ -478,7 +479,17 @@ export default function ProfilePage() {
                 <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.2, fontWeight: 800, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
                 {(displayName || pronouns) && (
                   <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>
-                    {displayName && `@${resolvedHandle ?? handle}`}
+                    {displayName && (
+                      <a
+                        href={`https://bsky.app/profile/${resolvedHandle ?? handle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: 'inherit', textDecoration: 'none' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                        onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                        onClick={(e) => e.stopPropagation()}
+                      >@{resolvedHandle ?? handle}</a>
+                    )}
                     {displayName && pronouns && ' • '}
                     {pronouns}
                   </p>

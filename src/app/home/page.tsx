@@ -327,6 +327,9 @@ export default function HomePage() {
                         </a>
                       </div>
                       <a className="game-card-grid-info" href={`/games/${game.igdbId}`}>
+                        {record.value.platform && (
+                          <div className="game-card-platform">{abbreviatePlatform(record.value.platform)}</div>
+                        )}
                         <div className="game-card-grid-title">{game.title}</div>
                         {releaseDateStr && <div className="browse-card-meta">{releaseDateStr}</div>}
                       </a>
@@ -382,21 +385,17 @@ export default function HomePage() {
                     </div>
                     
                     <a className="game-card-grid-info" href={`/games/${item.igdbId}`}>
+                      {item.platform && (
+                        <div className="game-card-platform">{abbreviatePlatform(item.platform)}</div>
+                      )}
                       <div className="game-card-grid-title">
                         {item.gameTitle}
                       </div>
                       {(() => {
-                        const parts: string[] = []
-                        if (item.platform) {
-                          parts.push(abbreviatePlatform(item.platform))
-                        }
                         const action = feedActionText(item.status, item.playedStatus)
-                        if (action) {
-                          parts.push(action.charAt(0).toUpperCase() + action.slice(1))
-                        }
-                        return parts.length > 0 ? (
+                        return action ? (
                           <div className="game-card-meta" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {parts.join(' • ')}
+                            {action.charAt(0).toUpperCase() + action.slice(1)}
                           </div>
                         ) : null
                       })()}

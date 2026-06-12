@@ -102,11 +102,11 @@ export default function Home() {
   return (
     <div className="login-page">
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <img src="/logo.svg" alt="postgame" style={{ height: 24, marginBottom: 1 }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <img src="/logo.svg" alt="postgame" style={{ height: 32 }} />
           <h1>postgame</h1>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Track and manage your gaming backlog</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Manage your gaming backlog</p>
       </div>
       <div className="login-box">
         <h2>Sign in</h2>
@@ -153,9 +153,9 @@ export default function Home() {
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <a href="/faq">FAQ</a>
         <span>•</span>
-        <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer">Bluesky</a>
+        <a href="https://userinput.app/#/s/did:plc:crwol3wvv2w2lvvognhvd5cm/3mnv7zsyjys2a" target="_blank" rel="noopener noreferrer">Feedback</a>
         <span>•</span>
-        <a href="https://github.com/assemblezero/postgame" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer">Bluesky</a>
       </p>
     </div>
   )

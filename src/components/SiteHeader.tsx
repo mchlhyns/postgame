@@ -8,7 +8,7 @@ import { restoreSession, signOut, SETTINGS_COLLECTION } from '@/lib/atproto'
 import MobileMenu from '@/components/MobileMenu'
 import MobileFooterNav from '@/components/MobileFooterNav'
 import HeaderSearch from '@/components/HeaderSearch'
-import { LayoutPanelTop, Compass, Users, Library, Logs } from 'lucide-react'
+import { LayoutPanelTop, Compass, Users, Library, Logs, ExternalLink } from 'lucide-react'
 import { extractCid } from '@/lib/appview-fetch'
 
 export default function SiteHeader() {
@@ -144,15 +144,17 @@ export default function SiteHeader() {
 
   return (
     <>
-      <a href={userHandle ? '/home' : '/'} style={{ display: 'contents' }}>
-        <img src="/logo.svg" alt="postgame" className="mobile-banner-logo" />
+      <a href={userHandle ? '/home' : '/'} className="mobile-banner-logo-link">
+        <img src="/logo.svg" alt="" className="mobile-banner-logo" />
+        <span className="mobile-banner-logo-text">postgame</span>
       </a>
 
       <aside className="site-sidebar">
           {/* Logo container at the top of the sidebar */}
-          <div className="sidebar-logo" style={{ padding: '0 0 24px 0', display: 'flex', alignItems: 'center' }}>
-            <a href={userHandle ? '/home' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <img src="/logo.svg" alt="postgame" style={{ height: 32 }} />
+          <div className="sidebar-logo" style={{ padding: '0 14px 24px 14px', display: 'flex', alignItems: 'center' }}>
+            <a href={userHandle ? '/home' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+              <img src="/logo.svg" alt="" style={{ height: 22 }} />
+              <span style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text)' }}>postgame</span>
             </a>
           </div>
 
@@ -194,9 +196,9 @@ export default function SiteHeader() {
 
           <div className="sidebar-footer">
             <div className="sidebar-footer-links">
-              <a href="https://bsky.app/profile/postgame.at" target="_blank" className="sidebar-footer-link">Bluesky</a>
               <a href="/faq" className="sidebar-footer-link">FAQ</a>
-              <a href="https://userinput.app/s/did:plc:crwol3wvv2w2lvvognhvd5cm/3mnv7zsyjys2a" target="_blank" className="sidebar-footer-link">Feedback</a>
+              <a href="https://userinput.app/s/did:plc:crwol3wvv2w2lvvognhvd5cm/3mnv7zsyjys2a" target="_blank" rel="noopener noreferrer" className="sidebar-footer-link">Feedback <ExternalLink size={12} style={{ marginLeft: 5, flexShrink: 0, position: 'relative', top: -2 }} /></a>
+              <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer" className="sidebar-footer-link">Bluesky <ExternalLink size={12} style={{ marginLeft: 5, flexShrink: 0, position: 'relative', top: -2 }} /></a>
             </div>
           </div>
 

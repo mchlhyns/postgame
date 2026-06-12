@@ -3,7 +3,7 @@
   src: url('/fonts/Fustat/Fustat-VariableFont_wght.woff2') format('woff2-variations');
   font-weight: 200 800;
   font-style: normal;
-  font-display: optional;
+  font-display: swap;
 }
 
 *, *::before, *::after {

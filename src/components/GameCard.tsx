@@ -411,8 +411,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               {platform && <div className="game-card-platform">{platform}</div>}
               <div className="game-card-started-title">
                 <span className="game-card-started-title-text" title={value.game.title}>{value.game.title}</span>
-                {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={15} /></span>}
-                {value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={15} /></span>}
+                {!readonly && value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={15} /></span>}
+                {!readonly && value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={15} /></span>}
               </div>
               {value.startedAt && <span className="game-card-started-meta">{`Started ${formatDate(value.startedAt)}`}</span>}
               {(value.rating && normalizeStatus(value.status) !== 'playing') || value.reviewBlogUri ? (
@@ -453,8 +453,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             {platform && <div className="game-card-platform">{platform}</div>}
             <div className="game-card-grid-title">
               <span className="game-card-grid-title-text" title={value.game.title}>{value.game.title}</span>
-              {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={13} /></span>}
-              {value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={13} /></span>}
+              {!readonly && value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={13} /></span>}
+              {!readonly && value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={13} /></span>}
             </div>
             {(() => {
               const parts: string[] = []
@@ -520,8 +520,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         {platform && <div className="game-card-platform">{platform}</div>}
         <div className="game-card-title">
           <span className="game-card-title-text" title={value.game.title}>{value.game.title}</span>
-          {value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={12} /></span>}
-          {value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={12} /></span>}
+          {!readonly && value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={12} /></span>}
+          {!readonly && value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={12} /></span>}
         </div>
 
         {(() => {

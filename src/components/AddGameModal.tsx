@@ -8,6 +8,7 @@ import { COLLECTION } from '@/lib/atproto'
 import { formatIgdbGame, PLAYED_STATUS_LABELS, normalizeStatus, abbreviatePlatform, HIDDEN_PLATFORMS, isoToDateInput, dateInputToISO } from '@/lib/igdb'
 import Select from '@/components/Select'
 import { StarRatingInput } from '@/components/Stars'
+import ModalDialog from '@/components/ModalDialog'
 
 interface Props {
   agent: Agent
@@ -175,8 +176,7 @@ releaseYear: selected.first_release_date
   ]
 
   return (
-    <div className="modal-fullscreen-overlay" onClick={onClose}>
-      <div className="modal modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+    <ModalDialog onClose={onClose} label="Add game">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <h2 style={{ margin: 0 }}>Add game</h2>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close">
@@ -208,19 +208,20 @@ releaseYear: selected.first_release_date
                       : null
                     const platforms = game.platforms?.map((p) => abbreviatePlatform(p.name)).filter(p => !HIDDEN_PLATFORMS.has(p)).join(', ')
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={game.id}
                         className="search-result-item"
                         onClick={() => { setSelected(game); setQuery(''); setResults([]) }}
                       >
-                        <img className="search-result-cover" src={g.coverUrl ?? '/no-cover.png'} alt={game.name} />
+                        <img className="search-result-cover" src={g.coverUrl ?? '/no-cover.png'} alt="" />
                         <div className="search-result-info">
                           <strong>{game.name}</strong>
                           <span className="search-result-platforms">
                             {[year ?? 'Unknown year', platforms].filter(Boolean).join(' | ')}
                           </span>
                         </div>
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
@@ -253,6 +254,7 @@ releaseYear: selected.first_release_date
                     key={opt.value}
                     type="button"
                     className={`status-pill${statusKey === opt.value ? ' active' : ''}`}
+                    aria-pressed={statusKey === opt.value}
                     onClick={() => handleStatusChange(opt.value)}
                   >
                     <span className="status-pill-title">{opt.title}</span>
@@ -266,6 +268,7 @@ releaseYear: selected.first_release_date
               <div className="form-field">
                 <label>Platform</label>
                 <Select
+                  ariaLabel="Platform"
                   variant="input"
                   value={platform}
                   onChange={setPlatform}
@@ -276,6 +279,7 @@ releaseYear: selected.first_release_date
                 <div className="form-field">
                   <label>Replay</label>
                   <Select
+                    ariaLabel="Replay"
                     variant="input"
                     value={isReplay ? 'yes' : ''}
                     onChange={(v) => setIsReplay(v === 'yes')}
@@ -288,6 +292,7 @@ releaseYear: selected.first_release_date
               <div className="form-field">
                 <label>Ownership</label>
                 <Select
+                  ariaLabel="Ownership"
                   variant="input"
                   value={owned ? 'yes' : ''}
                   onChange={(v) => setOwned(v === 'yes')}
@@ -304,6 +309,7 @@ releaseYear: selected.first_release_date
                 <div className="form-field" style={{ margin: 0 }}>
                   <label>Started Date</label>
                   <input
+                    aria-label="Started Date"
                     className="input"
                     type="date"
                     value={isoToDateInput(startedAt)}
@@ -313,6 +319,7 @@ releaseYear: selected.first_release_date
                 <div className="form-field" style={{ margin: 0 }}>
                   <label>Finished Date</label>
                   <input
+                    aria-label="Finished Date"
                     className="input"
                     type="date"
                     value={isoToDateInput(finishedAt)}
@@ -334,6 +341,7 @@ releaseYear: selected.first_release_date
                     <label>Link review</label>
                     <span className="settings-subtext">Attach a review from your linked publication</span>
                     <Select
+                      ariaLabel="Link review"
                       variant="input"
                       value={reviewBlogUri}
                       onChange={setReviewBlogUri}
@@ -357,8 +365,7 @@ releaseYear: selected.first_release_date
             </div>
           </>
         )}
-      </div>
-    </div>
+    </ModalDialog>
   )
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { ListRecordView, ListRecord } from '@/types'
+import ModalDialog from '@/components/ModalDialog'
 
 interface Props {
   list: ListRecordView
@@ -190,8 +191,7 @@ export default function ListShareModal({ list, showNumbers, onClose }: Props) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-wide" onClick={(e) => e.stopPropagation()}>
+    <ModalDialog onClose={onClose} label="Share list" overlayClassName="modal-overlay" className="modal modal-wide">
         <div className="share-modal-header">
           <h2 style={{ margin: 0 }}>Share</h2>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close">
@@ -251,7 +251,6 @@ export default function ListShareModal({ list, showNumbers, onClose }: Props) {
         >
           Download image
         </button>
-      </div>
-    </div>
+    </ModalDialog>
   )
 }

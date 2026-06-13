@@ -9,6 +9,7 @@ import { isoToDateInput, dateInputToISO, COMMON_PLATFORMS, normalizeStatus, infe
 import AddGameModal, { STATUS_OPTIONS, decodeStatusKey, encodeStatusKey } from '@/components/AddGameModal'
 import Select from '@/components/Select'
 import { StarRatingInput } from '@/components/Stars'
+import ModalDialog from '@/components/ModalDialog'
 
 type GameProp = Pick<IgdbGame, 'id' | 'name' | 'url' | 'first_release_date' | 'platforms'> & {
   coverUrl?: string
@@ -396,8 +397,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
   }
 
   return (
-    <div className="modal-fullscreen-overlay" onClick={onClose}>
-      <div className="modal modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+    <ModalDialog onClose={onClose} label="Edit playthrough">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <h2 style={{ margin: 0 }}>Edit playthrough</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -456,6 +456,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
                 key={opt.value}
                 type="button"
                 className={`status-pill${currentStatusKey === opt.value ? ' active' : ''}`}
+                aria-pressed={currentStatusKey === opt.value}
                 onClick={() => handleSubStatusSelect(opt.value)}
               >
                 <span className="status-pill-title">{opt.title}</span>
@@ -469,6 +470,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
           <div className="form-field">
             <label>Platform</label>
             <Select
+              ariaLabel="Platform"
               variant="input"
               value={draft.platform ?? ''}
               onChange={(v) => setDraft((d) => ({ ...d, platform: v || undefined }))}
@@ -482,6 +484,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
           <div className="form-field">
             <label>Replay</label>
             <Select
+              ariaLabel="Replay"
               variant="input"
               value={draft.isReplay ? 'yes' : ''}
               onChange={(v) => setDraft((d) => ({ ...d, isReplay: v === 'yes' || undefined }))}
@@ -491,6 +494,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
           <div className="form-field">
             <label>Ownership</label>
             <Select
+              ariaLabel="Ownership"
               variant="input"
               value={draft.owned ? 'yes' : ''}
               onChange={(v) => setDraft((d) => ({ ...d, owned: v === 'yes' }))}
@@ -507,6 +511,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
             <div className="form-field" style={{ marginBottom: 16 }}>
               <label>Started Date</label>
               <input
+                aria-label="Started Date"
                 className="input"
                 type="date"
                 value={isoToDateInput(draft.startedAt)}
@@ -517,6 +522,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
               <div className="form-field" style={{ marginBottom: 16, gridColumn: 'span 2' }}>
                 <label>Finished Date</label>
                 <input
+                  aria-label="Finished Date"
                   className="input"
                   type="date"
                   value={isoToDateInput(draft.finishedAt)}
@@ -541,6 +547,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
                 <label>Link review</label>
                 <span className="settings-subtext">Attach a review from your linked publication</span>
                 <Select
+                  ariaLabel="Link review"
                   variant="input"
                   value={draft.reviewBlogUri ?? ''}
                   onChange={(v) => setDraft((d) => ({ ...d, reviewBlogUri: v || undefined }))}
@@ -568,7 +575,6 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalDialog>
   )
 }

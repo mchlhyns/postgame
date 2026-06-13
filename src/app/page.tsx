@@ -100,7 +100,7 @@ export default function Home() {
   if (checking) return null
 
   return (
-    <div className="login-page">
+    <main className="login-page">
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           <img src="/logo.svg" alt="postgame" style={{ height: 32 }} />
@@ -116,6 +116,7 @@ export default function Home() {
               <input
                 className="input"
                 type="text"
+                aria-label="Your handle"
                 placeholder="you.bsky.social, yourdomain.com"
                 value={handle}
                 onChange={(e) => setHandle(e.target.value)}
@@ -157,6 +158,6 @@ export default function Home() {
         <span>•</span>
         <a href="https://bsky.app/profile/postgame.at" target="_blank" rel="noopener noreferrer">Bluesky</a>
       </p>
-    </div>
+    </main>
   )
 }

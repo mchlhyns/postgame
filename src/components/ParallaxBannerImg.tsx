@@ -16,6 +16,7 @@ export default function ParallaxBannerImg({ url, className }: Props) {
     const container = containerRef.current
     const inner = innerRef.current
     if (!container || !inner) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const update = () => {
       const rect = container.getBoundingClientRect()

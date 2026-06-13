@@ -22,8 +22,15 @@ export default function NavDropdown({ label, active, items }: Props) {
     function handleMouseDown(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [])
 
   return (
@@ -31,6 +38,8 @@ export default function NavDropdown({ label, active, items }: Props) {
       <button
         className={`nav-link${active ? ' nav-link-active' : ''}`}
         onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
         {label}
         <svg

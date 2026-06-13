@@ -9,6 +9,7 @@ import { isoToDateInput, dateInputToISO, formatDate, statusClass, statusLabel, C
 import Select from '@/components/Select'
 import { STATUS_OPTIONS, decodeStatusKey, encodeStatusKey } from '@/components/AddGameModal'
 import { Stars, StarRatingInput } from '@/components/Stars'
+import ModalDialog from '@/components/ModalDialog'
 
 interface Props {
   record: GameRecordView
@@ -219,8 +220,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
   }
 
   const editModal = editing ? (
-    <div className="modal-fullscreen-overlay" onClick={() => setEditing(false)}>
-      <div className="modal modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+    <ModalDialog onClose={() => setEditing(false)} label="Edit playthrough">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <h2 style={{ margin: 0 }}>Edit playthrough</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -279,6 +279,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 key={opt.value}
                 type="button"
                 className={`status-pill${currentStatusKey === opt.value ? ' active' : ''}`}
+                aria-pressed={currentStatusKey === opt.value}
                 onClick={() => handleSubStatusSelect(opt.value)}
               >
                 <span className="status-pill-title">{opt.title}</span>
@@ -292,6 +293,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div className="form-field">
             <label>Platform</label>
             <Select
+              ariaLabel="Platform"
               variant="input"
               value={draft.platform ?? ''}
               onChange={(v) => setDraft((d) => ({ ...d, platform: v || undefined }))}
@@ -305,6 +307,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div className="form-field">
             <label>Replay</label>
             <Select
+              ariaLabel="Replay"
               variant="input"
               value={draft.isReplay ? 'yes' : ''}
               onChange={(v) => setDraft((d) => ({ ...d, isReplay: v === 'yes' || undefined }))}
@@ -314,6 +317,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           <div className="form-field">
             <label>Ownership</label>
             <Select
+              ariaLabel="Ownership"
               variant="input"
               value={draft.owned ? 'yes' : ''}
               onChange={(v) => setDraft((d) => ({ ...d, owned: v === 'yes' }))}
@@ -330,6 +334,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             <div className="form-field" style={{ marginBottom: 16 }}>
               <label>Started Date</label>
               <input
+                aria-label="Started Date"
                 className="input"
                 type="date"
                 value={isoToDateInput(draft.startedAt)}
@@ -340,6 +345,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               <div className="form-field" style={{ marginBottom: 16, gridColumn: 'span 2' }}>
                 <label>Finished Date</label>
                 <input
+                  aria-label="Finished Date"
                   className="input"
                   type="date"
                   value={isoToDateInput(draft.finishedAt)}
@@ -364,6 +370,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 <label>Link review</label>
                 <span className="settings-subtext">Attach a review from your linked publication</span>
                 <Select
+                  ariaLabel="Link review"
                   variant="input"
                   value={draft.reviewBlogUri ?? ''}
                   onChange={(v) => setDraft((d) => ({ ...d, reviewBlogUri: v || undefined }))}
@@ -391,8 +398,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalDialog>
   ) : null
 
   if (view === 'started') {

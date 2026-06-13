@@ -6,6 +6,7 @@ import { Agent } from '@atproto/api'
 import { GameRecordView, IgdbGame, ListItem, ListRecordView, ListRecord } from '@/types'
 import { LIST_COLLECTION } from '@/lib/atproto'
 import { formatIgdbGame } from '@/lib/igdb'
+import ModalDialog from '@/components/ModalDialog'
 
 interface Props {
   agent: Agent
@@ -166,8 +167,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
   const showNoResults = query.length >= 2 && !searching && collectionResults.length === 0 && filteredIgdbResults.length === 0
 
   return (
-    <div className="modal-fullscreen-overlay" onClick={onClose}>
-      <div className="modal modal-fullscreen list-modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+    <ModalDialog onClose={onClose} label={isEdit ? 'Edit list' : 'New list'} className="modal modal-fullscreen list-modal-fullscreen">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <h2 style={{ margin: 0 }}>{isEdit ? 'Edit list' : 'New list'}</h2>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close">
@@ -184,6 +184,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
                 ref={nameRef}
                 className="input"
                 style={{ width: '100%' }}
+                aria-label="List name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. All-time favorites"
@@ -206,9 +207,9 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
                     <img src={item.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-item-cover" />
                     <span className="list-modal-item-title">{item.title}</span>
                     <div className="list-modal-item-actions">
-                      <button className="list-modal-item-btn" onClick={() => moveUp(i)} disabled={i === 0} title="Move up">↑</button>
-                      <button className="list-modal-item-btn" onClick={() => moveDown(i)} disabled={i === items.length - 1} title="Move down">↓</button>
-                      <button className="list-modal-item-btn list-modal-item-btn-remove" onClick={() => removeItem(item.igdbId)} title="Remove">✕</button>
+                      <button className="list-modal-item-btn" onClick={() => moveUp(i)} disabled={i === 0} title="Move up" aria-label={`Move ${item.title} up`}>↑</button>
+                      <button className="list-modal-item-btn" onClick={() => moveDown(i)} disabled={i === items.length - 1} title="Move down" aria-label={`Move ${item.title} down`}>↓</button>
+                      <button className="list-modal-item-btn list-modal-item-btn-remove" onClick={() => removeItem(item.igdbId)} title="Remove" aria-label={`Remove ${item.title}`}>✕</button>
                     </div>
                   </div>
                 ))}
@@ -222,6 +223,7 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
             <input
               className="input"
               style={{ width: '100%', marginBottom: 8 }}
+              aria-label="Add games"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search your collection or IGDB…"
@@ -237,10 +239,10 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
                   {collectionResults.slice(0, 30).map((record) => {
                     const g = record.value.game
                     return (
-                      <div key={g.igdbId} className="list-modal-add-item" onClick={() => addFromCollection(record)}>
+                      <button type="button" key={g.igdbId} className="list-modal-add-item" onClick={() => addFromCollection(record)}>
                         <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
                         <span className="list-modal-add-item-title">{g.title}</span>
-                      </div>
+                      </button>
                     )
                   })}
                 </>
@@ -252,11 +254,11 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
                     {searching ? 'Searching IGDB…' : 'From IGDB'}
                   </div>
                   {filteredIgdbResults.slice(0, 10).map((g) => (
-                    <div key={g.igdbId} className="list-modal-add-item" onClick={() => addItem(g)}>
+                    <button type="button" key={g.igdbId} className="list-modal-add-item" onClick={() => addItem(g)}>
                       <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
                       <span className="list-modal-add-item-title">{g.title}</span>
                       {g.year && <span className="list-modal-add-item-year">{g.year}</span>}
-                    </div>
+                    </button>
                   ))}
                 </>
               )}
@@ -290,7 +292,6 @@ export default function ListModal({ agent, did, games, list, onClose, onSaved, o
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalDialog>
   )
 }

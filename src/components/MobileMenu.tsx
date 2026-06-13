@@ -17,13 +17,20 @@ export default function MobileMenu({ userHandle, onSignOut }: Props) {
         setOpen(false)
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [])
 
   return (
     <div ref={ref} className="mobile-menu">
-      <button className="mobile-menu-trigger" onClick={() => setOpen((o) => !o)} aria-label="Menu">
+      <button className="mobile-menu-trigger" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-haspopup="menu" aria-expanded={open}>
         {open ? (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />

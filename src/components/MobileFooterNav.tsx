@@ -51,6 +51,15 @@ export default function MobileFooterNav({ userHandle, avatarUrl, displayName, on
   const pathname = usePathname()
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+
+  useEffect(() => {
+    if (!moreOpen) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMoreOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [moreOpen])
   const debug = typeof window !== 'undefined' && window.location.search.includes('vvdebug')
 
   const isHome = pathname === '/home'
@@ -114,7 +123,7 @@ export default function MobileFooterNav({ userHandle, avatarUrl, displayName, on
           <Library size={22} strokeWidth={isLibrary ? 2.5 : 2} />
           <span>Library</span>
         </a>
-        <button className={`mobile-footer-tab${searchOpen ? ' active' : ''}`} onClick={() => setSearchOpen(true)}>
+        <button className={`mobile-footer-tab${searchOpen ? ' active' : ''}`} onClick={() => setSearchOpen(true)} aria-expanded={searchOpen}>
           <Search size={22} strokeWidth={searchOpen ? 2.5 : 2} />
           <span>Search</span>
         </button>
@@ -122,7 +131,7 @@ export default function MobileFooterNav({ userHandle, avatarUrl, displayName, on
           <Users size={22} strokeWidth={isCommunity ? 2.5 : 2} />
           <span>Community</span>
         </a>
-        <button className={`mobile-footer-tab${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(true)}>
+        <button className={`mobile-footer-tab${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(true)} aria-haspopup="menu" aria-expanded={moreOpen}>
           <div className={`mobile-footer-avatar${moreOpen || isProfileSection ? ' active' : ''}`}>
             {avatarUrl
               ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />

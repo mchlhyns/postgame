@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 const starPath = "M11.1001 2.44358C11.4645 1.69178 12.5355 1.69178 12.8999 2.44358L15.4347 7.67365C15.5805 7.97434 15.8668 8.18237 16.1978 8.2281L21.9567 9.02365C22.7842 9.13796 23.1151 10.1564 22.5128 10.7352L18.3216 14.7634C18.0807 14.9949 17.9713 15.3314 18.0301 15.6603L19.053 21.3821C19.2 22.2045 18.3335 22.8339 17.5969 22.4398L12.4716 19.6982C12.177 19.5406 11.823 19.5406 11.5283 19.6982L6.40231 22.4398C5.66562 22.8339 4.7992 22.2044 4.94631 21.382L5.96982 15.6604C6.02866 15.3315 5.91931 14.9949 5.67838 14.7633L1.4872 10.7352C0.884912 10.1565 1.2158 9.13796 2.0433 9.02365L7.80222 8.2281C8.13323 8.18237 8.41952 7.97434 8.56525 7.67365L11.1001 2.44358Z"
 
@@ -38,7 +38,7 @@ export function Stars({ rating }: { rating: number }) {
   const empty = 5 - full - (half ? 1 : 0)
   const size = 14
   return (
-    <span style={{ display: 'inline-flex', gap: 1, alignItems: 'center' }}>
+    <span role="img" aria-label={`Rated ${rating} out of 5 stars`} style={{ display: 'inline-flex', gap: 1, alignItems: 'center' }}>
       {Array.from({ length: full }).map((_, i) => <StarFull key={`f${i}`} size={size} />)}
       {half && <StarHalf size={size} />}
       {Array.from({ length: empty }).map((_, i) => <StarEmpty key={`e${i}`} size={size} />)}
@@ -50,9 +50,46 @@ export function StarRatingInput({ value, onChange }: { value?: number; onChange:
   const [hover, setHover] = useState<number | undefined>()
   const display = hover ?? value ?? 0
   const size = 22
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  // One radio per half-star value (1–10). The radio for the current value is
+  // tabbable; with no value, the first radio is the tab stop.
+  function tabIndexFor(v: number) {
+    if (value) return v === value ? 0 : -1
+    return v === 1 ? 0 : -1
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    let next: number | undefined
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = Math.min((value ?? 0) + 1, 10)
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = Math.max((value ?? 2) - 1, 1)
+    else return
+    e.preventDefault()
+    onChange(next)
+    buttonRefs.current[next - 1]?.focus()
+  }
+
+  function radioButton(v: number, position: 'left' | 'right') {
+    return (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={value === v}
+        aria-label={`${v / 2} out of 5 stars`}
+        tabIndex={tabIndexFor(v)}
+        ref={(el) => { buttonRefs.current[v - 1] = el }}
+        className="star-rating-btn"
+        style={{ position: 'absolute', [position]: 0, top: 0, width: '50%', height: '100%' }}
+        onMouseEnter={() => setHover(v)}
+        onMouseLeave={() => setHover(undefined)}
+        onClick={() => onChange(value === v ? undefined : v)}
+        onKeyDown={handleKeyDown}
+      />
+    )
+  }
 
   return (
-    <span style={{ display: 'inline-flex', gap: 2, alignItems: 'center', cursor: 'pointer' }}>
+    <span role="radiogroup" aria-label="Rating" style={{ display: 'inline-flex', gap: 2, alignItems: 'center', cursor: 'pointer' }}>
       {Array.from({ length: 5 }).map((_, i) => {
         const halfVal = i * 2 + 1
         const fullVal = i * 2 + 2
@@ -65,18 +102,8 @@ export function StarRatingInput({ value, onChange }: { value?: number; onChange:
               : isHalf
               ? <StarHalf size={size} />
               : <StarEmpty size={size} />}
-            <span
-              style={{ position: 'absolute', left: 0, top: 0, width: '50%', height: '100%' }}
-              onMouseEnter={() => setHover(halfVal)}
-              onMouseLeave={() => setHover(undefined)}
-              onClick={() => onChange(value === halfVal ? undefined : halfVal)}
-            />
-            <span
-              style={{ position: 'absolute', right: 0, top: 0, width: '50%', height: '100%' }}
-              onMouseEnter={() => setHover(fullVal)}
-              onMouseLeave={() => setHover(undefined)}
-              onClick={() => onChange(value === fullVal ? undefined : fullVal)}
-            />
+            {radioButton(halfVal, 'left')}
+            {radioButton(fullVal, 'right')}
           </span>
         )
       })}

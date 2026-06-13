@@ -26,13 +26,20 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
     if (isControlled) { val ? onOpen?.() : onClose?.() }
     else setInternalOpen(val)
   }
-  
+
   const inputRef = useRef<HTMLInputElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const resultRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const prevFocusRef = useRef<HTMLElement | null>(null)
+  const wasOpenRef = useRef(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Focus input when modal opens, and toggle body scroll lock
+  // Focus input when modal opens, toggle body scroll lock, and restore focus
+  // to whatever opened the modal when it closes
   useEffect(() => {
     if (open) {
+      wasOpenRef.current = true
+      prevFocusRef.current = document.activeElement as HTMLElement | null
       setTimeout(() => inputRef.current?.focus(), 50)
       document.body.style.overflow = 'hidden'
     } else {
@@ -40,6 +47,10 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
       setResults([])
       setLoading(false)
       document.body.style.overflow = ''
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false
+        prevFocusRef.current?.focus()
+      }
     }
     return () => {
       document.body.style.overflow = ''
@@ -86,10 +97,52 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
     router.push(`/games/${id}`)
   }
 
+  // Keep keyboard focus inside the dialog while it is open
+  function trapFocus(e: React.KeyboardEvent) {
+    if (e.key !== 'Tab' || !cardRef.current) return
+    const focusable = cardRef.current.querySelectorAll<HTMLElement>('button, input')
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
+
+  function handleInputKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowDown' && results.length > 0) {
+      e.preventDefault()
+      resultRefs.current[0]?.focus()
+    }
+  }
+
+  function handleResultKeyDown(e: React.KeyboardEvent, index: number) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      resultRefs.current[Math.min(index + 1, results.length - 1)]?.focus()
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (index === 0) inputRef.current?.focus()
+      else resultRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const statusMessage = query.trim().length < 3
+    ? ''
+    : loading
+    ? 'Searching…'
+    : results.length === 0
+    ? 'No games found'
+    : `${results.length} result${results.length === 1 ? '' : 's'}`
+
   return (
     <>
       {/* Trigger Button — hidden when open state is controlled externally */}
-      {!isControlled && <div className="sidebar-search-trigger" onClick={() => { setOpen(true); inputRef.current?.focus() }}>
+      {!isControlled && <button type="button" className="sidebar-search-trigger" onClick={() => { setOpen(true); inputRef.current?.focus() }} aria-haspopup="dialog">
         <svg
           width="16"
           height="16"
@@ -100,17 +153,26 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
           strokeLinecap="round"
           strokeLinejoin="round"
           className="search-modal-icon"
+          aria-hidden="true"
         >
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <span>Search games…</span>
-      </div>}
+      </button>}
 
       {/* Modal Overlay */}
       {open && (
         <div className="search-modal-overlay" onClick={() => setOpen(false)}>
-          <div className="search-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={cardRef}
+            className="search-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search games"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={trapFocus}
+          >
             <div className="search-modal-header">
               <svg
                 width="20"
@@ -122,27 +184,32 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 className="search-modal-icon"
+                aria-hidden="true"
               >
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              
+
               <input
                 ref={inputRef}
                 className="search-modal-input"
                 type="text"
+                aria-label="Search games"
                 placeholder="Search games…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 autoComplete="off"
                 autoFocus
               />
             </div>
-            
+
+            <div className="sr-only" role="status">{statusMessage}</div>
+
             {query.trim().length >= 3 && (
               <>
                 <div className="search-modal-divider" />
-                
+
                 <div className="search-modal-body">
                   {loading ? (
                     <div className="search-modal-info">
@@ -154,21 +221,24 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
                     </div>
                   ) : (
                     <div className="search-modal-results">
-                      {results.map((game) => {
+                      {results.map((game, index) => {
                         const year = game.first_release_date
                           ? new Date(game.first_release_date * 1000).getFullYear()
                           : null
                         const platforms = game.platforms?.map((p) => abbreviatePlatform(p.name)).join(', ')
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={game.id}
+                            ref={(el) => { resultRefs.current[index] = el }}
                             className="search-modal-item"
                             onClick={() => selectGame(game.id)}
+                            onKeyDown={(e) => handleResultKeyDown(e, index)}
                           >
                             <img
                               className="search-modal-cover"
                               src={game.coverUrl ?? '/no-cover.png'}
-                              alt={game.name}
+                              alt=""
                             />
                             <div className="search-modal-item-info">
                               <div className="search-modal-item-title">{game.name}</div>
@@ -176,7 +246,7 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
                                 {[year ?? 'Unknown year', platforms].filter(Boolean).join(' • ')}
                               </div>
                             </div>
-                          </div>
+                          </button>
                         )
                       })}
                     </div>

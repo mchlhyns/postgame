@@ -119,8 +119,15 @@ export default function SiteHeader() {
         setMenuOpen(false)
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
     document.addEventListener('mousedown', handleOutsideClick)
-    return () => document.removeEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [])
 
   async function handleSignOut() {
@@ -144,10 +151,12 @@ export default function SiteHeader() {
 
   return (
     <>
-      <a href={userHandle ? '/home' : '/'} className="mobile-banner-logo-link">
-        <img src="/logo.svg" alt="" className="mobile-banner-logo" />
-        <span className="mobile-banner-logo-text">postgame</span>
-      </a>
+      <header>
+        <a href={userHandle ? '/home' : '/'} className="mobile-banner-logo-link">
+          <img src="/logo.svg" alt="" className="mobile-banner-logo" />
+          <span className="mobile-banner-logo-text">postgame</span>
+        </a>
+      </header>
 
       <aside className="site-sidebar">
           {/* Logo container at the top of the sidebar */}
@@ -210,7 +219,7 @@ export default function SiteHeader() {
             </div>
           ) : (
             <div className="sidebar-profile" ref={menuRef}>
-              <button className={`sidebar-profile-trigger${isProfileSection ? ' active' : ''}`} onClick={() => setMenuOpen(!menuOpen)} disabled={!userHandle}>
+              <button className={`sidebar-profile-trigger${isProfileSection ? ' active' : ''}`} onClick={() => setMenuOpen(!menuOpen)} disabled={!userHandle} aria-haspopup="menu" aria-expanded={menuOpen} aria-label="Account menu">
                 <div className="sidebar-profile-avatar">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
@@ -243,7 +252,6 @@ export default function SiteHeader() {
                   <a href="/settings" className="sidebar-profile-item" onClick={() => setMenuOpen(false)}>
                     Settings
                   </a>
-                  <div className="sidebar-profile-divider" />
                   <button
                     className="sidebar-profile-item sidebar-profile-item-signout"
                     onClick={() => { setMenuOpen(false); handleSignOut() }}

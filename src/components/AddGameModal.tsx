@@ -264,7 +264,7 @@ releaseYear: selected.first_release_date
               </div>
             </div>
 
-            <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+            <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               <div className="form-field">
                 <label>Platform</label>
                 <Select
@@ -332,7 +332,7 @@ releaseYear: selected.first_release_date
             {status === 'played' && (
               <div className="played-details-group">
                 <div className="form-field" style={{ margin: 0 }}>
-                  <label style={{ marginBottom: 8 }}>Rating</label>
+                  <label style={{ marginTop: 16, marginBottom: 8 }}>Rating</label>
                   <StarRatingInput value={rating} onChange={setRating} />
                 </div>
 

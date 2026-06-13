@@ -417,8 +417,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
               {platform && <div className="game-card-platform">{platform}</div>}
               <div className="game-card-started-title">
                 <span className="game-card-started-title-text" title={value.game.title}>{value.game.title}</span>
-                {!readonly && value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={15} /></span>}
-                {!readonly && value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={15} /></span>}
+                {!readonly && value.isReplay && <span className="card-badge-pill">Replay</span>}
+                {!readonly && value.owned && <span className="card-badge-pill">Owned</span>}
               </div>
               {value.startedAt && <span className="game-card-started-meta">{`Started ${formatDate(value.startedAt)}`}</span>}
               {(value.rating && normalizeStatus(value.status) !== 'playing') || value.reviewBlogUri ? (
@@ -459,8 +459,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
             {platform && <div className="game-card-platform">{platform}</div>}
             <div className="game-card-grid-title">
               <span className="game-card-grid-title-text" title={value.game.title}>{value.game.title}</span>
-              {!readonly && value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={13} /></span>}
-              {!readonly && value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={13} /></span>}
+              {!readonly && value.isReplay && <span className="card-badge-pill">Replay</span>}
+              {!readonly && value.owned && <span className="card-badge-pill">Owned</span>}
             </div>
             {(() => {
               const parts: string[] = []
@@ -475,9 +475,13 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 }
               } else if (norm === 'wishlisted') {
                 if (value.game.releaseDate) {
-                  parts.push(`Releasing ${new Date(value.game.releaseDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`)
+                  const releaseMs = value.game.releaseDate * 1000
+                  const isPast = releaseMs < Date.now()
+                  const releaseLabel = new Date(releaseMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+                  parts.push(`${isPast ? 'Released' : 'Available'} ${releaseLabel}`)
                 } else if (value.game.releaseYear) {
-                  parts.push(`Releasing ${value.game.releaseYear}`)
+                  const isPast = value.game.releaseYear < new Date().getFullYear()
+                  parts.push(`${isPast ? 'Released' : 'Available'} ${value.game.releaseYear}`)
                 } else {
                   parts.push('No release date')
                 }
@@ -526,8 +530,8 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         {platform && <div className="game-card-platform">{platform}</div>}
         <div className="game-card-title">
           <span className="game-card-title-text" title={value.game.title}>{value.game.title}</span>
-          {!readonly && value.isReplay && <span data-tooltip="Replay" className="card-badge card-badge--accent"><RotateCcw size={12} /></span>}
-          {!readonly && value.owned && <span data-tooltip="Owned" className="card-badge card-badge--accent"><Check size={12} /></span>}
+          {!readonly && value.isReplay && <span className="card-badge-pill">Replay</span>}
+          {!readonly && value.owned && <span className="card-badge-pill">Owned</span>}
         </div>
 
         {(() => {

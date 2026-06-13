@@ -201,12 +201,14 @@ export default function MyListsPage() {
                         }}
                       >
                         <div className="list-card-covers">
-                          {list.value.items.slice(0, 5).map((item) => (
-                            <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
-                          ))}
-                          {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="list-card-cover" />
-                          ))}
+                          {(() => {
+                              const r = list.value.items.slice(0, 5)
+                              return [r[1], r[2], r[0], r[3], r[4]].map((item, i) =>
+                                item
+                                  ? <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                                  : <div key={`empty-${i}`} className="list-card-cover" />
+                              )
+                            })()}
                         </div>
                       </div>
 
@@ -273,12 +275,14 @@ export default function MyListsPage() {
                         }}
                       >
                         <div className="list-card-covers">
-                          {list.value.items.slice(0, 5).map((item) => (
-                            <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
-                          ))}
-                          {Array.from({ length: Math.max(0, 3 - list.value.items.length) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="list-card-cover" />
-                          ))}
+                          {(() => {
+                              const r = list.value.items.slice(0, 5)
+                              return [r[1], r[2], r[0], r[3], r[4]].map((item, i) =>
+                                item
+                                  ? <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                                  : <div key={`empty-${i}`} className="list-card-cover" />
+                              )
+                            })()}
                         </div>
                       </div>
 

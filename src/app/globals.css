@@ -353,7 +353,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .game-card-title {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   font-weight: 800;
   overflow: visible;
 }
@@ -606,6 +606,23 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .card-badge.card-badge--accent {
   color: var(--accent);
+}
+
+.card-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 .card-badge:hover {
@@ -1144,25 +1161,28 @@ main {
 .list-card-cover:first-child {
   box-shadow: none;
   margin-left: 0;
-  scale: 90%;
+  scale: 88%;
+  z-index: 5;
 }
 
 .list-card-cover:nth-of-type(2) {
   z-index: 100;
+  scale: 100%;
 }
 
 .list-card-cover:nth-of-type(3) {
   z-index: 999;
-  scale: 110%;
+  scale: 115%;
 }
 
 .list-card-cover:nth-of-type(4) {
-  z-index: 5;
+  z-index: 100;
+  scale: 100%;
 }
 
 .list-card-cover:last-of-type {
-  scale: 90%;
-  z-index: 1;
+  scale: 88%;
+  z-index: 5;
 }
 
 .list-card-cover + .list-card-cover {

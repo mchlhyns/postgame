@@ -316,7 +316,7 @@ export default function HomePage() {
                 {upcomingUserGames.slice(0, 8).map((record, i) => {
                   const game = record.value.game
                   const releaseDateStr = game.releaseDate
-                    ? new Date(game.releaseDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+                    ? `Available ${new Date(game.releaseDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`
                     : null
                   const hideClass = i >= 6 ? ' upcoming-hide-at-1080' : i >= 4 ? ' upcoming-hide-below-768' : ''
                   return (

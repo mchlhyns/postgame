@@ -170,7 +170,7 @@ export default function MyListsPage() {
     }
   }
 
-  const sortedLists = [...lists].sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt))
+  const sortedLists = [...lists].filter(l => (l.value.items ?? []).length > 0).sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt))
 
   if (loading) return <main style={{ flex: 1 }} />
 
@@ -285,10 +285,9 @@ export default function MyListsPage() {
               </div>
             ) : (
               <div className="lists-community-grid">
-                {communityLists.map((list) => {
+                {communityLists.filter(list => !session || list.user.did !== session.did).map((list) => {
                   const rkey = list.uri.split('/').pop()!
-                  const isOwnList = session && list.user.did === session.did
-                  const viewUrl = isOwnList ? `/lists/${rkey}` : `/${list.user.handle}/lists/${rkey}`
+                  const viewUrl = `/${list.user.handle}/lists/${rkey}`
                   return (
                     <div key={list.uri} className="game-card-grid" onClick={() => window.location.href = viewUrl} style={{ cursor: 'pointer' }}>
                       {/* Covers Wrap (Top with background color divider) */}

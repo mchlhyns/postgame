@@ -59,14 +59,17 @@ export async function GET(req: NextRequest) {
       }
     }).filter(Boolean)
 
+    // Filter out lists with no items (inline items stripped after migration; happyview not yet joining list.item records)
+    const nonEmpty = lists.filter((l: any) => (l.value?.items?.length ?? 0) > 0)
+
     // Sort by createdAt descending
-    lists.sort((a: any, b: any) => {
+    nonEmpty.sort((a: any, b: any) => {
       const aTime = a.value?.createdAt || ''
       const bTime = b.value?.createdAt || ''
       return bTime.localeCompare(aTime)
     })
 
-    return NextResponse.json({ lists }, {
+    return NextResponse.json({ lists: nonEmpty }, {
       headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' },
     })
   } catch (err) {

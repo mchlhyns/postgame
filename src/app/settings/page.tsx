@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [blogPublicationUri, setBlogPublicationUri] = useState('')
   const [blogTag, setBlogTag] = useState('')
   const [userBlogs, setUserBlogs] = useState<{ uri: string; name: string }[]>([])
+  const [dangerOpen, setDangerOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -145,6 +146,18 @@ export default function SettingsPage() {
     else { setBannerFile(file); setBannerPreview(preview) }
   }
 
+  function removeAvatar() {
+    setAvatarBlob(null)
+    setAvatarPreview(null)
+    setAvatarFile(null)
+  }
+
+  function removeBanner() {
+    setBannerBlob(null)
+    setBannerPreview(null)
+    setBannerFile(null)
+  }
+
   async function uploadBlob(file: File): Promise<unknown> {
     const ab = await file.arrayBuffer()
     const res = await session!.agent.uploadBlob(new Uint8Array(ab), { encoding: file.type })
@@ -239,17 +252,16 @@ export default function SettingsPage() {
               {/* Avatar */}
               <div className="form-field">
                 <label>Avatar</label>
-                <div className="settings-avatar-wrap">
-                  {currentAvatar
-                    ? <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px solid var(--border)', overflow: 'hidden', flexShrink: 0 }}>
-                        <img src={currentAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      </div>
-                    : <div style={{ width: 80, height: 80, border: '1px solid var(--border)', background: 'var(--tertiary)', borderRadius: '50%' }} />
-                  }
-                  <button type="button" className="browse-card-action" onClick={() => avatarInputRef.current?.click()}>
-                    <Upload size={16} strokeWidth={2} />
-                    <span>Upload</span>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'var(--tertiary)' }}>
+                  {currentAvatar && <img src={currentAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button type="button" className="btn btn-ghost" onClick={() => avatarInputRef.current?.click()}>
+                    <Upload size={14} strokeWidth={2} style={{ marginRight: 4 }} />Upload
                   </button>
+                  {(avatarFile || avatarBlob) && (
+                    <button type="button" className="btn btn-ghost" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={removeAvatar}>Remove</button>
+                  )}
                 </div>
                 <input
                   ref={avatarInputRef}
@@ -295,11 +307,14 @@ export default function SettingsPage() {
                 <div
                   className="settings-banner-preview"
                   style={currentBanner ? { backgroundImage: `url(${currentBanner})` } : undefined}
-                >
-                  <button type="button" className="browse-card-action" onClick={() => bannerInputRef.current?.click()}>
-                    <Upload size={18} strokeWidth={2} />
-                    <span>Upload</span>
+                />
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button type="button" className="btn btn-ghost" onClick={() => bannerInputRef.current?.click()}>
+                    <Upload size={14} strokeWidth={2} style={{ marginRight: 4 }} />Upload
                   </button>
+                  {(bannerFile || bannerBlob) && (
+                    <button type="button" className="btn btn-ghost" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={removeBanner}>Remove</button>
+                  )}
                 </div>
                 <input
                   ref={bannerInputRef}
@@ -363,8 +378,16 @@ export default function SettingsPage() {
           </div>
 
           <div style={{ maxWidth: 480, marginTop: 42, paddingTop: 32, borderTop: '2px solid var(--tertiary)' }}>
-            <h2 className="faq-section-heading">Danger zone</h2>
-            <p className="faq-answer" style={{ marginBottom: 16 }}>
+            <button
+              type="button"
+              onClick={() => { setDangerOpen(o => !o); setConfirmDelete(false); setDeleteError('') }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--danger)', fontWeight: 700, fontSize: 'var(--text-base)' }}
+            >
+              <span style={{ fontSize: 12, transform: dangerOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', display: 'inline-block' }}>▶</span>
+              Danger zone
+            </button>
+            {dangerOpen && <>
+            <p className="faq-answer" style={{ marginBottom: 16, marginTop: 8 }}>
               Permanently delete all your postgame data, including games, lists, follows, and settings. Your Atmosphere Account and other connected apps will not be affected.
             </p>
             {!confirmDelete ? (
@@ -400,6 +423,7 @@ export default function SettingsPage() {
                 {deleteError && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>{deleteError}</p>}
               </div>
             )}
+            </>}
           </div>
         </div>
       </main>

@@ -828,8 +828,8 @@ export default function ProfilePage() {
                       <div key={f.did} className="game-card-grid" style={{ padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
                         <a href={`/${f.handle}`} style={{ display: 'block', flexShrink: 0 }}>
                           {f.avatar
-                            ? <img loading="lazy" decoding="async" src={bskyAvatar(f.avatar)} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block', border: '2px solid var(--border)' }} />
-                            : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)', border: '2px solid var(--border)' }} />
+                            ? <img loading="lazy" decoding="async" src={bskyAvatar(f.avatar)} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
+                            : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--tertiary)' }} />
                           }
                         </a>
                         <div style={{ minWidth: 0, width: '100%' }}>

@@ -466,7 +466,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
           </div>
         </div>
 
-        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+        <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
           <div className="form-field">
             <label>Platform</label>
             <Select
@@ -507,7 +507,7 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
         </div>
 
         {baseStatus !== 'backlogged' && baseStatus !== 'wishlisted' && (
-          <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+          <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div className="form-field" style={{ marginBottom: 16 }}>
               <label>Started Date</label>
               <input

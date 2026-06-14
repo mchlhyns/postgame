@@ -19,7 +19,7 @@ async function buildTrending(): Promise<unknown> {
         `fields name,url,cover.url,first_release_date,platforms.name,hypes; where first_release_date >= ${startOfTomorrow} & first_release_date < ${sixMonthsAhead} & hypes > 10; sort first_release_date asc; limit 48;`
       ),
       igdbQuery(token, 'games',
-        `fields name,url,cover.url,first_release_date,platforms.name,total_rating_count,aggregated_rating_count,hypes; where first_release_date > ${oneMonthAgo} & first_release_date < ${startOfTomorrow} & hypes > 5 & (aggregated_rating_count >= 1 | total_rating_count >= 5); sort first_release_date desc; limit 48;`
+        `fields name,url,cover.url,first_release_date,platforms.name,total_rating_count,aggregated_rating_count,hypes; where first_release_date > ${oneMonthAgo} & first_release_date < ${startOfTomorrow} & (aggregated_rating_count >= 1 | total_rating_count >= 3); sort first_release_date desc; limit 48;`
       ),
       igdbQuery(token, 'games',
         `fields name,url,cover.url,first_release_date,platforms.name,rating,rating_count,aggregated_rating,aggregated_rating_count; where first_release_date > ${oneMonthAgo} & first_release_date < ${startOfTomorrow} & rating_count > 1 & rating >= 80 & aggregated_rating_count >= 1; sort rating desc; limit 12;`

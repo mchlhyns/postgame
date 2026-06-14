@@ -228,9 +228,12 @@ export default function SiteHeader() {
                   ) : null}
                 </div>
                 <div className="sidebar-profile-info">
-                  {displayName && (
-                    <span className="sidebar-profile-name" style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px', lineHeight: 1.25 }}>
-                      {displayName}
+                  <span className="sidebar-profile-handle">
+                    {displayName || userHandle}
+                  </span>
+                  {userHandle && (
+                    <span className="sidebar-profile-handle" style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
+                      @{userHandle}
                     </span>
                   )}
                 </div>

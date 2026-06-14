@@ -259,7 +259,11 @@ export default function MyListsPage() {
                             onClick={(e) => {
                               if (openMenuRkey === rkey) { setOpenMenuRkey(null); setMenuPos(null); return }
                               const rect = e.currentTarget.getBoundingClientRect()
-                              setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+                              const menuHeight = 130
+                              const top = rect.bottom + menuHeight > window.innerHeight
+                                ? rect.top - menuHeight - 8
+                                : rect.bottom + 8
+                              setMenuPos({ top, right: window.innerWidth - rect.right })
                               setOpenMenuRkey(rkey)
                             }}
                             aria-label="List options"
@@ -365,7 +369,9 @@ export default function MyListsPage() {
           <button className="list-overflow-option" onClick={() => { setOpenMenuRkey(null); window.location.href = `/lists/${openMenuRkey}` }}>
             Edit
           </button>
-          <div className="list-overflow-divider" />
+          <button className="list-overflow-option" onClick={() => { const rkey = openMenuRkey; setOpenMenuRkey(null); const list = lists.find(l => l.uri.split('/').pop() === rkey); if (list) setSharingList(list) }}>
+            Share
+          </button>
           <button className="list-overflow-option list-overflow-option-danger" onClick={() => { const rkey = openMenuRkey; setOpenMenuRkey(null); handleDeleteList(rkey) }}>
             Delete
           </button>

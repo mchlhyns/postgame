@@ -10,6 +10,7 @@ export default function PublicListPage() {
   const { handle, rkey } = useParams<{ handle: string; rkey: string }>()
   const [list, setList] = useState<ListRecordView | null>(null)
   const [resolvedHandle, setResolvedHandle] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -29,7 +30,14 @@ export default function PublicListPage() {
         // Fetch list item records and inject into list.value.items
         let listValue = listData.value
         try {
-          const listItemsRes = await fetch(`${pdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=at.postgame.list.item&limit=100`)
+          const [listItemsRes, profileRes] = await Promise.all([
+            fetch(`${pdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=at.postgame.list.item&limit=100`),
+            fetch(`${pdsUrl}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=app.bsky.actor.profile&rkey=self`),
+          ])
+          if (profileRes.ok) {
+            const profileData = await profileRes.json()
+            setDisplayName(profileData.value?.displayName ?? null)
+          }
           if (listItemsRes.ok) {
             const listItemsData = await listItemsRes.json()
             const items = (listItemsData.records ?? [])
@@ -64,8 +72,8 @@ export default function PublicListPage() {
             <>
               <div style={{ marginBottom: 24 }}>
                 <h1 className="browse-section-title">{list.value.name}</h1>
-                <div style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginTop: -24, marginBottom: 32 }}>
-                  <a href={profileHref} style={{ color: 'inherit', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>@{resolvedHandle ?? cleanHandle}</a> · {(list.value.items ?? []).length} game{(list.value.items ?? []).length !== 1 ? 's' : ''}
+                <div style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginTop: -18, marginBottom: 24 }}>
+                  <a href={profileHref} style={{ color: 'inherit', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{displayName ?? resolvedHandle ?? cleanHandle}</a> · {(list.value.items ?? []).length} game{(list.value.items ?? []).length !== 1 ? 's' : ''}{list.value.numbered !== false && ' · Ranked'}
                 </div>
               </div>
 
@@ -88,7 +96,7 @@ export default function PublicListPage() {
                         </div>
                         {item.award && (
                           <div className="public-list-award">
-                            <Trophy size={12} />
+                            <Trophy size={13} />
                             {item.award}
                           </div>
                         )}

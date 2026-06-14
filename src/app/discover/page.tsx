@@ -121,18 +121,21 @@ export default function HomePage() {
               className={`filter-tab${tab === 'trending' ? ' active' : ''}`}
               onClick={() => setTab('trending')}
             >
+              <TrendingUp size={14} />
               Trending now
             </button>
             <button
               className={`filter-tab${tab === 'recent' ? ' active' : ''}`}
               onClick={() => setTab('recent')}
             >
+              <Sparkles size={14} />
               New releases
             </button>
             <button
               className={`filter-tab${tab === 'upcoming' ? ' active' : ''}`}
               onClick={() => setTab('upcoming')}
             >
+              <CalendarDays size={14} />
               Coming soon
             </button>
           </div>
@@ -147,7 +150,7 @@ export default function HomePage() {
                     <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Nothing to show right now.</p>
                   ) : (
                     <div className="browse-grid">
-                      {trending.slice(0, 24).map((game) => (
+                      {trending.slice(0, 48).map((game) => (
                         <div key={game.igdbId} className="game-card-grid">
                           <div className="game-card-grid-cover-wrap">
                             <a href={`/games/${game.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
@@ -174,7 +177,7 @@ export default function HomePage() {
                     <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Nothing to show right now.</p>
                   ) : (
                     <div className="browse-grid">
-                      {recentlyReleased.slice(0, 24).map((game) => (
+                      {recentlyReleased.slice(0, 48).map((game) => (
                         <BrowseCard key={game.id} game={game} showPlatforms existingRecord={myGamesMap.get(game.id)} />
                       ))}
                     </div>
@@ -188,7 +191,7 @@ export default function HomePage() {
                     <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>Nothing to show right now.</p>
                   ) : (
                     <div className="browse-grid">
-                      {upcoming.slice(0, 24).map((game) => (
+                      {upcoming.slice(0, 48).map((game) => (
                         <BrowseCard key={game.id} game={game} showPlatforms showReleaseDate existingRecord={myGamesMap.get(game.id)} />
                       ))}
                     </div>

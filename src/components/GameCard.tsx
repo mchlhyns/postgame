@@ -289,7 +289,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
           </div>
         </div>
 
-        <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+        <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
           <div className="form-field">
             <label>Platform</label>
             <Select
@@ -330,7 +330,7 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         </div>
 
         {baseStatus !== 'backlogged' && baseStatus !== 'wishlisted' && (
-          <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+          <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div className="form-field" style={{ marginBottom: 16 }}>
               <label>Started Date</label>
               <input
@@ -520,11 +520,13 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
 
   return (
     <div className={`game-card game-card--${normalizeStatus(value.status)} game-card--${statusClass(value.status, value.playedStatus, value.backloggedStatus)}${inferBackloggedStatus(value.status, value.backloggedStatus) === 'shelved' ? ' game-card--shelved' : ''}`}>
-      {value.game.coverUrl ? (
-        <img loading="lazy" decoding="async" className="game-card-cover" src={value.game.coverUrl} alt={value.game.title} />
-      ) : (
-        <img loading="lazy" decoding="async" className="game-card-cover" src="/no-cover.png" alt={value.game.title} />
-      )}
+      <a href={gameHref} tabIndex={-1} aria-hidden="true" style={{ lineHeight: 0 }}>
+        {value.game.coverUrl ? (
+          <img loading="lazy" decoding="async" className="game-card-cover" src={value.game.coverUrl} alt={value.game.title} />
+        ) : (
+          <img loading="lazy" decoding="async" className="game-card-cover" src="/no-cover.png" alt={value.game.title} />
+        )}
+      </a>
 
       <a className="game-card-body" href={gameHref}>
         {platform && <div className="game-card-platform">{platform}</div>}

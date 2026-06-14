@@ -35,10 +35,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ hand
       const data = await listRes.json()
       const value = data.value as ListRecord
       listName = value.name
-      const count = value.items.length
+      const count = (value.items ?? []).length
       const resolvedHandle = descRes.ok ? ((await descRes.json()).handle ?? clean) : clean
       attribution = `@${resolvedHandle} · ${count} game${count !== 1 ? 's' : ''}`
-      const rawCovers = value.items.slice(0, MAX_COVERS).map((item) => item.coverUrl ?? null)
+      const rawCovers = (value.items ?? []).slice(0, MAX_COVERS).map((item) => item.coverUrl ?? null)
       covers = await Promise.all(rawCovers.map((url) => url ? fetchImageAsDataUrl(url).then((d) => d ?? null) : Promise.resolve(null)))
     }
   } catch { /* use defaults */ }

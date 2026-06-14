@@ -1,0 +1,31 @@
+{
+  "lexicon": 1,
+  "id": "at.postgame.list.item",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single game entry within a user's list",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["listUri", "game", "addedAt"],
+        "properties": {
+          "listUri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "The at.postgame.list this item belongs to"
+          },
+          "gameUri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT URI to the canonical game record; mirrors game.identifiers.atUri for cross-service compatibility"
+          },
+          "game": { "type": "ref", "ref": "at.postgame.game#gameRef" },
+          "position": { "type": "integer", "minimum": 1 },
+          "award": { "type": "string", "maxLength": 128 },
+          "addedAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

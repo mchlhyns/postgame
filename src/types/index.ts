@@ -13,14 +13,25 @@ export type GameStatus =
 export type PlayedStatus = 'completed' | 'mastered' | 'retired' | 'abandoned'
 export type BackloggedStatus = 'shelved'
 
+export interface GameIdentifiers {
+  steamId?: string
+  slug?: string
+  atUri?: string
+}
+
 export interface GameRef {
   igdbId: number
   title: string
   coverUrl?: string
+  backdropUrl?: string
+  /** @deprecated use backdropUrl */
   screenshotUrl?: string
-  igdbUrl?: string
-  releaseYear?: number
+  genres?: string[]
   releaseDate?: number
+  releaseYear?: number
+  igdbUrl?: string
+  ctaUrl?: string
+  identifiers?: GameIdentifiers
 }
 
 export interface GameRecord {
@@ -58,7 +69,8 @@ export interface ListItem {
 export interface ListRecord {
   $type: 'at.postgame.list'
   name: string
-  items: ListItem[]
+  /** @deprecated items are now stored as at.postgame.list.item records */
+  items?: ListItem[]
   numbered?: boolean
   url?: string
   createdAt: string
@@ -69,6 +81,22 @@ export interface ListRecordView {
   uri: string
   cid: string
   value: ListRecord
+}
+
+export interface ListItemRecord {
+  $type: 'at.postgame.list.item'
+  listUri: string
+  gameUri?: string
+  game: GameRef
+  position?: number
+  award?: string
+  addedAt: string
+}
+
+export interface ListItemRecordView {
+  uri: string
+  cid: string
+  value: ListItemRecord
 }
 
 export interface IgdbGame {

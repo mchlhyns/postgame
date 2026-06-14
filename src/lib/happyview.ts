@@ -14,7 +14,8 @@ export type HVGameRecord = {
 export type HVListRecord = {
   uri: string
   name: string
-  items: Array<{
+  /** Populated from inline items; will be empty once list.item records are the source of truth. Requires happyview server update to re-populate from at.postgame.list.item. */
+  items?: Array<{
     igdbId: number
     title: string
     coverUrl?: string

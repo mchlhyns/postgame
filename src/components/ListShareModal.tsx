@@ -63,7 +63,7 @@ function truncate(ctx: CanvasRenderingContext2D, text: string, maxW: number): st
 async function generateImage(list: ListRecord, showNumbers: boolean): Promise<Blob> {
   await document.fonts.ready
 
-  const items = list.items
+  const items = list.items ?? []
   const rows = Math.max(1, Math.ceil(items.length / COLS))
   const H = canvasHeight(items.length)
 
@@ -170,7 +170,7 @@ export default function ListShareModal({ list, showNumbers, onClose }: Props) {
   const blobRef = useRef<Blob | null>(null)
   const prevUrlRef = useRef<string | null>(null)
 
-  const itemCount = list.value.items.length
+  const itemCount = (list.value.items ?? []).length
   const H = canvasHeight(itemCount)
 
   useEffect(() => {

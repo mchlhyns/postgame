@@ -146,6 +146,26 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     bskyBannerUrl = profile.banner
   }
 
+  // Hydrate lists with items from list.item records
+  try {
+    const listItemsRes = await fetch(`${pdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=at.postgame.list.item&limit=100`)
+    if (listItemsRes.ok) {
+      const listItemsData = await listItemsRes.json()
+      const itemsByList = new Map<string, { igdbId: number; title: string; coverUrl?: string; position: number; award?: string }[]>()
+      for (const rec of listItemsData.records ?? []) {
+        const val = rec.value
+        if (!val.listUri || !val.game) continue
+        if (!itemsByList.has(val.listUri)) itemsByList.set(val.listUri, [])
+        itemsByList.get(val.listUri)!.push({ igdbId: val.game.igdbId, title: val.game.title, coverUrl: val.game.coverUrl, position: val.position ?? 0, award: val.award })
+      }
+      for (const items of itemsByList.values()) items.sort((a, b) => a.position - b.position)
+      lists = lists.map(list => {
+        const items = itemsByList.get(list.uri) ?? list.value.items ?? []
+        return { ...list, value: { ...list.value, items } } as ListRecordView
+      })
+    }
+  } catch { /* non-fatal */ }
+
   return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl: bannerUrl ?? bskyBannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, newScreenshots }
 }
 
@@ -717,16 +737,16 @@ export default function ProfilePage() {
                         <ChevronLeft size={22} style={{ color: 'var(--accent)' }} />
                       </button>
                       {selectedList.value.name}
-                      <span className="game-list-divider-count">{selectedList.value.items.length}</span>
+                      <span className="game-list-divider-count">{(selectedList.value.items ?? []).length}</span>
                     </div>
-                    {selectedList.value.items.length === 0 ? (
+                    {(selectedList.value.items ?? []).length === 0 ? (
                       <div className="empty-state">
                         <h3>No games yet</h3>
                         <p>This list is empty.</p>
                       </div>
                     ) : (
                       <div className="public-list-items">
-                        {selectedList.value.items.map((item, i) => (
+                        {(selectedList.value.items ?? []).map((item, i) => (
                           <div key={item.igdbId} className="game-card-grid">
                             <a href={`/games/${item.igdbId}`} style={{ display: 'block', lineHeight: 0 }}>
                               {item.coverUrl
@@ -773,7 +793,7 @@ export default function ProfilePage() {
                         >
                           <div className="list-card-covers">
                             {(() => {
-                              const r = list.value.items.slice(0, 5)
+                              const r = (list.value.items ?? []).slice(0, 5)
                               return [r[1], r[2], r[0], r[3], r[4]].map((item, i) =>
                                 item
                                   ? <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
@@ -787,7 +807,7 @@ export default function ProfilePage() {
                             {list.value.name}
                           </div>
                           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif' }}>
-                            {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+                            {(list.value.items ?? []).length} game{(list.value.items ?? []).length !== 1 ? 's' : ''}
                           </div>
                         </div>
                       </div>

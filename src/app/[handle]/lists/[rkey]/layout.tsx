@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       const value = data.value as ListRecord
       listName = value.name
       if (descRes.ok) resolvedHandle = ((await descRes.json()).handle ?? clean)
-      const count = value.items.length
+      const count = (value.items ?? []).length
       description = `${count} game${count !== 1 ? 's' : ''} · by @${resolvedHandle} on postgame`
     }
   } catch { /* use defaults */ }

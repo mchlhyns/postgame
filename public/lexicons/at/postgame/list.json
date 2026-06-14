@@ -8,13 +8,14 @@
       "key": "tid",
       "record": {
         "type": "object",
-        "required": ["name", "items", "createdAt", "updatedAt"],
+        "required": ["name", "createdAt", "updatedAt"],
         "properties": {
           "name": { "type": "string", "maxLength": 256 },
           "url": { "type": "string", "format": "uri", "description": "Public URL to view this list on postgame" },
           "items": {
             "type": "array",
-            "items": { "type": "ref", "ref": "#listItem" }
+            "items": { "type": "ref", "ref": "#listItem" },
+            "description": "Deprecated: use at.postgame.list.item records instead"
           },
           "numbered": { "type": "boolean", "description": "Whether to display position numbers on items" },
           "createdAt": { "type": "string", "format": "datetime" },

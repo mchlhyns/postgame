@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { Agent } from '@atproto/api'
-import { restoreSession, signOut, SETTINGS_COLLECTION } from '@/lib/atproto'
+import { restoreSession, getCachedSession, signOut, SETTINGS_COLLECTION } from '@/lib/atproto'
 import MobileMenu from '@/components/MobileMenu'
 import MobileFooterNav from '@/components/MobileFooterNav'
 import HeaderSearch from '@/components/HeaderSearch'
@@ -131,7 +131,7 @@ export default function SiteHeader() {
   }, [])
 
   async function handleSignOut() {
-    const s = await restoreSession()
+    const s = getCachedSession() ?? await restoreSession()
     if (!s) return
     localStorage.removeItem('cta_authed')
     sessionStorage.removeItem('cta_avatar_url')

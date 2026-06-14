@@ -43,8 +43,28 @@
         "igdbId": { "type": "integer" },
         "title": { "type": "string", "maxLength": 256 },
         "coverUrl": { "type": "string", "format": "uri" },
+        "backdropUrl": { "type": "string", "format": "uri" },
+        "genres": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 64 }
+        },
+        "releaseDate": { "type": "integer", "description": "Unix timestamp from IGDB" },
         "igdbUrl": { "type": "string", "format": "uri" },
-        "ctaUrl": { "type": "string", "format": "uri" }
+        "ctaUrl": { "type": "string", "format": "uri" },
+        "identifiers": { "type": "ref", "ref": "#gameIdentifiers" }
+      }
+    },
+    "gameIdentifiers": {
+      "type": "object",
+      "description": "Cross-service identifiers for a game",
+      "properties": {
+        "steamId": { "type": "string" },
+        "slug": { "type": "string" },
+        "atUri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT URI to a canonical game record on a shared game database"
+        }
       }
     }
   }

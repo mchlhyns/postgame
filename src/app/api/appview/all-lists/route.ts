@@ -40,14 +40,11 @@ export async function GET(req: NextRequest) {
       const profile = did ? profileMap.get(did) : null
       if (!profile) return null
 
-      // Filter out lists with 0 items
-      if (!list.items || list.items.length === 0) return null
-
       return {
         uri: list.uri,
         value: {
           name: list.name,
-          items: list.items,
+          items: list.items ?? [],
           numbered: list.numbered,
           url: list.url,
           createdAt: list.createdAt,

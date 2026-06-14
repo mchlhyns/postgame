@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Agent } from '@atproto/api'
 import { TID } from '@atproto/common-web'
-import { restoreSession, LIST_COLLECTION } from '@/lib/atproto'
-import { ListRecord, ListRecordView } from '@/types'
+import { restoreSession, LIST_COLLECTION, LIST_ITEM_COLLECTION } from '@/lib/atproto'
+import { ListItem, ListItemRecord, ListRecord, ListRecordView } from '@/types'
 import { bskyAvatar } from '@/lib/appview-fetch'
 import ListShareModal from '@/components/ListShareModal'
 
@@ -56,8 +56,29 @@ export default function MyListsPage() {
 
   const fetchLists = useCallback(async (agent: Agent, did: string) => {
     try {
-      const res = await agent.com.atproto.repo.listRecords({ repo: did, collection: LIST_COLLECTION, limit: 100 })
-      setLists(res.data.records as unknown as ListRecordView[])
+      const itemsByList = new Map<string, ListItem[]>()
+      let cursor: string | undefined
+      do {
+        const itemsRes = await agent.com.atproto.repo.listRecords({ repo: did, collection: LIST_ITEM_COLLECTION, limit: 100, cursor })
+        if (!itemsRes.success || itemsRes.data.records.length === 0) break
+        for (const rec of itemsRes.data.records) {
+          const val = rec.value as unknown as ListItemRecord
+          if (!val.listUri) continue
+          if (!itemsByList.has(val.listUri)) itemsByList.set(val.listUri, [])
+          itemsByList.get(val.listUri)!.push({
+            igdbId: val.game.igdbId, title: val.game.title, coverUrl: val.game.coverUrl,
+            position: val.position ?? 0, award: val.award,
+          })
+        }
+        cursor = itemsRes.data.records.length === 100 ? itemsRes.data.cursor : undefined
+      } while (cursor)
+      for (const items of itemsByList.values()) items.sort((a, b) => a.position - b.position)
+
+      const listsRes = await agent.com.atproto.repo.listRecords({ repo: did, collection: LIST_COLLECTION, limit: 100 })
+      setLists((listsRes.data.records as unknown as ListRecordView[]).map(rec => {
+        const items = itemsByList.get(rec.uri) ?? rec.value.items ?? []
+        return { ...rec, value: { ...rec.value, items } }
+      }))
     } catch { /* collection may not exist yet */ }
   }, [])
 
@@ -100,11 +121,20 @@ export default function MyListsPage() {
     if (!session) return
     if (!confirm('Delete this list? This cannot be undone.')) return
     try {
-      await session.agent.com.atproto.repo.deleteRecord({
-        repo: session.did,
-        collection: LIST_COLLECTION,
-        rkey,
-      })
+      const listView = lists.find(l => l.uri.split('/').pop() === rkey)
+      if (listView) {
+        const itemsRes = await session.agent.com.atproto.repo.listRecords({ repo: session.did, collection: LIST_ITEM_COLLECTION, limit: 100 })
+        const itemRkeys = itemsRes.data.records
+          .filter(rec => (rec.value as unknown as ListItemRecord).listUri === listView.uri)
+          .map(rec => rec.uri.split('/').pop()!)
+        if (itemRkeys.length > 0) {
+          await session.agent.com.atproto.repo.applyWrites({
+            repo: session.did,
+            writes: itemRkeys.map(itemRkey => ({ $type: 'com.atproto.repo.applyWrites#delete', collection: LIST_ITEM_COLLECTION, rkey: itemRkey })) as any,
+          })
+        }
+      }
+      await session.agent.com.atproto.repo.deleteRecord({ repo: session.did, collection: LIST_COLLECTION, rkey })
       setLists((prev) => prev.filter((l) => l.uri.split('/').pop() !== rkey))
     } catch (err: any) {
       alert(err?.message ?? 'Failed to delete list.')
@@ -123,7 +153,6 @@ export default function MyListsPage() {
       const record: ListRecord = {
         $type: 'at.postgame.list',
         name: newName.trim(),
-        items: [],
         ...(url ? { url } : {}),
         createdAt: now,
         updatedAt: now,
@@ -202,7 +231,7 @@ export default function MyListsPage() {
                       >
                         <div className="list-card-covers">
                           {(() => {
-                              const r = list.value.items.slice(0, 5)
+                              const r = (list.value.items ?? []).slice(0, 5)
                               return [r[1], r[2], r[0], r[3], r[4]].map((item, i) =>
                                 item
                                   ? <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
@@ -217,7 +246,7 @@ export default function MyListsPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
                           <div className="game-card-grid-title">{list.value.name}</div>
                           <div className="browse-card-meta">
-                            {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+                            {(list.value.items ?? []).length} game{(list.value.items ?? []).length !== 1 ? 's' : ''}
                           </div>
                         </div>
                         <div
@@ -276,7 +305,7 @@ export default function MyListsPage() {
                       >
                         <div className="list-card-covers">
                           {(() => {
-                              const r = list.value.items.slice(0, 5)
+                              const r = (list.value.items ?? []).slice(0, 5)
                               return [r[1], r[2], r[0], r[3], r[4]].map((item, i) =>
                                 item
                                   ? <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
@@ -290,7 +319,7 @@ export default function MyListsPage() {
                       <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <div className="game-card-grid-title">{list.value.name}</div>
                         <div className="browse-card-meta" style={{ flexGrow: 1 }}>
-                          {list.value.items.length} game{list.value.items.length !== 1 ? 's' : ''}
+                          {(list.value.items ?? []).length} game{(list.value.items ?? []).length !== 1 ? 's' : ''}
                         </div>
 
                         {/* Creator Badge (Pill/Badge style, compact and below the game count) */}

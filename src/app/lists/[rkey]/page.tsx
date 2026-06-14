@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Agent } from '@atproto/api'
-import { restoreSession, COLLECTION, LIST_COLLECTION } from '@/lib/atproto'
-import { GameRecordView, IgdbGame, ListItem, ListRecord, ListRecordView } from '@/types'
+import { restoreSession, COLLECTION, LIST_COLLECTION, LIST_ITEM_COLLECTION } from '@/lib/atproto'
+import { GameRecordView, IgdbGame, ListItem, ListItemRecord, ListRecord, ListRecordView } from '@/types'
 import { formatIgdbGame, abbreviatePlatform } from '@/lib/igdb'
 import ListShareModal from '@/components/ListShareModal'
 
@@ -66,6 +66,7 @@ export default function ListEditPage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const existingItemRkeys = useRef<string[]>([])
   const awardPickerRef = useRef<HTMLDivElement>(null)
   const overflowRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -118,9 +119,33 @@ export default function ListEditPage() {
           const listRecord = { uri: listRes.data.uri, cid: listRes.data.cid, value: listRes.data.value } as unknown as ListRecordView
           setList(listRecord)
           setName(listRecord.value.name)
-          setItems(listRecord.value.items ?? [])
           setShowNumbers(listRecord.value.numbered !== false)
           setGames(gamesRes.data.records as unknown as GameRecordView[])
+
+          // Load items from list.item records; fall back to inline items during migration window
+          const itemEntries: { item: ListItem; rkey: string }[] = []
+          let cursor: string | undefined
+          do {
+            const itemsRes = await s.agent.com.atproto.repo.listRecords({ repo: s.did, collection: LIST_ITEM_COLLECTION, limit: 100, cursor })
+            if (!itemsRes.success || itemsRes.data.records.length === 0) break
+            for (const rec of itemsRes.data.records) {
+              const val = rec.value as unknown as ListItemRecord
+              if (val.listUri !== listRecord.uri) continue
+              itemEntries.push({
+                rkey: rec.uri.split('/').pop()!,
+                item: { igdbId: val.game.igdbId, title: val.game.title, coverUrl: val.game.coverUrl, position: val.position ?? itemEntries.length + 1, award: val.award },
+              })
+            }
+            cursor = itemsRes.data.records.length === 100 ? itemsRes.data.cursor : undefined
+          } while (cursor)
+
+          if (itemEntries.length > 0) {
+            itemEntries.sort((a, b) => a.item.position - b.item.position)
+            existingItemRkeys.current = itemEntries.map(e => e.rkey)
+            setItems(itemEntries.map(e => e.item))
+          } else {
+            setItems(listRecord.value.items ?? [])
+          }
         } catch {
           window.location.href = '/lists'
           return
@@ -234,11 +259,36 @@ export default function ListEditPage() {
     setSaved(false)
     try {
       const effectiveNumbered = numberedOverride !== undefined ? numberedOverride : showNumbers
-      const itemsWithPositions = items.map((item, i) => ({ ...item, position: i + 1 }))
       const now = new Date().toISOString()
       const url = userHandle ? `${window.location.origin}/${userHandle}/lists/${rkey}` : list.value.url
-      const record: ListRecord = { ...list.value, name: name.trim(), items: itemsWithPositions, numbered: effectiveNumbered, url, updatedAt: now }
-      await session.agent.com.atproto.repo.putRecord({ repo: session.did, collection: LIST_COLLECTION, rkey, record: record as any })
+
+      const writes: object[] = [
+        ...existingItemRkeys.current.map(itemRkey => ({
+          $type: 'com.atproto.repo.applyWrites#delete',
+          collection: LIST_ITEM_COLLECTION,
+          rkey: itemRkey,
+        })),
+        ...items.map((item, i) => ({
+          $type: 'com.atproto.repo.applyWrites#create',
+          collection: LIST_ITEM_COLLECTION,
+          value: {
+            $type: LIST_ITEM_COLLECTION,
+            listUri: list!.uri,
+            game: { igdbId: item.igdbId, title: item.title, ...(item.coverUrl ? { coverUrl: item.coverUrl } : {}) },
+            position: i + 1,
+            ...(item.award ? { award: item.award } : {}),
+            addedAt: now,
+          },
+        })),
+        {
+          $type: 'com.atproto.repo.applyWrites#update',
+          collection: LIST_COLLECTION,
+          rkey,
+          value: { $type: LIST_COLLECTION, name: name.trim(), numbered: effectiveNumbered, url, createdAt: list.value.createdAt, updatedAt: now },
+        },
+      ]
+
+      await session.agent.com.atproto.repo.applyWrites({ repo: session.did, writes: writes as any })
       window.location.href = '/lists'
     } catch (err: any) {
       setError(err?.message ?? 'Failed to save.')
@@ -253,19 +303,33 @@ export default function ListEditPage() {
     setOverflowOpen(false)
     try {
       const now = new Date().toISOString()
-      const record: ListRecord = {
-        ...list.value,
-        name: `${list.value.name} (copy)`,
-        createdAt: now,
-        updatedAt: now,
-        url: undefined,
-      }
+      const { items: _items, ...listWithoutItems } = list.value
+      const record: ListRecord = { ...listWithoutItems, name: `${list.value.name} (copy)`, createdAt: now, updatedAt: now, url: undefined }
       const res = await session.agent.com.atproto.repo.createRecord({ repo: session.did, collection: LIST_COLLECTION, record: record as any })
       const newRkey = res.data.uri.split('/').pop()!
+      const newListUri = res.data.uri
+
       if (userHandle) {
         const url = `${window.location.origin}/${userHandle}/lists/${newRkey}`
         await session.agent.com.atproto.repo.putRecord({ repo: session.did, collection: LIST_COLLECTION, rkey: newRkey, record: { ...record, url } as any })
       }
+
+      if (items.length > 0) {
+        const itemWrites = items.map((item, i) => ({
+          $type: 'com.atproto.repo.applyWrites#create',
+          collection: LIST_ITEM_COLLECTION,
+          value: {
+            $type: LIST_ITEM_COLLECTION,
+            listUri: newListUri,
+            game: { igdbId: item.igdbId, title: item.title, ...(item.coverUrl ? { coverUrl: item.coverUrl } : {}) },
+            position: i + 1,
+            ...(item.award ? { award: item.award } : {}),
+            addedAt: now,
+          },
+        }))
+        await session.agent.com.atproto.repo.applyWrites({ repo: session.did, writes: itemWrites as any })
+      }
+
       window.location.href = `/lists/${newRkey}`
     } catch (err: any) {
       setError(err?.message ?? 'Failed to duplicate.')
@@ -277,6 +341,14 @@ export default function ListEditPage() {
     if (!session || !list) return
     setDeleting(true)
     try {
+      if (existingItemRkeys.current.length > 0) {
+        const itemWrites = existingItemRkeys.current.map(itemRkey => ({
+          $type: 'com.atproto.repo.applyWrites#delete',
+          collection: LIST_ITEM_COLLECTION,
+          rkey: itemRkey,
+        }))
+        await session.agent.com.atproto.repo.applyWrites({ repo: session.did, writes: itemWrites as any })
+      }
       await session.agent.com.atproto.repo.deleteRecord({ repo: session.did, collection: LIST_COLLECTION, rkey })
       window.location.href = '/lists'
     } catch (err: any) {

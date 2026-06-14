@@ -1,10 +1,12 @@
 import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
 import { Agent } from '@atproto/api'
+import type { ListRecord } from '@/types'
 
 export const HANDLE_RESOLVER = 'https://api.bsky.app'
 export const COLLECTION = 'at.postgame.game'
 export const SETTINGS_COLLECTION = 'at.postgame.settings'
 export const LIST_COLLECTION = 'at.postgame.list'
+export const LIST_ITEM_COLLECTION = 'at.postgame.list.item'
 export const FOLLOW_COLLECTION = 'at.postgame.follow'
 
 let _client: BrowserOAuthClient | null = null
@@ -20,7 +22,7 @@ export async function getOAuthClient(): Promise<BrowserOAuthClient> {
       client_name: 'postgame',
       client_uri: origin,
       redirect_uris: [`${origin}/oauth/callback`],
-      scope: 'atproto blob:image/* repo:at.postgame.game?action=create repo:at.postgame.game?action=update repo:at.postgame.game?action=delete repo:at.postgame.list?action=create repo:at.postgame.list?action=update repo:at.postgame.list?action=delete repo:at.postgame.follow?action=create repo:at.postgame.follow?action=update repo:at.postgame.follow?action=delete repo:at.postgame.settings?action=create repo:at.postgame.settings?action=update repo:at.postgame.settings?action=delete repo:com.crashthearcade.game?action=read repo:com.crashthearcade.game?action=delete repo:com.crashthearcade.list?action=read repo:com.crashthearcade.list?action=delete repo:com.crashthearcade.follow?action=read repo:com.crashthearcade.follow?action=delete repo:com.crashthearcade.settings?action=read repo:com.crashthearcade.settings?action=delete',
+      scope: 'atproto blob:image/* repo:at.postgame.game?action=create repo:at.postgame.game?action=update repo:at.postgame.game?action=delete repo:at.postgame.list?action=create repo:at.postgame.list?action=update repo:at.postgame.list?action=delete repo:at.postgame.list.item?action=create repo:at.postgame.list.item?action=update repo:at.postgame.list.item?action=delete repo:at.postgame.follow?action=create repo:at.postgame.follow?action=update repo:at.postgame.follow?action=delete repo:at.postgame.settings?action=create repo:at.postgame.settings?action=update repo:at.postgame.settings?action=delete repo:com.crashthearcade.game?action=read repo:com.crashthearcade.game?action=delete repo:com.crashthearcade.list?action=read repo:com.crashthearcade.list?action=delete repo:com.crashthearcade.follow?action=read repo:com.crashthearcade.follow?action=delete repo:com.crashthearcade.settings?action=read repo:com.crashthearcade.settings?action=delete',
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],
       token_endpoint_auth_method: 'none',
@@ -40,6 +42,7 @@ export async function restoreSession(): Promise<{ agent: Agent; did: string } | 
         const agent = new Agent(result.session)
         const did = result.session.did
         await migrateUserData(agent, did)
+        await migrateListItems(agent, did)
         return { agent, did }
       })
       .catch(() => null)
@@ -51,6 +54,14 @@ export async function signIn(handle: string): Promise<void> {
   const client = await getOAuthClient()
   await client.signInRedirect(handle)
   // Browser will redirect to PDS authorization page
+}
+
+export function getCachedSession(): { agent: Agent; did: string } | null {
+  if (!_sessionPromise) return null
+  // Return synchronously only if already resolved — avoids triggering migration
+  let result: { agent: Agent; did: string } | null = null
+  _sessionPromise.then((s) => { result = s }).catch(() => {})
+  return result
 }
 
 export async function signOut(did: string): Promise<void> {
@@ -166,6 +177,66 @@ async function migrateUserData(agent: Agent, did: string): Promise<void> {
       migrationOk = false
     }
   }
+
+  if (migrationOk && typeof localStorage !== 'undefined') localStorage.setItem(key, '1')
+}
+
+async function migrateListItems(agent: Agent, did: string): Promise<void> {
+  const key = `pg_migrated_list_items_v1_${did}`
+  if (typeof localStorage !== 'undefined' && localStorage.getItem(key)) return
+
+  let migrationOk = true
+  let cursor: string | undefined
+
+  do {
+    let res
+    try {
+      res = await agent.com.atproto.repo.listRecords({ repo: did, collection: LIST_COLLECTION, limit: 100, cursor })
+    } catch { break }
+    if (!res.success || res.data.records.length === 0) break
+
+    for (const rec of res.data.records) {
+      const list = rec.value as unknown as ListRecord
+      const items = list.items
+      if (!items || items.length === 0) continue
+
+      const listRkey = rec.uri.split('/').pop()!
+
+      try {
+        const writes: object[] = items.map((item, i) => ({
+          $type: 'com.atproto.repo.applyWrites#create',
+          collection: LIST_ITEM_COLLECTION,
+          value: {
+            $type: LIST_ITEM_COLLECTION,
+            listUri: rec.uri,
+            game: {
+              igdbId: item.igdbId,
+              title: item.title,
+              ...(item.coverUrl ? { coverUrl: item.coverUrl } : {}),
+            },
+            position: item.position ?? i + 1,
+            ...(item.award ? { award: item.award } : {}),
+            addedAt: list.createdAt,
+          },
+        }))
+
+        const { items: _removed, ...listWithoutItems } = list
+        writes.push({
+          $type: 'com.atproto.repo.applyWrites#update',
+          collection: LIST_COLLECTION,
+          rkey: listRkey,
+          value: { ...listWithoutItems, $type: LIST_COLLECTION },
+        })
+
+        await agent.com.atproto.repo.applyWrites({ repo: did, writes: writes as any })
+      } catch (e) {
+        console.error('[postgame] list items migration failed:', rec.uri, e)
+        migrationOk = false
+      }
+    }
+
+    cursor = res.data.records.length === 100 ? res.data.cursor : undefined
+  } while (cursor)
 
   if (migrationOk && typeof localStorage !== 'undefined') localStorage.setItem(key, '1')
 }

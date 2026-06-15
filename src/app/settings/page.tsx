@@ -19,6 +19,11 @@ interface Settings {
   favouriteGame?: GameRef
   blogPublicationUri?: string
   blogTag?: string
+  steamUrl?: string
+  itchHandle?: string
+  battlenetHandle?: string
+  twitchHandle?: string
+  streamPlaceHandle?: string
 }
 
 export default function SettingsPage() {
@@ -41,6 +46,11 @@ export default function SettingsPage() {
   const [favouriteGame, setFavouriteGame] = useState<GameRef | null>(null)
   const [blogPublicationUri, setBlogPublicationUri] = useState('')
   const [blogTag, setBlogTag] = useState('')
+  const [steamUrl, setSteamUrl] = useState('')
+  const [itchHandle, setItchHandle] = useState('')
+  const [battlenetHandle, setBattlenetHandle] = useState('')
+  const [twitchHandle, setTwitchHandle] = useState('')
+  const [streamPlaceHandle, setStreamPlaceHandle] = useState('')
   const [userBlogs, setUserBlogs] = useState<{ uri: string; name: string }[]>([])
   const [dangerOpen, setDangerOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -64,6 +74,7 @@ export default function SettingsPage() {
       setPdsUrl(pds)
 
       let bskyName: string | null = null
+      let bskyPronouns: string | null = null
       try {
         const profileRes = await fetch(
           `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(s.did)}`
@@ -77,6 +88,15 @@ export default function SettingsPage() {
       } catch { /* ignore */ }
 
       try {
+        const actorProfile = await s.agent.com.atproto.repo.getRecord({
+          repo: s.did,
+          collection: 'app.bsky.actor.profile',
+          rkey: 'self',
+        })
+        bskyPronouns = (actorProfile.data.value as any)?.pronouns ?? null
+      } catch { /* ignore */ }
+
+      try {
         const res = await s.agent.com.atproto.repo.getRecord({
           repo: s.did,
           collection: SETTINGS_COLLECTION,
@@ -84,13 +104,21 @@ export default function SettingsPage() {
         })
         const value = res.data.value as Settings
         setDisplayName(value.displayName ?? bskyName ?? '')
-        setPronouns(value.pronouns ?? '')
+        setPronouns(value.pronouns ?? bskyPronouns ?? '')
         if (value.avatarBlob) setAvatarBlob(value.avatarBlob)
         if (value.bannerBlob) setBannerBlob(value.bannerBlob)
         if (value.favouriteGame) setFavouriteGame(value.favouriteGame)
         if (value.blogPublicationUri) setBlogPublicationUri(value.blogPublicationUri)
         if (value.blogTag) setBlogTag(value.blogTag)
-      } catch { if (bskyName) setDisplayName(bskyName) }
+        if (value.steamUrl) setSteamUrl(value.steamUrl)
+        if (value.itchHandle) setItchHandle(value.itchHandle)
+        if (value.battlenetHandle) setBattlenetHandle(value.battlenetHandle)
+        if (value.twitchHandle) setTwitchHandle(value.twitchHandle)
+        if (value.streamPlaceHandle) setStreamPlaceHandle(value.streamPlaceHandle)
+      } catch {
+        if (bskyName) setDisplayName(bskyName)
+        if (bskyPronouns) setPronouns(bskyPronouns)
+      }
 
       // Fetch user's blogs (site.standard.publication)
       try {
@@ -185,6 +213,11 @@ export default function SettingsPage() {
         ...(favouriteGame ? { favouriteGame } : {}),
         ...(blogPublicationUri ? { blogPublicationUri } : {}),
         ...(blogTag.trim() ? { blogTag: blogTag.trim() } : {}),
+        ...(steamUrl.trim() ? { steamUrl: steamUrl.trim() } : {}),
+        ...(itchHandle.trim() ? { itchHandle: itchHandle.trim() } : {}),
+        ...(battlenetHandle.trim() ? { battlenetHandle: battlenetHandle.trim() } : {}),
+        ...(twitchHandle.trim() ? { twitchHandle: twitchHandle.trim() } : {}),
+        ...(streamPlaceHandle.trim() ? { streamPlaceHandle: streamPlaceHandle.trim() } : {}),
       }
       await session.agent.com.atproto.repo.putRecord({
         repo: session.did,
@@ -246,7 +279,7 @@ export default function SettingsPage() {
 
             <h2 className="faq-section-heading">Profile</h2>
             <p className="faq-answer" style={{ marginBottom: 16 }}>
-              Adjust the look and feel of your public profile. By default, we'll use the avatar and display name from your Atmosphere Account.
+              Adjust the look and feel of your public profile. By default, we'll use the avatar and display name from your Atmosphere account.
             </p>
 
               {/* Avatar */}
@@ -366,6 +399,34 @@ export default function SettingsPage() {
 
 
 
+              {/* Gaming Profiles */}
+              <div>
+                <h2 className="faq-section-heading">Gaming</h2>
+                <p className="faq-answer" style={{ marginBottom: 16 }}>
+                  Link your profiles on other gaming platforms to display them on your public profile.
+                </p>
+                <div className="form-field">
+                  <label>Steam profile URL</label>
+                  <input className="input" style={{ width: '100%' }} type="url" placeholder="https://steamcommunity.com/id/yourname" value={steamUrl} onChange={(e) => setSteamUrl(e.target.value)} />
+                </div>
+                <div className="form-field">
+                  <label>itch.io username</label>
+                  <input className="input" style={{ width: '100%' }} type="text" placeholder="yourusername" value={itchHandle} onChange={(e) => setItchHandle(e.target.value)} maxLength={50} />
+                </div>
+                <div className="form-field">
+                  <label>Battle.net tag</label>
+                  <input className="input" style={{ width: '100%' }} type="text" placeholder="Username#1234" value={battlenetHandle} onChange={(e) => setBattlenetHandle(e.target.value)} maxLength={50} />
+                </div>
+                <div className="form-field">
+                  <label>Twitch username</label>
+                  <input className="input" style={{ width: '100%' }} type="text" placeholder="yourusername" value={twitchHandle} onChange={(e) => setTwitchHandle(e.target.value)} maxLength={50} />
+                </div>
+                <div className="form-field">
+                  <label>stream.place handle</label>
+                  <input className="input" style={{ width: '100%' }} type="text" placeholder="yourusername" value={streamPlaceHandle} onChange={(e) => setStreamPlaceHandle(e.target.value)} maxLength={50} />
+                </div>
+              </div>
+
 {fileError && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)', marginTop: 8 }}>{fileError}</p>}
 
 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 24 }}>
@@ -377,7 +438,7 @@ export default function SettingsPage() {
             </form>
           </div>
 
-          <div style={{ maxWidth: 480, marginTop: 42, paddingTop: 32, borderTop: '2px solid var(--tertiary)' }}>
+          <div style={{ maxWidth: 480, marginTop: 32, paddingTop: 32, borderTop: '2px solid var(--tertiary)' }}>
             <button
               type="button"
               onClick={() => { setDangerOpen(o => !o); setConfirmDelete(false); setDeleteError('') }}

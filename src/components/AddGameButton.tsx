@@ -426,6 +426,12 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
                 >
                   {refreshingArt ? 'Refreshing…' : freshCoverUrl ? 'Artwork updated ✓' : 'Refresh artwork'}
                 </button>
+                <button
+                  className="list-overflow-option list-overflow-option-danger"
+                  onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); remove() }}
+                >
+                  Delete
+                </button>
               </div>
             )}
             <button className="modal-close-btn" onClick={onClose} aria-label="Close">
@@ -562,14 +568,6 @@ function EditModal({ record, agent, did, onSaved, onDeleted, onClose }: {
         )}
 
         <div className="form-actions" style={{ marginTop: 'auto', paddingTop: 24, gap: 12 }}>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ color: 'var(--danger)', borderColor: 'var(--danger)', marginRight: 'auto' }}
-            onClick={remove}
-          >
-            Delete
-          </button>
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}

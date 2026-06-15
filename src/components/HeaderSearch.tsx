@@ -11,9 +11,10 @@ interface Props {
   open?: boolean
   onOpen?: () => void
   onClose?: () => void
+  onSelect?: (game: { igdbId: number; title: string; coverUrl?: string }) => void
 }
 
-export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: Props = {}) {
+export default function HeaderSearch({ open: controlledOpen, onOpen, onClose, onSelect }: Props = {}) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<FormattedGame[]>([])
@@ -92,9 +93,13 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
     }, 300)
   }, [query])
 
-  function selectGame(id: number) {
+  function selectGame(game: FormattedGame) {
     setOpen(false)
-    router.push(`/games/${id}`)
+    if (onSelect) {
+      onSelect({ igdbId: game.id, title: game.name, coverUrl: game.coverUrl })
+    } else {
+      router.push(`/games/${game.id}`)
+    }
   }
 
   // Keep keyboard focus inside the dialog while it is open
@@ -232,7 +237,7 @@ export default function HeaderSearch({ open: controlledOpen, onOpen, onClose }: 
                             key={game.id}
                             ref={(el) => { resultRefs.current[index] = el }}
                             className="search-modal-item"
-                            onClick={() => selectGame(game.id)}
+                            onClick={() => selectGame(game)}
                             onKeyDown={(e) => handleResultKeyDown(e, index)}
                           >
                             <img

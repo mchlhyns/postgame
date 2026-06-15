@@ -249,6 +249,12 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
                 >
                   {refreshingArt ? 'Refreshing…' : freshCoverUrl ? 'Artwork updated ✓' : 'Refresh artwork'}
                 </button>
+                <button
+                  className="list-overflow-option list-overflow-option-danger"
+                  onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); setEditing(false); deleteRecord() }}
+                >
+                  Delete
+                </button>
               </div>
             )}
             <button className="modal-close-btn" onClick={() => setEditing(false)} aria-label="Close">
@@ -385,14 +391,6 @@ export default function GameCard({ record, agent, view = 'list', onUpdated, onDe
         )}
 
         <div className="form-actions" style={{ marginTop: 'auto', paddingTop: 24, gap: 12 }}>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ color: 'var(--danger)', borderColor: 'var(--danger)', marginRight: 'auto' }}
-            onClick={() => { setEditing(false); deleteRecord() }}
-          >
-            Delete
-          </button>
           <button type="button" className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
           <button type="button" className="btn btn-primary" onClick={saveEdit} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}

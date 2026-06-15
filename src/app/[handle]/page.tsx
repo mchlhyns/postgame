@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ChevronLeft, Trophy, UserCheck, UserMinus, UserPlus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Globe, Trophy, UserCheck, UserMinus, UserPlus } from 'lucide-react'
 import { Agent } from '@atproto/api'
 import { COLLECTION, SETTINGS_COLLECTION, LIST_COLLECTION, FOLLOW_COLLECTION, restoreSession, resolveHandleToPds } from '@/lib/atproto'
 import { GameRecordView, GameRef, ListRecordView } from '@/types'
@@ -14,6 +14,44 @@ import { extractCid, blobUrl, resolvePds, bskyAvatar } from '@/lib/appview-fetch
 import { relativeTime } from '@/lib/feed'
 
 const ALL_STATUSES = PRIMARY_STATUSES
+
+const GAMING_PROFILE_ICONS: { key: keyof GamingProfiles; icon: string; label: string; href: (val: string) => string }[] = [
+  { key: 'steamUrl', icon: '/icons/steam.svg', label: 'Steam', href: (v) => v },
+  { key: 'itchHandle', icon: '/icons/itch-io.svg', label: 'itch.io', href: (v) => `https://${v}.itch.io` },
+  { key: 'battlenetHandle', icon: '/icons/battle-net.svg', label: 'Battle.net', href: (v) => `https://battle.net` },
+  { key: 'twitchHandle', icon: '/icons/twitch.svg', label: 'Twitch', href: (v) => `https://twitch.tv/${v}` },
+  { key: 'streamPlaceHandle', icon: '/icons/streamplace.svg', label: 'stream.place', href: (v) => `https://stream.place/${v}` },
+]
+
+function ProfileBioCard({ description, website, bskyHandle, gamingProfiles }: { description: string | null; website: string | null; bskyHandle: string | null; gamingProfiles: GamingProfiles }) {
+  const profileLinks = GAMING_PROFILE_ICONS.filter(p => gamingProfiles[p.key])
+  const hasLinks = !!(website || bskyHandle || profileLinks.length)
+
+  return (
+    <div className="profile-bio-card">
+      {description && <p className="profile-bio-description">{description}</p>}
+      {hasLinks && (
+        <div className="profile-bio-links">
+          {website && (
+            <a href={website} target="_blank" rel="noopener noreferrer" className="profile-bio-link" title={website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}>
+              <Globe size={18} />
+            </a>
+          )}
+          {bskyHandle && (
+            <a href={`https://bsky.app/profile/${bskyHandle}`} target="_blank" rel="noopener noreferrer" className="profile-bio-link" title={`@${bskyHandle}`}>
+              <img src="/icons/bluesky.svg" alt="Bluesky" className="profile-bio-link-icon" />
+            </a>
+          )}
+          {profileLinks.map(p => (
+            <a key={p.key} href={p.href(gamingProfiles[p.key]!)} target="_blank" rel="noopener noreferrer" className="profile-bio-link" title={p.label}>
+              <img src={p.icon} alt={p.label} className="profile-bio-link-icon" />
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 
 function feedActionText(status: string, playedStatus?: string): string {
@@ -49,7 +87,15 @@ function getBlogPostUrl(docValue: any, publicationValue: any): string {
   return `https://${cleanDomain}${cleanPath}`
 }
 
-async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; pronouns?: string; blogPublicationUri?: string; blogTag?: string; newScreenshots: Record<number, string> }> {
+interface GamingProfiles {
+  steamUrl?: string
+  itchHandle?: string
+  battlenetHandle?: string
+  twitchHandle?: string
+  streamPlaceHandle?: string
+}
+
+async function fetchPublicGames(handle: string, screenshotCache: Record<number, string> = {}): Promise<{ did: string; pdsUrl: string; resolvedHandle: string; records: GameRecordView[]; lists: ListRecordView[]; displayName?: string; bskyDisplayName?: string; avatar?: string; ctaAvatarUrl?: string; bannerUrl?: string; favouriteGame?: GameRef; pronouns?: string; blogPublicationUri?: string; blogTag?: string; description?: string; website?: string; gamingProfiles: GamingProfiles; newScreenshots: Record<number, string> }> {
   const cleanHandle = handle.replace(/^@/, '')
   const { did, pdsUrl } = await resolveHandleToPds(cleanHandle)
 
@@ -59,6 +105,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
   const descFetch = fetch(`${pdsUrl}/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}`)
   const settingsFetch = fetch(`${pdsUrl}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=${SETTINGS_COLLECTION}&rkey=self`)
   const profileFetch = fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`)
+  const actorProfileFetch = fetch(`${pdsUrl}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=app.bsky.actor.profile&rkey=self`)
 
   // Process records as soon as they arrive, then immediately start screenshot fetch
   const recordsRes = await recordsFetch
@@ -89,8 +136,8 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     : Promise.resolve(null)
 
   // Wait for all remaining fetches (screenshots now runs in parallel with lists/desc/settings/profile)
-  const [listsRes, descRes, settingsRes, profileRes, screenshotRes] = await Promise.all([
-    listsFetch, descFetch, settingsFetch, profileFetch, screenshotFetch,
+  const [listsRes, descRes, settingsRes, profileRes, actorProfileRes, screenshotRes] = await Promise.all([
+    listsFetch, descFetch, settingsFetch, profileFetch, actorProfileFetch, screenshotFetch,
   ])
 
   let newScreenshots: Record<number, string> = {}
@@ -125,6 +172,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
   let pronouns: string | undefined
   let blogPublicationUri: string | undefined
   let blogTag: string | undefined
+  const gamingProfiles: GamingProfiles = {}
   if (settingsRes.ok) {
     const settings = await settingsRes.json()
     displayName = settings.value?.displayName
@@ -134,16 +182,29 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     if (settings.value?.pronouns) pronouns = settings.value.pronouns
     blogPublicationUri = settings.value?.blogPublicationUri
     blogTag = settings.value?.blogTag
+    if (settings.value?.steamUrl) gamingProfiles.steamUrl = settings.value.steamUrl
+    if (settings.value?.itchHandle) gamingProfiles.itchHandle = settings.value.itchHandle
+    if (settings.value?.battlenetHandle) gamingProfiles.battlenetHandle = settings.value.battlenetHandle
+    if (settings.value?.twitchHandle) gamingProfiles.twitchHandle = settings.value.twitchHandle
+    if (settings.value?.streamPlaceHandle) gamingProfiles.streamPlaceHandle = settings.value.streamPlaceHandle
   }
 
   let bskyDisplayName: string | undefined
   let avatar: string | undefined
   let bskyBannerUrl: string | undefined
+  let description: string | undefined
   if (profileRes.ok) {
     const profile = await profileRes.json()
     bskyDisplayName = profile.displayName
     avatar = profile.avatar
     bskyBannerUrl = profile.banner
+    description = profile.description
+  }
+
+  let website: string | undefined
+  if (actorProfileRes.ok) {
+    const actorProfile = await actorProfileRes.json()
+    website = actorProfile.value?.website
   }
 
   // Hydrate lists with items from list.item records
@@ -166,7 +227,7 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     }
   } catch { /* non-fatal */ }
 
-  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl: bannerUrl ?? bskyBannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, newScreenshots }
+  return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl: bannerUrl ?? bskyBannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, description, website, gamingProfiles, newScreenshots }
 }
 
 export default function ProfilePage() {
@@ -183,7 +244,7 @@ export default function ProfilePage() {
   const [pronouns, setPronouns] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [section, setSection] = useState<'overview' | 'games' | 'lists' | 'activity' | 'following' | 'blog'>('overview')
+  const [section, setSection] = useState<'overview' | 'games' | 'lists' | 'activity' | 'following'>('overview')
   const [activityLimit, setActivityLimit] = useState(20)
   const [profilePdsUrl, setProfilePdsUrl] = useState<string | null>(null)
   const [follows, setFollows] = useState<Array<{ did: string; handle: string; displayName?: string; avatar?: string }> | null>(null)
@@ -202,6 +263,10 @@ export default function ProfilePage() {
   const [blogLoading, setBlogLoading] = useState(false)
   const [publicationValue, setPublicationValue] = useState<any>(null)
   const [favScreenshotUrl, setFavScreenshotUrl] = useState<string | null>(null)
+  const [description, setDescription] = useState<string | null>(null)
+  const [website, setWebsite] = useState<string | null>(null)
+  const [gamingProfiles, setGamingProfiles] = useState<GamingProfiles>({})
+  const blogCarouselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     restoreSession()
@@ -265,7 +330,7 @@ export default function ProfilePage() {
     setFollows(null)
 
     fetchPublicGames(handle, screenshotCache)
-      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, newScreenshots }) => {
+      .then(({ did, pdsUrl, resolvedHandle, records, lists: fetchedLists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, description, website, gamingProfiles, newScreenshots }) => {
         if (cancelled) return
         setProfileDid(did)
         setProfilePdsUrl(pdsUrl)
@@ -290,6 +355,9 @@ export default function ProfilePage() {
         setPronouns(pronouns ?? null)
         setBlogPublicationUri(blogPublicationUri ?? null)
         setBlogTag(blogTag ?? null)
+        setDescription(description ?? null)
+        setWebsite(website ?? null)
+        setGamingProfiles(gamingProfiles)
         if (Object.keys(newScreenshots).length > 0) {
           try { sessionStorage.setItem('cta_screenshots', JSON.stringify({ ...screenshotCache, ...newScreenshots })) } catch {}
         }
@@ -343,10 +411,11 @@ export default function ProfilePage() {
 
         if (cancelled) return
 
-        // Filter posts
+        // Filter to published posts only
         const filtered = posts.filter((post: any) => {
           const val = post.value
           if (!val) return false
+          if (!val.publishedAt) return false
           if (val.site !== blogPublicationUri) return false
           if (blogTag) {
             const tags: string[] = val.tags || []
@@ -357,12 +426,8 @@ export default function ProfilePage() {
           return true
         })
 
-        // Sort posts descending by publishedAt, updatedAt, or createdAt
-        filtered.sort((a: any, b: any) => {
-          const aDate = a.value?.publishedAt || a.value?.updatedAt || a.value?.createdAt || ''
-          const bDate = b.value?.publishedAt || b.value?.updatedAt || b.value?.createdAt || ''
-          return bDate.localeCompare(aDate)
-        })
+        // Sort descending by publishedAt (newest first)
+        filtered.sort((a: any, b: any) => b.value.publishedAt.localeCompare(a.value.publishedAt))
 
         if (!cancelled) {
           setBlogPosts(filtered)
@@ -472,78 +537,83 @@ export default function ProfilePage() {
         {!loading && !error && (
           <div className="profile-banner-block" style={{ position: 'relative' }}>
             <ParallaxBannerImg className="profile-banner-img" url={bannerUrl} />
+            <div className="profile-banner-overlay" />
             <a href="/home" className="mobile-banner-logo-link">
               <img src="/logo.svg" alt="" className="mobile-banner-logo" />
               <span className="mobile-banner-logo-text">postgame</span>
             </a>
-            <div className="container profile-banner-content">
-              <div style={{ position: 'relative', height: 72, flexShrink: 0 }}>
-                {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}
-                {authSession && profileDid && authSession.did !== profileDid && (
-                  <button
-                    className={`profile-follow-btn${isFollowing ? ' profile-follow-btn--following' : ''}`}
-                    onClick={handleFollow}
-                    disabled={followLoading}
-                    title={isFollowing ? 'Unfollow' : 'Follow'}
-                    onMouseEnter={() => setFollowBtnHover(true)}
-                    onMouseLeave={() => setFollowBtnHover(false)}
-                  >
-                    {isFollowing
-                      ? (followBtnHover ? <UserMinus size={16} /> : <UserCheck size={16} />)
-                      : <UserPlus size={16} />
-                    }
-                  </button>
-                )}
-              </div>
-              <div>
-                <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.2, fontWeight: 800, margin: '0' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
-                {(displayName || pronouns) && (
-                  <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)' }}>
-                    {displayName && (
-                      <a
-                        href={`https://bsky.app/profile/${resolvedHandle ?? handle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: 'inherit', textDecoration: 'none' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                        onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                        onClick={(e) => e.stopPropagation()}
-                      >@{resolvedHandle ?? handle}</a>
+            <div className="profile-banner-content-wrap">
+              <div className="container profile-banner-content">
+                <div className="profile-banner-identity">
+                  <div style={{ position: 'relative', flexShrink: 0, bottom: -8 }}>
+                    {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}
+                    {authSession && profileDid && authSession.did !== profileDid && (
+                      <button
+                        className={`profile-follow-btn${isFollowing ? ' profile-follow-btn--following' : ''}`}
+                        onClick={handleFollow}
+                        disabled={followLoading}
+                        title={isFollowing ? 'Unfollow' : 'Follow'}
+                        onMouseEnter={() => setFollowBtnHover(true)}
+                        onMouseLeave={() => setFollowBtnHover(false)}
+                      >
+                        {isFollowing
+                          ? (followBtnHover ? <UserMinus size={16} /> : <UserCheck size={16} />)
+                          : <UserPlus size={16} />
+                        }
+                      </button>
                     )}
-                    {displayName && pronouns && ' • '}
-                    {pronouns}
-                  </p>
-                )}
-              </div>
-              <div className="profile-stats" style={{ marginLeft: 'auto', gap: 32, flexShrink: 0 }}>
-                {([
-                  { label: 'Playing', status: 'playing' },
-                  { label: 'Backlogged', status: 'backlogged' },
-                  { label: 'Wishlisted', status: 'wishlisted' },
-                  { label: 'Played', status: 'played' },
-                ] as const).flatMap(({ label, status }) => {
-                  const count = deduped.filter(g => matchesStatus(g.value.status, status)).length
-                  if (count === 0) return []
-                  return [(
-                    <button
-                      key={status}
-                      style={{ textAlign: 'right', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
-                      onClick={() => {
-                        setSection('games')
-                        setSelectedList(null)
-                        setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
-                      }}
-                    >
-                      <div className="profile-stat-count">{count}</div>
-                      <div className="profile-stat-label">{label}</div>
-                    </button>
-                  )]
-                })}
+                  </div>
+                  <div>
+                    <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.1, fontWeight: 800, margin: '0', color: 'white' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
+                    {(displayName || pronouns) && (
+                      <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 'var(--text-base)', margin: 0 }}>
+                        {displayName && (
+                          <a
+                            href={`https://bsky.app/profile/${resolvedHandle ?? handle}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'rgba(255,255,255,0.65)', textDecoration: 'none' }}
+                            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                            onClick={(e) => e.stopPropagation()}
+                          >@{resolvedHandle ?? handle}</a>
+                        )}
+                        {displayName && pronouns && ' • '}
+                        {pronouns}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="profile-stats" style={{ flexShrink: 0, color: 'white', alignSelf: 'flex-end', marginLeft: 'auto' }}>
+                  {([
+                    { label: 'Playing', status: 'playing' },
+                    { label: 'Backlogged', status: 'backlogged' },
+                    { label: 'Wishlisted', status: 'wishlisted' },
+                    { label: 'Played', status: 'played' },
+                  ] as const).flatMap(({ label, status }) => {
+                    const count = deduped.filter(g => matchesStatus(g.value.status, status)).length
+                    if (count === 0) return []
+                    return [(
+                      <button
+                        key={status}
+                        style={{ textAlign: 'right', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
+                        onClick={() => {
+                          setSection('games')
+                          setSelectedList(null)
+                          setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+                        }}
+                      >
+                        <div className="profile-stat-count">{count}</div>
+                        <div className="profile-stat-label">{label}</div>
+                      </button>
+                    )]
+                  })}
+                </div>
               </div>
             </div>
           </div>
         )}
-        <div className="container">
+        <div className="container profile-body">
           {loading ? (
             <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
           ) : error ? (
@@ -554,14 +624,11 @@ export default function ProfilePage() {
           ) : (
             <>
               {/* Overview / Games / Lists / Activity / Following / Posts tabs */}
-              <div className="filter-tabs">
-                {(blogPublicationUri
-                  ? ['overview', 'games', 'lists', 'blog', 'activity', 'following'] as const
-                  : ['overview', 'games', 'lists', 'activity', 'following'] as const
-                ).map((s) => (
+              <div className="profile-tabs">
+                {(['overview', 'games', 'lists', 'activity', 'following'] as const).map((s) => (
                   <button
                     key={s}
-                    className={`filter-tab${section === s ? ' active' : ''}`}
+                    className={`profile-tab${section === s ? ' active' : ''}`}
                     onClick={() => { setSection(s as any); setSelectedList(null); setActivityLimit(20) }}
                   >
                     {s === 'blog' ? 'Posts' : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -571,61 +638,8 @@ export default function ProfilePage() {
 
               {section === 'overview' ? (
                 <div className="profile-overview">
-                  {/* Standard site: playing now + latest post side by side */}
-                  {blogPublicationUri && playingGames.length > 0 && (
-                    <section className="profile-overview-section">
-                      {newestBlogPost ? (
-                        <div className="profile-overview-highlight-row">
-                          <div className="profile-overview-playing">
-                            <h2 className="home-section-title">Playing now</h2>
-                            <GameCard record={playingGames[0]} view="started" readonly />
-                          </div>
-                          {(() => {
-                            const postUrl = getBlogPostUrl(newestBlogPost.value, publicationValue)
-                            const pubDate = newestBlogPost.value.publishedAt
-                              ? new Date(newestBlogPost.value.publishedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-                              : null
-                            const coverUrl = newestBlogPost.value.coverImage && profilePdsUrl && profileDid
-                              ? blobUrl(profilePdsUrl, profileDid, newestBlogPost.value.coverImage)
-                              : null
-                            return (
-                              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <h2 className="home-section-title">Latest post</h2>
-                                <div className="blog-post-card" style={{ flex: 1 }}>
-                                  <div className="blog-post-card-body">
-                                    <div className="blog-post-card-header">
-                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h3 style={{ margin: 0 }}>
-                                          <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
-                                            {newestBlogPost.value.title}
-                                          </a>
-                                        </h3>
-                                        {pubDate && <div className="blog-post-date">{pubDate}</div>}
-                                      </div>
-                                      {coverUrl && <img loading="lazy" decoding="async" src={coverUrl} alt="" className="blog-post-thumbnail" />}
-                                    </div>
-                                  </div>
-                                  <div className="blog-post-card-footer">
-                                    <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
-                                      Read post
-                                    </a>
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          })()}
-                        </div>
-                      ) : (
-                        <div className="profile-overview-playing">
-                          <h2 className="home-section-title">Playing now</h2>
-                          <GameCard record={playingGames[0]} view="started" readonly />
-                        </div>
-                      )}
-                    </section>
-                  )}
-
-                  {/* No Standard site: up to 3 playing games in 2fr 1fr 1fr grid */}
-                  {!blogPublicationUri && playingGames.length > 0 && (
+                  {/* Playing now */}
+                  {playingGames.length > 0 && (
                     <section className="profile-overview-section">
                       <h2 className="home-section-title">Playing now</h2>
                       {playingGames.length === 1 ? (
@@ -641,6 +655,57 @@ export default function ProfilePage() {
                           {playingGames[2] && <GameCard record={playingGames[2]} view="grid" readonly />}
                         </div>
                       )}
+                    </section>
+                  )}
+
+                  {/* Posts carousel — most recent 5 */}
+                  {blogPublicationUri && blogPosts.length > 0 && (
+                    <section className="profile-overview-section">
+                      <div className="game-updates-header">
+                        <span className="game-updates-title">Posts</span>
+                        <div className="game-updates-nav-row">
+                          <button className="game-updates-nav-btn" aria-label="Previous" onClick={() => { const el = blogCarouselRef.current; if (!el) return; const card = el.querySelector('.game-update-card') as HTMLElement | null; el.scrollBy({ left: -(card ? card.offsetWidth + 12 : el.offsetWidth * 0.7), behavior: 'smooth' }) }}><ChevronLeft size={16} /></button>
+                          <button className="game-updates-nav-btn" aria-label="Next" onClick={() => { const el = blogCarouselRef.current; if (!el) return; const card = el.querySelector('.game-update-card') as HTMLElement | null; el.scrollBy({ left: card ? card.offsetWidth + 12 : el.offsetWidth * 0.7, behavior: 'smooth' }) }}><ChevronRight size={16} /></button>
+                        </div>
+                      </div>
+                      <div className="game-updates-carousel" ref={blogCarouselRef}>
+                        {blogPosts.slice(0, 8).map((post) => {
+                          const postUrl = getBlogPostUrl(post.value, publicationValue)
+                          const cardDate = post.value.createdAt ?? post.value.publishedAt
+                          const pubDate = cardDate
+                            ? new Date(cardDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                            : null
+                          const coverUrl = post.value.coverImage && profilePdsUrl && profileDid
+                            ? blobUrl(profilePdsUrl, profileDid, post.value.coverImage)
+                            : null
+                          return (
+                            <div key={post.uri} className="game-update-card blog-post-carousel-card">
+                              {coverUrl && <img loading="lazy" decoding="async" src={coverUrl} alt="" className="game-update-img" />}
+                              <p className="game-update-text blog-post-carousel-title">
+                                <a href={postUrl} target="_blank" rel="noopener noreferrer" className="game-update-link blog-post-carousel-link">
+                                  {post.value.title}
+                                </a>
+                              </p>
+                              {pubDate && (
+                                <a href={postUrl} target="_blank" rel="noopener noreferrer" className="game-update-time">{pubDate}</a>
+                              )}
+                            </div>
+                          )
+                        })}
+                        {(() => {
+                          const pubDomain = publicationValue?.domain || publicationValue?.url
+                          if (!pubDomain) return null
+                          const pubUrl = pubDomain.startsWith('http') ? pubDomain : `https://${pubDomain}`
+                          return (
+                            <div className="game-update-card blog-post-carousel-card blog-post-read-more-card">
+                              <a href={pubUrl} target="_blank" rel="noopener noreferrer" className="blog-post-read-more-link">
+                                Read more
+                                <ChevronRight size={20} />
+                              </a>
+                            </div>
+                          )
+                        })()}
+                      </div>
                     </section>
                   )}
 
@@ -683,49 +748,6 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-              ) : section === 'blog' ? (
-                blogLoading ? (
-                  <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
-                ) : blogPosts.length === 0 ? (
-                  <div className="empty-state">
-                    <h3>No posts yet</h3>
-                    <p>This blog doesn't have any posts yet.</p>
-                  </div>
-                ) : (
-                  <div className="blog-posts-grid">
-                    {blogPosts.map((post) => {
-                      const postUrl = getBlogPostUrl(post.value, publicationValue)
-                      const pubDate = post.value.publishedAt
-                        ? new Date(post.value.publishedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-                        : null
-                      const coverUrl = post.value.coverImage && profilePdsUrl && profileDid
-                        ? blobUrl(profilePdsUrl, profileDid, post.value.coverImage)
-                        : null
-                      return (
-                        <div key={post.uri} className="blog-post-card">
-                          <div className="blog-post-card-body">
-                            <div className="blog-post-card-header">
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ margin: 0 }}>
-                                  <a href={postUrl} target="_blank" rel="noopener noreferrer" className="blog-post-title-link">
-                                    {post.value.title}
-                                  </a>
-                                </h3>
-                                {pubDate && <div className="blog-post-date">{pubDate}</div>}
-                              </div>
-                              {coverUrl && <img loading="lazy" decoding="async" src={coverUrl} alt="" className="blog-post-thumbnail" />}
-                            </div>
-                          </div>
-                          <div className="blog-post-card-footer">
-                            <a href={postUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}>
-                              Read post
-                            </a>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
               ) : section === 'lists' ? (
                 selectedList ? (
                   <>

@@ -3,11 +3,11 @@ import { getGame } from '@/lib/igdb-game'
 import { normalizeCoverUrl, normalizeScreenshotUrl, abbreviatePlatform, HIDDEN_PLATFORMS } from '@/lib/igdb'
 import { IgdbGame } from '@/types'
 import GamePageBanner from '@/components/GamePageBanner'
-import GameBannerStats from '@/components/GameBannerStats'
 import AddGameButton from '@/components/AddGameButton'
 import ScreenshotGallery from '@/components/ScreenshotGallery'
 import RelatedGamesSection from '@/components/RelatedGamesSection'
 import GameSummary from '@/components/GameSummary'
+import GameBlueskyUpdates from '@/components/GameBlueskyUpdates'
 
 export default async function GamePage({ params }: { params: Promise<{ igdbId: string }> }) {
   const { igdbId } = await params
@@ -45,9 +45,15 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
     else if (/epicgames\.com/i.test(u)) label = 'Epic Games'
     else if (/itch\.io/i.test(u)) label = 'itch.io'
     else if (/wikipedia\.org/i.test(u)) label = 'Wikipedia'
+    else if (/bsky\.app/i.test(u)) label = 'Bluesky'
     if (label) acc.push({ label, url: u })
     return acc
   }, [])
+
+  const bskyHandle = (() => {
+    const url = (game.websites ?? []).find(w => /bsky\.app/i.test(w.url))?.url
+    return url ? url.replace(/^https?:\/\/bsky\.app\/profile\//, '').replace(/\/$/, '') : undefined
+  })()
 
   const gameForClient: Pick<IgdbGame, 'id' | 'name' | 'url' | 'first_release_date' | 'platforms'> & { coverUrl?: string; screenshotUrl?: string } = {
     id: game.id,
@@ -109,7 +115,7 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
   return (
     <>
       <main>
-        <GamePageBanner bannerUrl={bannerUrl} />
+        <GamePageBanner bannerUrl={bannerUrl} title={game.name} subtitle={subtitle} igdbId={id} />
 
         <div className="container">
           <div className="game-detail-layout">
@@ -130,17 +136,11 @@ export default async function GamePage({ params }: { params: Promise<{ igdbId: s
               <div className="game-detail-add-mobile">
                 <AddGameButton game={gameForClient} />
               </div>
-              <div className="game-detail-banner-info">
-                <div style={{ minWidth: 0 }}>
-                  <h1 className="game-detail-title">{game.name}</h1>
-                  {subtitle && <p className="game-detail-banner-sub">{subtitle}</p>}
-                </div>
-                <GameBannerStats igdbId={id} />
-              </div>
               {game.summary && <GameSummary summary={game.summary} />}
               {allScreenshots.length > 0 && (
                 <ScreenshotGallery screenshots={allScreenshots} />
               )}
+              {bskyHandle && <GameBlueskyUpdates handle={bskyHandle} />}
               <div className="game-detail-meta-mobile">
                 {metaSections}
               </div>

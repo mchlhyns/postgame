@@ -3,12 +3,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Agent } from '@atproto/api'
-import { restoreSession, COLLECTION, LIST_COLLECTION, LIST_ITEM_COLLECTION } from '@/lib/atproto'
-import { GameRecordView, IgdbGame, ListItem, ListItemRecord, ListRecord, ListRecordView } from '@/types'
-import { formatIgdbGame, abbreviatePlatform } from '@/lib/igdb'
+import { restoreSession, LIST_COLLECTION, LIST_ITEM_COLLECTION } from '@/lib/atproto'
+import { ListItem, ListItemRecord, ListRecord, ListRecordView } from '@/types'
 import ListShareModal from '@/components/ListShareModal'
+import HeaderSearch from '@/components/HeaderSearch'
 
-type SearchResult = { igdbId: number; title: string; coverUrl?: string; year?: number; platforms?: string }
 
 const AWARDS = [
   'Personal Impact',
@@ -41,12 +40,9 @@ export default function ListEditPage() {
   const [userHandle, setUserHandle] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [list, setList] = useState<ListRecordView | null>(null)
-  const [games, setGames] = useState<GameRecordView[]>([])
-  const [name, setName] = useState('')
+const [name, setName] = useState('')
   const [items, setItems] = useState<ListItem[]>([])
-  const [query, setQuery] = useState('')
-  const [igdbResults, setIgdbResults] = useState<SearchResult[]>([])
-  const [searching, setSearching] = useState(false)
+  const [addGameOpen, setAddGameOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -63,13 +59,11 @@ export default function ListEditPage() {
   const [overflowPos, setOverflowPos] = useState<{ top: number; right: number } | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isNew, setIsNew] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const existingItemRkeys = useRef<string[]>([])
   const awardPickerRef = useRef<HTMLDivElement>(null)
   const overflowRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!overflowOpen) return
@@ -94,13 +88,6 @@ export default function ListEditPage() {
     return () => document.removeEventListener('mousedown', handleMouseDown)
   }, [awardPickerFor])
 
-  useEffect(() => {
-    function handleMouseDown(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false)
-    }
-    document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
-  }, [])
 
   useEffect(() => {
     restoreSession()
@@ -112,15 +99,11 @@ export default function ListEditPage() {
           .catch(() => {})
 
         try {
-          const [listRes, gamesRes] = await Promise.all([
-            s.agent.com.atproto.repo.getRecord({ repo: s.did, collection: LIST_COLLECTION, rkey }),
-            s.agent.com.atproto.repo.listRecords({ repo: s.did, collection: COLLECTION, limit: 100 }),
-          ])
+          const listRes = await s.agent.com.atproto.repo.getRecord({ repo: s.did, collection: LIST_COLLECTION, rkey })
           const listRecord = { uri: listRes.data.uri, cid: listRes.data.cid, value: listRes.data.value } as unknown as ListRecordView
           setList(listRecord)
           setName(listRecord.value.name)
           setShowNumbers(listRecord.value.numbered !== false)
-          setGames(gamesRes.data.records as unknown as GameRecordView[])
 
           // Load items from list.item records; fall back to inline items during migration window
           const itemEntries: { item: ListItem; rkey: string }[] = []
@@ -144,7 +127,9 @@ export default function ListEditPage() {
             existingItemRkeys.current = itemEntries.map(e => e.rkey)
             setItems(itemEntries.map(e => e.item))
           } else {
-            setItems(listRecord.value.items ?? [])
+            const inlineItems = listRecord.value.items ?? []
+            setIsNew(inlineItems.length === 0)
+            setItems(inlineItems)
           }
         } catch {
           window.location.href = '/lists'
@@ -156,56 +141,9 @@ export default function ListEditPage() {
       .catch(() => { window.location.href = '/' })
   }, [rkey])
 
-  // Debounced IGDB search
-  useEffect(() => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current)
-    if (query.length < 2) { setIgdbResults([]); setSearchOpen(false); return }
-    setSearchOpen(true)
-    searchTimeout.current = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const res = await fetch(`/api/igdb/search?q=${encodeURIComponent(query)}`)
-        if (!res.ok) return
-        const data = await res.json()
-        const formatted = (data.games ?? []).map(formatIgdbGame) as (IgdbGame & { coverUrl?: string })[]
-        setIgdbResults(formatted.map((g) => ({
-          igdbId: g.id,
-          title: g.name,
-          coverUrl: g.coverUrl,
-          year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : undefined,
-          platforms: g.platforms?.map((p) => abbreviatePlatform(p.name)).join(', '),
-        })))
-      } catch { /* ignore */ } finally {
-        setSearching(false)
-      }
-    }, 400)
-  }, [query])
-
-  // Deduped collection sorted by title
-  const collectionMap = Object.values(
-    games.reduce<Record<number, GameRecordView>>((acc, r) => {
-      const id = r.value.game.igdbId
-      if (!acc[id] || r.value.createdAt > acc[id].value.createdAt) acc[id] = r
-      return acc
-    }, {})
-  ).sort((a, b) => a.value.game.title.localeCompare(b.value.game.title))
-
-  const collectionResults = collectionMap
-    .filter((g) => query.trim() === '' || g.value.game.title.toLowerCase().includes(query.toLowerCase()))
-  const collectionIgdbIds = new Set(collectionMap.map((g) => g.value.game.igdbId))
-  const filteredIgdbResults = igdbResults.filter((g) => !collectionIgdbIds.has(g.igdbId))
-
-  function addItem(result: SearchResult) {
-    setItems((prev) => [...prev, { igdbId: result.igdbId, title: result.title, coverUrl: result.coverUrl, position: prev.length + 1 }])
-    setQuery('')
-    setIgdbResults([])
-    setSearchOpen(false)
+  function addItem(game: { igdbId: number; title: string; coverUrl?: string }) {
+    setItems((prev) => [...prev, { igdbId: game.igdbId, title: game.title, coverUrl: game.coverUrl, position: prev.length + 1 }])
     setSaved(false)
-  }
-
-  function addFromCollection(record: GameRecordView) {
-    const g = record.value.game
-    addItem({ igdbId: g.igdbId, title: g.title, coverUrl: g.coverUrl })
   }
 
   function removeItem(index: number) {
@@ -357,10 +295,6 @@ export default function ListEditPage() {
     }
   }
 
-  const showCollectionSection = collectionResults.length > 0
-  const showIgdbSection = query.length >= 2 && (searching || filteredIgdbResults.length > 0)
-  const showNoResults = query.length >= 2 && !searching && collectionResults.length === 0 && filteredIgdbResults.length === 0
-
   if (loading) return <main style={{ flex: 1 }} />
 
   const currentList: ListRecordView = list
@@ -370,90 +304,20 @@ export default function ListEditPage() {
   return (
     <>
       <main>
-        <div className="container">
+        <div className="container page-top">
+          <h1 className="browse-section-title">{isNew ? 'New list' : 'Edit list'}</h1>
+
           <div className="list-edit-header">
-            <a href="/lists" className="list-edit-back">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </a>
             <input
               ref={nameInputRef}
-              className="list-edit-name-input"
+              className="input list-edit-name-input"
               value={name}
               onChange={(e) => { setName(e.target.value); setSaved(false) }}
-              placeholder="List name"
+              placeholder={isNew ? 'New list' : 'List name'}
               maxLength={100}
             />
-            <div ref={searchRef} className="list-edit-search-wrap">
-              <input
-                className="input header-search-input list-edit-search-input"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => (showCollectionSection || showIgdbSection || showNoResults) && setSearchOpen(true)}
-                placeholder="Add games to list"
-                autoComplete="off"
-              />
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="header-search-icon"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              {searchOpen && (showCollectionSection || showIgdbSection || showNoResults) && (
-                <div className="search-results list-edit-search-results">
-                  {showCollectionSection && (
-                    <>
-                      {query.trim() !== '' && <div className="list-modal-results-label" style={{ padding: '4px 12px 2px' }}>Your collection</div>}
-                      {collectionResults.slice(0, 20).map((record) => {
-                        const g = record.value.game
-                        return (
-                          <div key={g.igdbId} className="list-modal-add-item search-result-item" onMouseDown={(e) => { e.preventDefault(); addFromCollection(record) }}>
-                            <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
-                            <div className="list-modal-add-item-info">
-                              <span className="list-modal-add-item-title">{g.title}</span>
-                              {record.value.platform && <span className="list-modal-add-item-platforms">{record.value.platform}</span>}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </>
-                  )}
-                  {showIgdbSection && (
-                    <>
-                      <div className="list-modal-results-label" style={{ padding: '4px 12px 2px', marginTop: showCollectionSection ? 4 : 0 }}>
-                        {searching ? 'Searching…' : 'From IGDB'}
-                      </div>
-                      {filteredIgdbResults.slice(0, 10).map((g) => (
-                        <div key={g.igdbId} className="list-modal-add-item search-result-item" onMouseDown={(e) => { e.preventDefault(); addItem(g) }}>
-                          <img src={g.coverUrl ?? '/no-cover.png'} alt="" className="list-modal-add-item-cover" />
-                          <div className="list-modal-add-item-info">
-                            <span className="list-modal-add-item-title">{g.title}</span>
-                            {(g.year || g.platforms) && (
-                              <span className="list-modal-add-item-platforms">{[g.year, g.platforms].filter(Boolean).join(' · ')}</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {showNoResults && (
-                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', padding: '8px 12px' }}>No results found.</div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {saved && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>Saved</span>}
-              {error && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>{error}</span>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setAddGameOpen(true)}>Add game to list</button>
               <div className="list-overflow-wrap" ref={overflowRef}>
                 <button
                   className="btn btn-ghost list-overflow-btn"
@@ -466,15 +330,12 @@ export default function ListEditPage() {
                   title="More options"
                 >⋯</button>
               </div>
-              <button className="btn btn-primary" onClick={() => handleSave()} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
-              </button>
             </div>
           </div>
 
           <div className="list-edit-body">
             {items.length === 0 ? (
-              <div className="list-modal-empty">Search for games using the bar above to add them</div>
+              <div className="list-modal-empty">No games yet — click "Add game" to get started</div>
             ) : (
               <div className="list-edit-items">
                   {items.map((item, i) => (
@@ -567,6 +428,15 @@ export default function ListEditPage() {
             )}
           </div>
 
+          <div className="list-edit-footer">
+            {saved && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>Saved</span>}
+            {error && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>{error}</span>}
+            <a href="/lists" className="btn btn-ghost">Cancel</a>
+            <button className="btn btn-primary" onClick={() => handleSave()} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+
         </div>
       </main>
 
@@ -580,26 +450,9 @@ export default function ListEditPage() {
             className="list-overflow-option"
             onMouseDown={(e) => { e.preventDefault(); const next = !showNumbers; setShowNumbers(next); setOverflowOpen(false); setOverflowPos(null); handleSave(next) }}
           >
-            Numbered list
+            Ranked list
             <span>{showNumbers ? '✓' : ''}</span>
           </button>
-          {userHandle && (
-            <button
-              className="list-overflow-option"
-              onMouseDown={(e) => {
-                e.preventDefault()
-                const url = `${window.location.origin}/${userHandle}/lists/${rkey}`
-                navigator.clipboard.writeText(url).then(() => {
-                  setLinkCopied(true)
-                  setTimeout(() => setLinkCopied(false), 2000)
-                })
-                setOverflowOpen(false)
-                setOverflowPos(null)
-              }}
-            >
-              {linkCopied ? 'Copied!' : 'Copy link'}
-            </button>
-          )}
           <button
             className="list-overflow-option"
             onMouseDown={(e) => { e.preventDefault(); handleDuplicate() }}
@@ -609,18 +462,10 @@ export default function ListEditPage() {
           </button>
           <button
             className="list-overflow-option"
-            onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); setTimeout(() => nameInputRef.current?.focus(), 0) }}
-          >
-            Rename
-          </button>
-          <button
-            className="list-overflow-option"
-            onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); if (items.length > 0) setSharingList(currentList) }}
-            disabled={items.length === 0}
+            onMouseDown={(e) => { e.preventDefault(); setOverflowOpen(false); setOverflowPos(null); setSharingList(currentList) }}
           >
             Share
           </button>
-          <div className="list-overflow-divider" />
           <button
             className="list-overflow-option list-overflow-option-danger"
             onMouseDown={(e) => { e.preventDefault(); setConfirmDelete(true); setOverflowOpen(false); setOverflowPos(null) }}
@@ -629,6 +474,13 @@ export default function ListEditPage() {
           </button>
         </div>
       )}
+
+      <HeaderSearch
+        open={addGameOpen}
+        onOpen={() => setAddGameOpen(true)}
+        onClose={() => setAddGameOpen(false)}
+        onSelect={(game) => { addItem(game); setAddGameOpen(false) }}
+      />
 
       {sharingList && (
         <ListShareModal

@@ -292,7 +292,7 @@ export default function SettingsPage() {
                   <button type="button" className="btn btn-ghost" onClick={() => avatarInputRef.current?.click()}>
                     <Upload size={14} strokeWidth={2} style={{ marginRight: 4 }} />Upload
                   </button>
-                  {(avatarFile || avatarBlob) && (
+                  {!!(avatarFile || avatarBlob) && (
                     <button type="button" className="btn btn-ghost" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={removeAvatar}>Remove</button>
                   )}
                 </div>
@@ -345,7 +345,7 @@ export default function SettingsPage() {
                   <button type="button" className="btn btn-ghost" onClick={() => bannerInputRef.current?.click()}>
                     <Upload size={14} strokeWidth={2} style={{ marginRight: 4 }} />Upload
                   </button>
-                  {(bannerFile || bannerBlob) && (
+                  {!!(bannerFile || bannerBlob) && (
                     <button type="button" className="btn btn-ghost" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={removeBanner}>Remove</button>
                   )}
                 </div>

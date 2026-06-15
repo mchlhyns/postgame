@@ -34,7 +34,7 @@ function ProfileBioCard({ description, website, bskyHandle, gamingProfiles }: { 
         <div className="profile-bio-links">
           {website && (
             <a href={website} target="_blank" rel="noopener noreferrer" className="profile-bio-link" title={website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}>
-              <Globe size={18} />
+              <Globe size={16} />
             </a>
           )}
           {bskyHandle && (
@@ -76,6 +76,20 @@ function feedActionText(status: string, playedStatus?: string): string {
     case 'abandoned': return 'abandoned'
     default: return status
   }
+}
+
+function renderBio(text: string) {
+  const parts = text.split(/(@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,})/g)
+  return parts.map((part, i) => {
+    if (/^@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(part)) {
+      return (
+        <a key={i} href={`https://bsky.app/profile/${part.slice(1)}`} target="_blank" rel="noopener noreferrer" className="profile-bio-mention">
+          {part}
+        </a>
+      )
+    }
+    return part
+  })
 }
 
 function getBlogPostUrl(docValue: any, publicationValue: any): string {
@@ -207,24 +221,28 @@ async function fetchPublicGames(handle: string, screenshotCache: Record<number, 
     website = actorProfile.value?.website
   }
 
-  // Hydrate lists with items from list.item records
+  // Hydrate lists with items from list.item records (paginated)
   try {
-    const listItemsRes = await fetch(`${pdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=at.postgame.list.item&limit=100`)
-    if (listItemsRes.ok) {
-      const listItemsData = await listItemsRes.json()
-      const itemsByList = new Map<string, { igdbId: number; title: string; coverUrl?: string; position: number; award?: string }[]>()
-      for (const rec of listItemsData.records ?? []) {
+    const itemsByList = new Map<string, { igdbId: number; title: string; coverUrl?: string; position: number; award?: string }[]>()
+    let listItemsCursor: string | undefined
+    do {
+      const url = `${pdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=at.postgame.list.item&limit=100${listItemsCursor ? `&cursor=${encodeURIComponent(listItemsCursor)}` : ''}`
+      const res = await fetch(url)
+      if (!res.ok) break
+      const data = await res.json()
+      for (const rec of data.records ?? []) {
         const val = rec.value
         if (!val.listUri || !val.game) continue
         if (!itemsByList.has(val.listUri)) itemsByList.set(val.listUri, [])
         itemsByList.get(val.listUri)!.push({ igdbId: val.game.igdbId, title: val.game.title, coverUrl: val.game.coverUrl, position: val.position ?? 0, award: val.award })
       }
-      for (const items of itemsByList.values()) items.sort((a, b) => a.position - b.position)
-      lists = lists.map(list => {
-        const items = itemsByList.get(list.uri) ?? list.value.items ?? []
-        return { ...list, value: { ...list.value, items } } as ListRecordView
-      })
-    }
+      listItemsCursor = data.cursor
+    } while (listItemsCursor)
+    for (const items of itemsByList.values()) items.sort((a, b) => a.position - b.position)
+    lists = lists.map(list => {
+      const items = itemsByList.get(list.uri) ?? list.value.items ?? []
+      return { ...list, value: { ...list.value, items } } as ListRecordView
+    })
   } catch { /* non-fatal */ }
 
   return { did, pdsUrl, resolvedHandle, records: patched, lists, displayName, bskyDisplayName, avatar, ctaAvatarUrl, bannerUrl: bannerUrl ?? bskyBannerUrl, favouriteGame, pronouns, blogPublicationUri, blogTag, description, website, gamingProfiles, newScreenshots }
@@ -542,88 +560,104 @@ export default function ProfilePage() {
               <img src="/logo.svg" alt="" className="mobile-banner-logo" />
               <span className="mobile-banner-logo-text">postgame</span>
             </a>
-            <div className="profile-banner-content-wrap">
-              <div className="container profile-banner-content">
-                <div className="profile-banner-identity">
-                  <div style={{ position: 'relative', flexShrink: 0, bottom: -8 }}>
-                    {avatar && <img src={avatar} alt="" className="profile-banner-avatar" />}
-                    {authSession && profileDid && authSession.did !== profileDid && (
-                      <button
-                        className={`profile-follow-btn${isFollowing ? ' profile-follow-btn--following' : ''}`}
-                        onClick={handleFollow}
-                        disabled={followLoading}
-                        title={isFollowing ? 'Unfollow' : 'Follow'}
-                        onMouseEnter={() => setFollowBtnHover(true)}
-                        onMouseLeave={() => setFollowBtnHover(false)}
-                      >
-                        {isFollowing
-                          ? (followBtnHover ? <UserMinus size={16} /> : <UserCheck size={16} />)
-                          : <UserPlus size={16} />
-                        }
-                      </button>
-                    )}
-                  </div>
-                  <div>
-                    <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.1, fontWeight: 800, margin: '0', color: 'white' }}>{displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}</h1>
-                    {(displayName || pronouns) && (
-                      <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 'var(--text-base)', margin: 0 }}>
-                        {displayName && (
-                          <a
-                            href={`https://bsky.app/profile/${resolvedHandle ?? handle}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: 'rgba(255,255,255,0.65)', textDecoration: 'none' }}
-                            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                            onClick={(e) => e.stopPropagation()}
-                          >@{resolvedHandle ?? handle}</a>
-                        )}
-                        {displayName && pronouns && ' • '}
-                        {pronouns}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="profile-stats" style={{ flexShrink: 0, color: 'white', alignSelf: 'flex-end', marginLeft: 'auto' }}>
-                  {([
-                    { label: 'Playing', status: 'playing' },
-                    { label: 'Backlogged', status: 'backlogged' },
-                    { label: 'Wishlisted', status: 'wishlisted' },
-                    { label: 'Played', status: 'played' },
-                  ] as const).flatMap(({ label, status }) => {
-                    const count = deduped.filter(g => matchesStatus(g.value.status, status)).length
-                    if (count === 0) return []
-                    return [(
-                      <button
-                        key={status}
-                        style={{ textAlign: 'right', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
-                        onClick={() => {
-                          setSection('games')
-                          setSelectedList(null)
-                          setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
-                        }}
-                      >
-                        <div className="profile-stat-count">{count}</div>
-                        <div className="profile-stat-label">{label}</div>
-                      </button>
-                    )]
-                  })}
-                </div>
-              </div>
-            </div>
           </div>
         )}
         <div className="container profile-body">
           {loading ? (
             <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
           ) : error ? (
-            <div className="empty-state">
+            <div className="empty-state" style={{ paddingTop: 48 }}>
               <h3>Not found</h3>
               <p>Could not load games for @{handle}. Make sure the handle is correct.</p>
             </div>
           ) : (
-            <>
-              {/* Overview / Games / Lists / Activity / Following / Posts tabs */}
+            <div className="profile-layout">
+              {/* Left sidebar */}
+              <div className="profile-sidebar">
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  {avatar
+                    ? <img src={avatar} alt="" className="profile-sidebar-avatar" />
+                    : <div className="profile-sidebar-avatar" />
+                  }
+                  {authSession && profileDid && authSession.did !== profileDid && (
+                    <button
+                      className={`profile-follow-btn${isFollowing ? ' profile-follow-btn--following' : ''}`}
+                      onClick={handleFollow}
+                      disabled={followLoading}
+                      title={isFollowing ? 'Unfollow' : 'Follow'}
+                      onMouseEnter={() => setFollowBtnHover(true)}
+                      onMouseLeave={() => setFollowBtnHover(false)}
+                    >
+                      {isFollowing
+                        ? (followBtnHover ? <UserMinus size={16} /> : <UserCheck size={16} />)
+                        : <UserPlus size={16} />
+                      }
+                    </button>
+                  )}
+                </div>
+                <h1 className="profile-sidebar-name">
+                  {displayName ? (displayName.length > 30 ? displayName.slice(0, 30) + '…' : displayName) : `@${resolvedHandle ?? handle}`}
+                  {pronouns && <span className="profile-pronouns-badge">{pronouns}</span>}
+                </h1>
+                {displayName && (
+                  <p className="profile-sidebar-sub">
+                    <a
+                      href={`https://bsky.app/profile/${resolvedHandle ?? handle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'inherit', textDecoration: 'none' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                      onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                    >@{resolvedHandle ?? handle}</a>
+                  </p>
+                )}
+                {description && <p className="profile-sidebar-bio">{renderBio(description)}</p>}
+                <div className="profile-sidebar-links">
+                  {website && (
+                    <a href={website} target="_blank" rel="noopener noreferrer" className="profile-bio-link" title={website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}>
+                      <Globe size={16} />
+                    </a>
+                  )}
+                  <a href={`https://bsky.app/profile/${resolvedHandle ?? handle}`} target="_blank" rel="noopener noreferrer" className="profile-bio-link" title={`@${resolvedHandle ?? handle}`}>
+                    <img src="/icons/bluesky.svg" alt="Bluesky" className="profile-bio-link-icon" />
+                  </a>
+                  {GAMING_PROFILE_ICONS.filter(p => gamingProfiles[p.key]).map(p => (
+                    <a key={p.key} href={p.href(gamingProfiles[p.key]!)} target="_blank" rel="noopener noreferrer" className="profile-bio-link" title={p.label}>
+                      <img src={p.icon} alt={p.label} className="profile-bio-link-icon" />
+                    </a>
+                  ))}
+                </div>
+                {deduped.length > 0 && (
+                  <div className="profile-sidebar-stats">
+                    {([
+                      { label: 'Playing', status: 'playing' },
+                      { label: 'Backlogged', status: 'backlogged' },
+                      { label: 'Wishlisted', status: 'wishlisted' },
+                      { label: 'Played', status: 'played' },
+                    ] as const).flatMap(({ label, status }) => {
+                      const count = deduped.filter(g => matchesStatus(g.value.status, status)).length
+                      if (count === 0) return []
+                      return [(
+                        <button
+                          key={status}
+                          onClick={() => {
+                            setSection('games')
+                            setSelectedList(null)
+                            setTimeout(() => document.getElementById(status)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+                          }}
+                        >
+                          <div className="profile-stat-count">{count}</div>
+                          <div className="profile-stat-label">{label}</div>
+                        </button>
+                      )]
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Right content */}
+              <div className="profile-content">
+              {/* Overview / Games / Lists / Activity / Following tabs */}
               <div className="profile-tabs">
                 {(['overview', 'games', 'lists', 'activity', 'following'] as const).map((s) => (
                   <button
@@ -631,7 +665,7 @@ export default function ProfilePage() {
                     className={`profile-tab${section === s ? ' active' : ''}`}
                     onClick={() => { setSection(s as any); setSelectedList(null); setActivityLimit(20) }}
                   >
-                    {s === 'blog' ? 'Posts' : s.charAt(0).toUpperCase() + s.slice(1)}
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
                   </button>
                 ))}
               </div>
@@ -641,7 +675,7 @@ export default function ProfilePage() {
                   {/* Playing now */}
                   {playingGames.length > 0 && (
                     <section className="profile-overview-section">
-                      <h2 className="home-section-title">Playing now</h2>
+                      <h2 className="home-section-title">Now playing</h2>
                       {playingGames.length === 1 ? (
                         <div className="profile-overview-playing">
                           <GameCard record={playingGames[0]} view="started" readonly />
@@ -800,40 +834,43 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="lists-community-grid">
-                    {[...lists].sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt)).map((list) => (
-                      <div key={list.uri} className="game-card-grid" onClick={() => setSelectedList(list)} style={{ cursor: 'pointer' }}>
-                        <div
-                          className="game-card-grid-cover-wrap"
-                          style={{
-                            background: 'var(--tertiary)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            padding: '24px',
-                            aspectRatio: 'unset',
-                          }}
-                        >
-                          <div className="list-card-covers">
-                            {(() => {
-                              const r = (list.value.items ?? []).slice(0, 5)
-                              return [r[1], r[2], r[0], r[3], r[4]].map((item, i) =>
-                                item
-                                  ? <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
-                                  : <div key={`empty-${i}`} className="list-card-cover" />
-                              )
-                            })()}
+                    {[...lists].sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt)).map((list) => {
+                      const rkey = list.uri.split('/').pop()
+                      return (
+                        <a key={list.uri} href={`/${resolvedHandle ?? handle}/lists/${rkey}`} className="game-card-grid" style={{ cursor: 'pointer', display: 'block', textDecoration: 'none', color: 'inherit' }}>
+                          <div
+                            className="game-card-grid-cover-wrap"
+                            style={{
+                              background: 'var(--tertiary)',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              padding: '24px',
+                              aspectRatio: 'unset',
+                            }}
+                          >
+                            <div className="list-card-covers">
+                              {(() => {
+                                const r = (list.value.items ?? []).slice(0, 3)
+                                return [r[1], r[0], r[2]].map((item, i) =>
+                                  item
+                                    ? <img loading="lazy" decoding="async" key={item.igdbId} src={item.coverUrl || '/no-cover.png'} alt={item.title} className="list-card-cover" />
+                                    : <div key={`empty-${i}`} className="list-card-cover" />
+                                )
+                              })()}
+                            </div>
                           </div>
-                        </div>
-                        <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 800 }}>
-                            {list.value.name}
+                          <div className="game-card-grid-info" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="game-card-grid-title" style={{ fontSize: 'var(--text-base)', fontWeight: 800 }}>
+                              {list.value.name}
+                            </div>
+                            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif' }}>
+                              {(list.value.items ?? []).length} game{(list.value.items ?? []).length !== 1 ? 's' : ''}
+                            </div>
                           </div>
-                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'Fustat, system-ui, -apple-system, sans-serif' }}>
-                            {(list.value.items ?? []).length} game{(list.value.items ?? []).length !== 1 ? 's' : ''}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                        </a>
+                      )
+                    })}
                   </div>
                 )
               ) : section === 'following' ? (
@@ -932,7 +969,8 @@ export default function ProfilePage() {
                   })}
                 </div>
               )}
-            </>
+              </div>
+            </div>
           )}
         </div>
       </main>

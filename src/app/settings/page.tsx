@@ -358,6 +358,22 @@ export default function SettingsPage() {
                 />
               </div>
 
+              {/* Gaming Profiles */}
+              <div>
+                <h2 className="faq-section-heading">Gaming</h2>
+                <p className="faq-answer" style={{ marginBottom: 16 }}>
+                  Link your profiles on other gaming platforms to display them on your public profile.
+                </p>
+                <div className="form-field">
+                  <label>Steam profile URL</label>
+                  <input className="input" style={{ width: '100%' }} type="url" placeholder="https://steamcommunity.com/id/yourname" value={steamUrl} onChange={(e) => setSteamUrl(e.target.value)} />
+                </div>
+                <div className="form-field">
+                  <label>itch.io username</label>
+                  <input className="input" style={{ width: '100%' }} type="text" placeholder="yourusername" value={itchHandle} onChange={(e) => setItchHandle(e.target.value)} maxLength={50} />
+                </div>
+              </div>
+
               {/* Blog Settings Section */}
               <div>
                 <h2 className="faq-section-heading">Posts</h2>
@@ -394,36 +410,6 @@ export default function SettingsPage() {
                     onChange={(e) => setBlogTag(e.target.value)}
                     maxLength={50}
                   />
-                </div>
-              </div>
-
-
-
-              {/* Gaming Profiles */}
-              <div>
-                <h2 className="faq-section-heading">Gaming</h2>
-                <p className="faq-answer" style={{ marginBottom: 16 }}>
-                  Link your profiles on other gaming platforms to display them on your public profile.
-                </p>
-                <div className="form-field">
-                  <label>Steam profile URL</label>
-                  <input className="input" style={{ width: '100%' }} type="url" placeholder="https://steamcommunity.com/id/yourname" value={steamUrl} onChange={(e) => setSteamUrl(e.target.value)} />
-                </div>
-                <div className="form-field">
-                  <label>itch.io username</label>
-                  <input className="input" style={{ width: '100%' }} type="text" placeholder="yourusername" value={itchHandle} onChange={(e) => setItchHandle(e.target.value)} maxLength={50} />
-                </div>
-                <div className="form-field">
-                  <label>Battle.net tag</label>
-                  <input className="input" style={{ width: '100%' }} type="text" placeholder="Username#1234" value={battlenetHandle} onChange={(e) => setBattlenetHandle(e.target.value)} maxLength={50} />
-                </div>
-                <div className="form-field">
-                  <label>Twitch username</label>
-                  <input className="input" style={{ width: '100%' }} type="text" placeholder="yourusername" value={twitchHandle} onChange={(e) => setTwitchHandle(e.target.value)} maxLength={50} />
-                </div>
-                <div className="form-field">
-                  <label>stream.place handle</label>
-                  <input className="input" style={{ width: '100%' }} type="text" placeholder="yourusername" value={streamPlaceHandle} onChange={(e) => setStreamPlaceHandle(e.target.value)} maxLength={50} />
                 </div>
               </div>
 
